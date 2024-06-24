@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>Login</title>
+</head>
+<body>
+    <div class="header">
+        <img src="https://www.zeuslearning.com/c/img/quantum/laptop-1366/Quantum%20Logo.svg">
+    </div>
+    <div class="main">
+        <div class="container">
+             <div class="head">
+                <h3>&larr;</h3>
+                <h1>Log in with Quantum</h1>
+            </div>
+            <form class="form">
+                <div class="radio">
+                    <input type="radio" id="radio-district" name="fav_language" value="" required>
+                        <label for="District" class="text-district">District</label>
+                    <input type="radio" id="radio-school" name="fav_language" value="" required>
+                        <label for="school" class="text-district">Independent school</label><br>
+                </div>
+                <label class="state-drop">state*<br>
+                    <select id="state" name="statelist">
+                        <option value="">Alabama</option>
+                        <option value="">Maharashtra</option>
+                        <option value="">Gujarat</option>
+                        <option value="">Punjab</option>
+                        <option value="">Tamil Nadu</option>
+                    </select>
+                </label><br>
+                <label class="district-drop">District*<br>
+                    <select id="district" name="districtlist">
+                        <option value="">Alabama school District</option>
+                        <option value="">Maharashtra school District</option>
+                        <option value="">Gujarat school District</option>
+                        <option value="">Punjab school District</option>
+                        <option value="">Tamil Nadu school District</option>
+                    </select><br>
+                </label>
+                <input type="text" class="username" placeholder="username / Email Id*" required><br>
+                <a href="#" >FORGOT USERNAME?</a><br>
+                
+                <input type="password" class="password" placeholder="password*" required><span class="eye">&#128065;</span><br>
+                <a href="#">FORGOT PASSWORD?</a><br>
+                
+                <div class="checkbox">
+                <input type="checkbox"><span>Remember Me</span>
+                </div>
+
+                <button type="submit" class="btn"><span>LOG IN</button>
+            </form>
+        </div>
+    </div>
+    <div class="footer">
+        <div class="about">About | Contact Us</div>
+        <div class="logo">
+            <img src="./icons/icons/logo used in footer.svg">
+            <span >  |   Copyright © 2024 </span>
+            <span >Zeus Systems Pvt. Ltd.</span>
+            <span > All rights reserved.</span>
+        </div>
+    </div>
+</body>
+</html>
