@@ -29,6 +29,9 @@ body{
     margin-top: auto;
     width: 100%;
     text-align: center;
+    
+}
+.logo{
     background: #E0E1E1;
 }
 .footer >div> img {
@@ -46,6 +49,10 @@ body{
 
 /* header */
 .header{
+    position: sticky;
+    top: 0px;
+    padding-inline: 28px;
+    z-index: 1;
     display: flex;
     background: #25313F url('./header\ pattern\ image.png') 0% 0% no-repeat padding-box;
     background-blend-mode: overlay;
@@ -189,6 +196,7 @@ li{
 .text{
     font-weight: bold;
     font-size: 20px;
+    padding-inline: 10px;
 }
 #text{
     font-size: 20px;
@@ -199,7 +207,7 @@ li{
     margin: 20px;
     height: 40px;
     grid-template-columns: 1fr 1fr;
-    border-bottom: 2px solid grey;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.12);
 }
 .show > span{
     color: #686868;
@@ -210,6 +218,7 @@ li{
 .select{
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     margin-top: -10px;
 }
 .select > label{
@@ -221,7 +230,6 @@ li{
     border-right: none;
     font: 16px/20px Quicksand;
     border-bottom: 2px solid rgba(0, 0, 0, 0.12);
-    margin-bottom: 30px;
     background: #EEEEEE;
 }
 .select > .material-symbols-outlined {
@@ -379,10 +387,10 @@ li{
         grid-template-columns: 1fr;
         justify-content: center;
     }
-    .select{
+    /* .select{
         display: flex;
         flex-direction: column;
-    }
+    } */
     .company > img{
         width: 150px;
     }
