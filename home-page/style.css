@@ -60,8 +60,8 @@ body{
     margin-right: auto;
 }
 .company>img{
-    height: 60px;
-    margin-top: 10px;
+    height: 40px;
+    margin-top: 20px;
 }
 .icons > .material-symbols-outlined{
     width: 40px;
@@ -91,6 +91,7 @@ body{
 }
 #m-icon{
     margin-top: 30px;
+    color: #3FD28B;
 
 }
 li{
@@ -170,6 +171,9 @@ li{
 }
 .course{
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .course-classes > .course[data-current]::before{
     background: #222222;
@@ -178,14 +182,14 @@ li{
     width: 100%;
     height: 4px;
     content: "";
-    bottom: calc(0px - 0.8em);
+    bottom: -18px;
 }
 .text{
     font-weight: bold;
-    font-size: xx-large;
+    font-size: 20px;
 }
 #text{
-    font-size: xx-large;
+    font-size: 20px;
 }
 
 .show {
@@ -196,24 +200,32 @@ li{
     border-bottom: 2px solid grey;
 }
 .show > span{
-        color: #686868;
+    color: #686868;
+    margin-top: 10px;
+    font: 12px/14px Quicksand;
+    font-weight: medium;
 }
 .select{
     display: flex;
     justify-content: flex-end;
+    margin-top: -10px;
+}
+.select > label{
+    font: 12px / 20px Quicksand;
 }
 .select > select{
     border-top: none;
     border-left: none;
     border-right: none;
+    font: 16px/20px Quicksand;
     border-bottom: 2px solid rgba(0, 0, 0, 0.12);
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     background: #EEEEEE;
 }
 .select > .material-symbols-outlined {
     display: grid;
     color: green;
-    font-size: x-large;
+    font-weight: x-large;
     margin-bottom: 5px;
 }
 
@@ -222,13 +234,14 @@ li{
 .content-card{
     margin: auto;
     background: white;
-    max-width: 500px;
+    max-width: 476px;
     display: grid;
     justify-content: center;
     place-items: center;
     position: relative;
-    padding: 10px;
+    /* padding: 10px; */
     margin-bottom: 50px;
+   
 }
 .card{ 
     background: white;
@@ -240,7 +253,7 @@ li{
 }
 .card > select{
     font: Quicksand;
-    font-size: medium;
+    font-weight: medium;
     color: #222222;
 }
 .info{
@@ -251,18 +264,18 @@ li{
     color: #222222;
     font: Quicksand;
     font-weight: bold;
-    font-size: bold;
+    font-weight: bold;
 }
 .info > span {
     font:12px/16px Quicksand;
-    font-size: medium;
+    font-weight: medium;
 }
 .info > span > span{
     color: #1F7A54;
 }
 .content{
     margin-right: 20px;
-    height: 200px;
+    /* height: 200px; */
 }
 .content > .card-content-head{
     display: grid;
@@ -276,7 +289,7 @@ li{
 }
 .card-content-head > h1 {
     font:16px/20px Quicksand;
-    font-size: medium;
+    font-weight: medium;
     display: flex;
     justify-content: flex-end;
     width: fit-content;
@@ -303,18 +316,27 @@ li{
     margin: 10px 20px 10px 20px;
     width: 100%;
 }
-.content-icons > span{
+/* .content-icons > span{
     color: #1F7A54;
     opacity: 1;
-}
+} */
 .content-icons > .material-symbols-outlined{
     display: flex;
     color: #1F7A54;
+    width: 18px;
+    height: 24px;
 }
 .content > span{
     display: grid;
     margin-bottom: 10px;
+    font-size: 12px;
     color: #666666;
+}
+#card{
+    display: grid;
+    margin-left: 10px;
+    margin-right: 10px;
+    grid-template-columns: repeat(auto-fill,minmax(496px,1fr));
 }
 .card-content-head > .material-symbols-outlined{
     color: #EEEEEE;
@@ -340,7 +362,7 @@ li{
   }
 
 
-@media only screen and (width<=1040px){
+@media only screen and (width<=786px){
     .drop-down{
         display: none;
     }
@@ -352,8 +374,15 @@ li{
         grid-template-columns: 1fr;
         justify-content: center;
     }
+    .select{
+        display: flex;
+        flex-direction: column;
+    }
+    .company > img{
+        width: 150px;
+    }
 }
-@media only screen and (width>1040px){
+@media only screen and (width>786px){
     #m-icon{
         display: none;
     }
@@ -361,8 +390,8 @@ li{
         /* display: none; */
         visibility: hidden;
     }
-    #card{
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+    .content-card{
+        height: 250px;   
     }
+    /*  */
 }
