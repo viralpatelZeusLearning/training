@@ -1,0 +1,422 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+@import url("https://db.onlinewebfonts.com/c/16697a764b01cdcc691b05f001046bc3?family=MuseoSans-500");
+
+$text-color:#222222;
+$icon-color:#1F7A54;
+$nav-text:#3FD28B;
+$card-bg:#FFFFFF;
+$star:#EDC900;
+$background:#EEEEEE;
+$font:Quicksand;
+@mixin icons{
+    width: 30px;
+    height: 50px;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+@mixin flex-temp($flex,$position){
+    display: $flex;
+    justify-content: $position;
+}
+
+body{
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    background: $background;
+    min-height: 100vh;
+    align-content: start;
+    font-family: $font;
+}
+.material-symbols-outlined {
+    font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24
+}
+select{
+    font: 16px/20px ;
+    font-family: $font;
+    font-weight: 500;
+    color: $text-color;
+    appearance: none;
+    background-image: url(/day4-task/home-page/icons/icons/arrow-down.svg);
+    background-repeat:no-repeat;
+    background-position:100% ;
+}
+/* footer */
+footer{
+    /* position: absolute; */
+    display: grid;
+    bottom: 0px;
+    margin-top: auto;
+    width: 100%;
+    text-align: center;
+    .logo{
+        background: #E0E1E1;
+        padding:10px;
+    }
+    img{
+        height: 40px;
+    }
+    span{
+        position: relative;
+    bottom: 12px;
+    }
+    .about{
+        position: relative;
+        bottom: 10px;
+        color: $icon-color;
+    }
+}
+/* header */
+header{
+    position: sticky;
+    top: 0px;
+    padding-inline: 28px;
+    z-index: 1;
+    display: flex;
+    background: #25313F url('./header\ pattern\ image.png') 0% 0% no-repeat padding-box;
+    background-blend-mode: overlay;
+    background-size: 100% 100%;
+    height: 80px;
+    border-top:none;
+    border-left: none;
+    border-right: none;
+    width: auto;
+    .company{
+        margin-right: auto;
+        & img{
+            height: 40px;
+            margin-top: 20px;
+        }
+    }
+    .menu{
+        display: flex;
+        padding: 0px;
+        gap: 15px;
+        & li{
+            margin: 16px;
+            height: 18px;
+            position: relative;
+            justify-content: space-between;
+            color: $nav-text;
+            list-style-type: none;
+            font-family: $font;
+        }
+        & li[data-current]{
+            color: $card-bg;
+            &::before{
+                background-color: $card-bg;
+                display: block;
+                position: absolute;
+                width: 100%;
+                height: 4px;
+                content: "";
+                bottom: calc(0px - 1.9em);
+            }
+        }
+    }
+    .icons{
+        display: flex;
+        justify-self: flex-end;
+        align-items: end;
+        gap: 15px;
+        justify-content: end;
+        & span{
+            position: relative;
+            width: 50px;
+            height: 60px;
+            margin-top: 10px;
+            color: $nav-text;
+            &:nth-child(1){
+                background-image: url('/day4-task/home-page/icons/icons/alerts.svg');
+                @include icons;
+                margin-bottom: 10px;
+            }
+            &:nth-child(2){
+                background-image: url('/day4-task/home-page/icons/icons/announcements.svg');
+                @include icons;
+                margin-bottom: 10px;
+            }
+            &::before{
+                position: absolute;
+                height: 10px;
+                width: 10px;
+                inline-size: block;
+                content: "2";
+                padding: 5px;
+                font-size: small;
+                background: #2A7FF3;
+                border-radius: 50%;
+                bottom: 25px;
+                left: 15px;
+                text-align: center;
+                font-family: $font;
+            }
+        }
+        & img{
+            width: 30px;
+            height: 30px;
+            margin-bottom: 20px;
+            margin-right: 10px;
+            background-color: #333;
+        }
+    }
+    #m-icon{
+        margin-top: 30px;
+        color: $nav-text;
+    }
+    .drop-down{
+        position: fixed;
+        z-index: 100;
+        top: 80px;
+        right: 0px;
+        text-align: start;
+        height: min-content;
+        color: $icon-color;
+        background: $card-bg;
+        &[data-state='closed']{
+            display: none;
+        }
+        &[data-state='open']{
+            display: block;
+        }
+    }
+    .menu-list li[data-current] {
+        color: $icon-color;
+        &::before{
+            background-color: $card-bg;
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            content: "";
+            bottom: calc(0px - 0.4em);
+        }
+    }
+}
+// course-div
+.course-classes{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    background: #8DDC97;
+    margin: 20px;
+    height: 64px;
+    text-align: center;
+    place-content: center;
+    .course{
+        position: relative;
+        @include flex-temp(flex,center);
+        align-items: center;
+        &[data-current]::before{
+            background: $text-color;
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            content: "";
+            bottom: -18px;
+        }
+    }
+    .text{
+        font-weight: bold;
+        font-size: 20px;
+        padding-inline: 10px;
+    }
+    #text{
+        font-size: 20px;
+    }
+}
+// show course and filter
+.show {
+    display: grid;
+    margin: 20px;
+    height: 40px;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+    span{
+        color: #686868;
+        margin-top: 5px;
+        font: 12px/14px ;
+        font-family: $font;
+        font-weight: 500;
+    }
+    .select-sort{
+        @include flex-temp(flex,flex-end);
+        align-items: center;
+        margin-top: -30px;
+        label{
+            font: 12px / 20px ;
+            font-family: $font;
+        }
+        select{
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            width: 180px;
+            background-color: $background;
+        }
+        .material-symbols-outlined {
+            background-image: url('/day4-task/home-page/icons/icons/sort.svg');
+            display: grid;
+            color: green;
+            @include icons;
+            margin-bottom: 5px;
+        }
+    }
+}
+// card
+main{
+    display: grid;
+    margin-left: 10px;
+    margin-right: 10px;
+    grid-template-columns: repeat(auto-fill,minmax(496px,1fr));
+    h3{
+        margin-bottom: -5px;
+        margin-top: 10px;
+        font:16px/20px ;
+        font-family: $font;
+        font-weight: 500;
+        @include flex-temp(flex,flex-end);
+        width: fit-content;
+        left: 50px;
+        margin-bottom: -2px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .content-card{
+        margin: auto;
+        background: $card-bg;
+        
+        display: grid;
+        justify-content: center;
+        place-items: center;
+        position: relative;
+        margin-bottom: 30px;
+        &[data-expired]::before{
+            content: "EXPIRED";
+            color: #D80000;
+            background-color: #FFE4E6;
+            position: absolute;
+            top:  0px;
+            left: 0px;
+            font-size: 10px;
+            font-family: "MuseoSans-500";
+            font-weight: 500;
+            padding: 4px;
+            border-radius: 2px;
+        }
+        .card{ 
+            background:$card-bg;
+            display: grid;
+            grid-template-columns: 1fr 4fr;
+            margin: 5px;
+            border-bottom:2px solid rgba(0, 0, 0, 0.12) ;
+            img{
+                margin: 10px;
+                display: grid;
+                width: 132px;
+                height: 157px;
+            }
+            .content{
+                margin-right: 20px;
+                /* height: 200px; */
+                .card-content-head{
+                    display: grid;
+                    margin-bottom: 5px;
+                    grid-template-columns: 9fr 1fr;
+                    &[data-starred] .material-symbols-outlined{
+                        color: $star;
+                        margin-top: 10px;
+                    }
+                    .material-symbols-outlined{
+                        color: $background;
+                        margin-top: 10px;
+                    }
+                }
+                .info{
+                    margin-bottom: 5px;
+                    font-family: $font;
+                    &span{
+                        font:12px/16px ;
+                        font-weight: 500;
+                    }
+                    .no{
+                        color: $text-color;
+                        font-weight: bold;
+                        font-weight: bold;
+                    }
+                }
+                select{
+                    border-top: 0px;
+                    border-left: 0px;
+                    border-right: 0px;
+                    margin-top: 10px;
+                    margin-bottom: 10px;
+                    border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+                    width: 100%;
+                }
+
+            }
+        }
+        .content-icons{
+            @include flex-temp(flex,space-around);
+            margin: 10px 20px 10px 20px;
+            width: 100%;
+            .material-symbols-outlined{
+                display: flex;
+                color: $icon-color;
+                width: 18px;
+                height: 24px;
+                &[data-unstared]{
+                    opacity: 0.4;
+                }
+            }
+        }
+    }
+}
+@media only screen and (width<=896px){
+    .drop-down{
+        display: none;
+    }
+    .menu > li {
+        display: none;
+    }
+    main{
+        // display: grid;
+        // grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .content-card{
+        max-width: 571px;
+    }
+    .company > img{
+        width: 150px;
+    }
+}
+
+@media only screen and (width>896px ){
+    #m-icon{
+        display: none;
+    }
+    .drop-down{
+        /* display: none; */
+        visibility: hidden;
+    }
+    .content-card{
+        max-width: 476px;
+        height: 246px;
+    }
+}
+@media only screen and (width<1015px){
+    .content-card{
+        max-width: 571px;
+    }
+}
