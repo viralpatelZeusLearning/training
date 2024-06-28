@@ -71,6 +71,201 @@ footer{
         color: $icon-color;
     }
 }
+// announcements
+.announce{
+    & img{
+        margin-top: 8px;
+    }
+}
+.anouncement{
+    opacity: 0;
+    transition: 0.5s ease-in-out;
+    background:#FFFFFF;
+    display:flex;
+    flex-direction:column;
+    margin:0px;
+    padding:0px;
+    width:315px;
+    position:absolute;
+    top:80px;
+    right:10%;
+    
+    &[data-state="open"],&[data-state="clicked"]{
+        opacity: 1;
+        max-height:582px;
+        transition: all 0.5s ease-in;
+    }
+    & .noti-btn{
+        display: flex;
+        & span{
+            font-size: 30px;
+            background: #FFFFEE;
+            color: gray;
+        }
+    }
+    & button{
+        height: 48px;
+        width: 158px;
+        border: none;
+        font-size: 14px;
+        font-family: $font;
+        text-transform: uppercase;
+        background: #FFFFFF;
+        color: $icon-color;
+        justify-content: center;
+        align-items: center;
+        box-shadow: #0000003D;
+    }
+    & .content{
+      margin:3px;
+      background: #FFFFEE 0% 0% no-repeat padding-box;
+      border-bottom: 1px solid $text-color;
+      padding-inline:10px;
+      & p{
+        font:14px/18px ;
+        font-family: $font;
+        font-weight: 600;
+        margin:2px 0px 2px 0px;
+        }
+      & div:nth-child(1){
+        font: 12px/18px ;
+        font-family: $font;
+        color: #222222;
+        display:flex;
+        justify-content:space-between;
+        
+        & span:nth-child(1){
+          &::before{
+          content:"PA:";
+          }
+        }
+        & span:nth-child(2){
+            background-image: url(../do_not_disturb_on.svg);
+            width: 20px;
+            height: 20px;
+            background-size: 100% 100%;
+        }
+        
+      }
+      & div:nth-child(3){
+        display:flex;
+        // justify-content:space-between;
+        & span{
+            font-size:12px;
+            font-family: $font;
+            &:nth-child(1){
+                background-image: url(../file.svg);
+                width: 20px;
+                height: 20px;
+                background-size: 100% 100%;
+            }
+            &:nth-child(3){
+                margin-left: auto;
+            }
+        }
+      }
+      &[data-state="true"]{
+        background: #FFFFFF;
+        & div:nth-child(1){
+            & span:nth-child(2){
+                background: url(../check_circle_.svg);
+            }
+        }
+      }
+    }
+  }
+//notify{
+.notify{
+        opacity: 0;
+        transition: 0.5s ease-in-out;
+        background:#FFFFFF;
+        display:flex;
+        flex-direction:column;
+        margin:0px;
+        padding:0px;
+        width:315px;
+        position:absolute;
+        top:80px;
+        right:10%;
+    &[data-state="open"],&[data-state="clicked"]{
+            opacity: 1;
+            max-height:582px;
+            transition: all 0.5s ease-in;
+    }
+    & .noti-btn{
+            display: flex;
+        & span{
+                font-size: 30px;
+                background: #FFFFEE;
+                color: gray;
+            }
+        }
+    & button{
+            height: 48px;
+            width: 158px;
+            border: none;
+            font-size: 14px;
+            font-family: $font;
+            text-transform: uppercase;
+            background: #FFFFFF;
+            color: $icon-color;
+            justify-content: center;
+            align-items: center;
+            box-shadow: #0000003D;
+        }
+    & .content{
+          margin:3px;
+          background: #FFFFEE 0% 0% no-repeat padding-box;
+          border-bottom: 1px solid $text-color;
+          padding-inline:10px;
+          &[data-state="true"]{
+            background: #FFFFFF;
+            & div:nth-child(1){
+                & span:nth-child(2){
+                    background: url(../check_circle_.svg);
+                }
+            }
+          }
+        & p{
+            font:14px/18px ;
+            font-family: $font;
+            font-weight: 600;
+            margin:2px 0px 2px 0px;
+            }
+        & div:nth-child(1){
+            font: 12px/18px ;
+            font-family: $font;
+            color: #222222;
+            display:flex;
+            justify-content:space-between;
+            
+        & span:nth-child(1){
+            &::before{
+              content:"PA:";
+              }
+            }
+        & span:nth-child(2){
+                background-image: url(../do_not_disturb_on.svg);
+                width: 20px;
+                height: 20px;
+                background-size: 100% 100%;
+            }
+            
+          }
+        & div:nth-child(3){
+            display:flex;
+            // justify-content:space-between;
+        & span{
+                font-size:12px;
+                font-family: $font;
+            &:nth-child(1){
+                    margin-left: auto;
+                }
+            }
+          }
+        
+        }
+      }
 /* header */
 header{
     position: sticky;
@@ -125,21 +320,21 @@ header{
         align-items: end;
         gap: 15px;
         justify-content: end;
-        & span{
+        & > span{
             position: relative;
             width: 50px;
             height: 60px;
             margin-top: 10px;
             color: $nav-text;
             &:nth-child(1){
-                background-image: url('/day4-task/home-page/icons/icons/alerts.svg');
+                // background-image: url('/day4-task/home-page/icons/icons/alerts.svg');
                 @include icons;
-                margin-bottom: 10px;
+                margin-top: 10px;
             }
             &:nth-child(2){
-                background-image: url('/day4-task/home-page/icons/icons/announcements.svg');
+                // background-image: url('/day4-task/home-page/icons/icons/announcements.svg');
                 @include icons;
-                margin-bottom: 10px;
+                margin-top: 10px;
             }
             &::before{
                 position: absolute;
@@ -151,7 +346,7 @@ header{
                 font-size: small;
                 background: #2A7FF3;
                 border-radius: 50%;
-                bottom: 25px;
+                bottom: 35px;
                 left: 15px;
                 text-align: center;
                 font-family: $font;
@@ -160,7 +355,7 @@ header{
         & img{
             width: 30px;
             height: 30px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             margin-right: 10px;
             background-color: #333;
         }

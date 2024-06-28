@@ -22,12 +22,72 @@
             <li>ADMIN</li>
         </ul>
         <div class="icons">
-            <span class="material-symbols-outlined">
-                <!-- notifications_active -->
+            
+            <span class="notifyicon">
+                <img src="./icons/icons/alerts.svg">
             </span>
-            <span class="material-symbols-outlined">
-                
+                <div class='notify' data-state="closed">
+                        <div class='content'>
+                        <div>
+                            <span>wilson kumar</span>
+                            <span></span>
+                        </div>
+                        <p>No class held</p>
+                        <div>
+                            <!-- <span></span>
+                            <span>2 files</span> -->
+                            <span>15-Sep-2018 at 07:21 pm</span>
+                        </div>
+                        </div>
+                        <div class='content' data-state="true">
+                        <div>
+                            <span>wilson kumar</span>
+                            <span></span>
+                        </div>
+                        <p>No class held</p>
+                        <div>
+                            <span></span>
+                            <!-- <span>2 files</span> -->
+                            <span>15-Sep-2018 at 07:21 pm</span>
+                        </div>
+                        </div>
+                    </div>  
+            
+            <span class="announce">
+                <img src="./icons/icons/announcements.svg">
             </span>
+            <div class='anouncement' data-state="closed">
+                    <div class='content' data-state="false">
+                        <div>
+                            <span>wilson kumar</span>
+                            <span></span>
+                        </div>
+                        <p>No classes will be held on 21st Nov</p>
+                        <div>
+                            <span></span>
+                            <span>2 files are attached</span>
+                            <span>15-Sep-2018 at 07:21 pm</span>                           
+                        </div>
+                    </div>
+                    <div class='content' data-state="true">
+                        <div>
+                            <span>wilson kumar</span>
+                            <span></span>
+                        </div>
+                        <p>No classes will be held on 21st Nov</p>
+                        <div>
+                            <span></span>
+                            <span>2 files are attached</span>
+                            <span>15-Sep-2018 at 07:21 pm</span>
+                        </div>
+                    </div>
+                    <div class="noti-btn">
+                        <button>show all</button>
+                        <span>|</span>
+                        <button>create new</button>
+                    </div>
+            </div>  
+            
             <img src="https://dayproof.com.au/wp-content/uploads/sites/5/2023/10/testimonial-1.png">
         </div>
         <span class="material-symbols-outlined" id="m-icon">
@@ -96,15 +156,17 @@
         </div>
     </div>
     <main>
-            <div class='content-card'>
+            <!-- <div class='content-card'>
                 <div class='card'>
                     <div class="image">
                         <img src="images/images/imageMask.png" alt="">
                     </div>
                     <div class="content">
                         <div class='card-content-head' data-starred>
-                            <h3>Acceleration</h3>
-                            <span class="material-symbols-outlined">star</span>
+                            <h3 class="head">Acceleration</h3>
+                            <span class="material-symbols-outlined">
+                                star
+                            </span>
                         </div>
                         <div class="info">
                             <span>Physics </span>
@@ -127,15 +189,17 @@
                 </div>
                 <div class='content-icons'>
                     <span class="material-symbols-outlined">
-                        visibility
+                        <img src="../home-page/icons/icons/preview.svg">
                     </span>
                     <span class="material-symbols-outlined">
-                        event
+                        <img src="../home-page/icons/icons/manage course.svg">
                     </span>
                     <span class="material-symbols-outlined">
-                        pages
+                        <img src="../home-page/icons/icons/grade submissions.svg">
                     </span>
-                    <span class="material-symbols-outlined chart-icon">insert_chart</span>
+                    <span class="material-symbols-outlined">
+                        <img src="../home-page/icons/icons/reports.svg">
+                    </span>
                 </div>
             </div>
             <div class='content-card'>
@@ -168,15 +232,17 @@
                 </div>
                 <div class='content-icons'>
                     <span class="material-symbols-outlined">
-                        visibility
+                        <img src="../home-page/icons/icons/preview.svg">
                     </span>
-                    <span class="material-symbols-outlined" data-unstared>
-                        event
+                    <span class="material-symbols-outlined" data-unstared="">
+                        <img src="../home-page/icons/icons/manage course.svg">
                     </span>
-                    <span class="material-symbols-outlined" data-unstared>
-                        pages
+                    <span class="material-symbols-outlined" data-unstared="">
+                        <img src="../home-page/icons/icons/grade submissions.svg">
                     </span>
-                    <span class="material-symbols-outlined chart-icon">insert_chart</span>
+                    <span class="material-symbols-outlined chart-icon">
+                        <img src="../home-page/icons/icons/reports.svg">
+                    </span>
                 </div>
             </div>
             <div class='content-card'>
@@ -210,15 +276,17 @@
                 </div>
                 <div class='content-icons'>
                     <span class="material-symbols-outlined">
-                        visibility
+                        <img src="../home-page/icons/icons/preview.svg">
                     </span>
                     <span class="material-symbols-outlined" data-unstared>
-                        event
+                        <img src="../home-page/icons/icons/manage course.svg">
                     </span>
-                    <span class="material-symbols-outlined" data-unstared>
-                        pages
+                    <span class="material-symbols-outlined" data-unstared="">
+                        <img src="../home-page/icons/icons/grade submissions.svg">
                     </span>
-                    <span class="material-symbols-outlined chart-icon">insert_chart</span>
+                    <span class="material-symbols-outlined chart-icon">
+                        <img src="../home-page/icons/icons/reports.svg">
+                    </span>
                 </div>
             </div>
             <div class='content-card' data-expired>
@@ -236,14 +304,6 @@
                         <span>|</span>
                         <span>Grade 8 <span>+3</span></span>
                         </div>
-                        <!-- <div class="info">
-                        <span class="info-no">2</span>
-                        <span>Units</span>
-                        <span class="info-no">15 </span>
-                        <span>Lessons</span>
-                        <span class="info-no">20 </span>
-                        <span>Topics</span>
-                        </div> -->
                         <select name="">
                             <option value="">Mr Frank's Class</option>
                         </select><br>
@@ -252,17 +312,19 @@
                 </div>
                 <div class='content-icons'>
                     <span class="material-symbols-outlined">
-                        visibility
+                        <img src="../home-page/icons/icons/preview.svg">
                     </span>
                     <span class="material-symbols-outlined">
-                        event
+                        <img src="../home-page/icons/icons/manage course.svg">
                     </span>
                     <span class="material-symbols-outlined">
-                        pages
+                        <img src="../home-page/icons/icons/grade submissions.svg">
                     </span>
-                    <span class="material-symbols-outlined chart-icon">insert_chart</span>
+                    <span class="material-symbols-outlined chart-icon">
+                        <img src="../home-page/icons/icons/reports.svg">
+                    </span>
                 </div>
-            </div>
+            </div> -->
         
     </main>
     <footer>
@@ -274,6 +336,6 @@
             <span > All rights reserved.</span>
         </div>
     </footer>
-    <script src="index.js"></script>
+    <script src="index.js" type="module"></script>
 </body>
 </html>
