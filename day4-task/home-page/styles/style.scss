@@ -85,18 +85,37 @@ footer{
     flex-direction:column;
     margin:0px;
     padding:0px;
-    width:315px;
+    width: 0px;
+    // width:315px;
     position:absolute;
     top:80px;
     right:10%;
-    
-    &[data-state="open"],&[data-state="clicked"]{
+    max-height: 534px;
+    overflow-y: scroll;
+    &::-webkit-scrollbar{
+        width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.38);
+        border-radius: 2px;
+        width: 4px;
+        // transform: translateX(-20px);
+    }
+    &::-webkit-scrollbar-track {
+        background: white;
+    }
+    &[data-state="open"],&[data-state="clicked"],&:hover{
         opacity: 1;
-        max-height:582px;
-        transition: all 0.5s ease-in;
+        max-height: 534px;
+        width: 315px;
+        transition: all 0.5s ease-out;
+        
     }
     & .noti-btn{
         display: flex;
+        position: fixed;
+        top: 610px;
+        box-shadow: 0px 1px 6px #0000003D;
         & span{
             font-size: 30px;
             background: #FFFFEE;
@@ -105,7 +124,7 @@ footer{
     }
     & button{
         height: 48px;
-        width: 158px;
+        width: 155px;
         border: none;
         font-size: 14px;
         font-family: $font;
@@ -120,11 +139,19 @@ footer{
       margin:3px;
       background: #FFFFEE 0% 0% no-repeat padding-box;
       border-bottom: 1px solid $text-color;
+      & div {
+        display: flex;
+      }
+      & .timestamp{
+        margin-left: auto;
+        font-size: 12px;
+        font-family: $font;
+      }
       padding-inline:10px;
       & p{
         font:14px/18px ;
         font-family: $font;
-        font-weight: 600;
+        font-weight: 500;
         margin:2px 0px 2px 0px;
         }
       & div:nth-child(1){
@@ -153,13 +180,13 @@ footer{
         & span{
             font-size:12px;
             font-family: $font;
-            &:nth-child(1){
+            &.attachmentlogo{
                 background-image: url(../file.svg);
                 width: 20px;
                 height: 20px;
                 background-size: 100% 100%;
             }
-            &:nth-child(3){
+            &.timestamp{
                 margin-left: auto;
             }
         }
@@ -175,7 +202,7 @@ footer{
     }
   }
 //notify{
-.notify{
+    .notify{
         opacity: 0;
         transition: 0.5s ease-in-out;
         background:#FFFFFF;
@@ -183,26 +210,44 @@ footer{
         flex-direction:column;
         margin:0px;
         padding:0px;
-        width:315px;
+        width: 0px;
         position:absolute;
         top:80px;
-        right:10%;
-    &[data-state="open"],&[data-state="clicked"]{
+        right:20%;
+        max-height: 534px;
+        overflow-y: scroll;
+        &::-webkit-scrollbar{
+            width: 4px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.38);
+            border-radius: 2px;
+            width: 4px;
+            // transform: translateX(-20px);
+        }
+        &::-webkit-scrollbar-track {
+            background: white;
+        }
+        &[data-state="open"],&[data-state="clicked"],&:hover{
             opacity: 1;
-            max-height:582px;
+            width:315px;
+            max-height: 534px;
             transition: all 0.5s ease-in;
-    }
-    & .noti-btn{
+            
+        }
+        & .noti-btn{
             display: flex;
-        & span{
+            position: fixed;
+            top: 610px;
+            & span{
                 font-size: 30px;
                 background: #FFFFEE;
                 color: gray;
             }
         }
-    & button{
+        & button{
             height: 48px;
-            width: 158px;
+            width: 310px;
             border: none;
             font-size: 14px;
             font-family: $font;
@@ -211,13 +256,58 @@ footer{
             color: $icon-color;
             justify-content: center;
             align-items: center;
-            box-shadow: #0000003D;
+            box-shadow: 0px 1px 6px #0000003D;
         }
-    & .content{
+        & .content{
           margin:3px;
           background: #FFFFEE 0% 0% no-repeat padding-box;
           border-bottom: 1px solid $text-color;
           padding-inline:10px;
+          & div {
+            display: flex;
+          }
+          & .timestamp{
+            margin-left: auto;
+            font-size: 12px;
+            font-family: $font;
+          }
+          & p{
+            font:14px/18px ;
+            font-family: $font;
+            font-weight: 500;
+            margin:2px 0px 2px 0px;
+            }
+          & div:nth-child(1){
+            font: 12px/18px ;
+            font-family: $font;
+            color: #222222;
+            display:flex;
+            justify-content:space-between;
+            
+            & span:nth-child(1){
+              &::before{
+              content:"PA:";
+              }
+            }
+            & span:nth-child(2){
+                background-image: url(../do_not_disturb_on.svg);
+                width: 20px;
+                height: 20px;
+                background-size: 100% 100%;
+            }
+            
+          }
+          & div:nth-child(3){
+            display:flex;
+            // justify-content:space-between;
+            & span{
+                font-size:12px;
+                font-family: $font;
+                &:nth-child(3){
+                    margin-left: auto;
+                }
+            }
+          }
           &[data-state="true"]{
             background: #FFFFFF;
             & div:nth-child(1){
@@ -226,46 +316,9 @@ footer{
                 }
             }
           }
-        & p{
-            font:14px/18px ;
-            font-family: $font;
-            font-weight: 600;
-            margin:2px 0px 2px 0px;
-            }
-        & div:nth-child(1){
-            font: 12px/18px ;
-            font-family: $font;
-            color: #222222;
-            display:flex;
-            justify-content:space-between;
-            
-        & span:nth-child(1){
-            &::before{
-              content:"PA:";
-              }
-            }
-        & span:nth-child(2){
-                background-image: url(../do_not_disturb_on.svg);
-                width: 20px;
-                height: 20px;
-                background-size: 100% 100%;
-            }
-            
-          }
-        & div:nth-child(3){
-            display:flex;
-            // justify-content:space-between;
-        & span{
-                font-size:12px;
-                font-family: $font;
-            &:nth-child(1){
-                    margin-left: auto;
-                }
-            }
-          }
-        
         }
       }
+
 /* header */
 header{
     position: sticky;
@@ -370,7 +423,7 @@ header{
         top: 80px;
         right: 0px;
         text-align: start;
-        width: 280px;
+        width: 0px;
         height: max-content;
         color: $icon-color;
         background: $card-bg;
@@ -378,13 +431,15 @@ header{
         
         &[data-state='closed']{
             opacity: 0;
-            transition: 0.3s ease-out;
+            width: 0px;
+            transition: 0.5s ease-out ;
         }
-        &[data-state='open'], &[data-state='clicked']{
+        &[data-state='open'], &[data-state='clicked'],&:hover{
             display: block;
             opacity: 1;
+            width: 280px;
             margin-right: 20px;
-            transition: all 0.5s ease-in-out;
+            transition: all 0.8s ease-in-out ;
             
         }
         & ul{

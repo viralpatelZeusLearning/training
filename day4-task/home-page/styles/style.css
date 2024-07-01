@@ -65,18 +65,35 @@ footer .about {
   flex-direction: column;
   margin: 0px;
   padding: 0px;
-  width: 315px;
+  width: 0px;
   position: absolute;
   top: 80px;
   right: 10%;
+  max-height: 534px;
+  overflow-y: scroll;
 }
-.anouncement[data-state=open], .anouncement[data-state=clicked] {
+.anouncement::-webkit-scrollbar {
+  width: 4px;
+}
+.anouncement::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.38);
+  border-radius: 2px;
+  width: 4px;
+}
+.anouncement::-webkit-scrollbar-track {
+  background: white;
+}
+.anouncement[data-state=open], .anouncement[data-state=clicked], .anouncement:hover {
   opacity: 1;
-  max-height: 582px;
-  transition: all 0.5s ease-in;
+  max-height: 534px;
+  width: 315px;
+  transition: all 0.5s ease-out;
 }
 .anouncement .noti-btn {
   display: flex;
+  position: fixed;
+  top: 610px;
+  box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.2392156863);
 }
 .anouncement .noti-btn span {
   font-size: 30px;
@@ -85,7 +102,7 @@ footer .about {
 }
 .anouncement button {
   height: 48px;
-  width: 158px;
+  width: 155px;
   border: none;
   font-size: 14px;
   font-family: Quicksand;
@@ -102,10 +119,18 @@ footer .about {
   border-bottom: 1px solid #222222;
   padding-inline: 10px;
 }
+.anouncement .content div {
+  display: flex;
+}
+.anouncement .content .timestamp {
+  margin-left: auto;
+  font-size: 12px;
+  font-family: Quicksand;
+}
 .anouncement .content p {
   font: 14px/18px;
   font-family: Quicksand;
-  font-weight: 600;
+  font-weight: 500;
   margin: 2px 0px 2px 0px;
 }
 .anouncement .content div:nth-child(1) {
@@ -131,13 +156,13 @@ footer .about {
   font-size: 12px;
   font-family: Quicksand;
 }
-.anouncement .content div:nth-child(3) span:nth-child(1) {
+.anouncement .content div:nth-child(3) span.attachmentlogo {
   background-image: url(../file.svg);
   width: 20px;
   height: 20px;
   background-size: 100% 100%;
 }
-.anouncement .content div:nth-child(3) span:nth-child(3) {
+.anouncement .content div:nth-child(3) span.timestamp {
   margin-left: auto;
 }
 .anouncement .content[data-state=true] {
@@ -155,18 +180,34 @@ footer .about {
   flex-direction: column;
   margin: 0px;
   padding: 0px;
-  width: 315px;
+  width: 0px;
   position: absolute;
   top: 80px;
-  right: 10%;
+  right: 20%;
+  max-height: 534px;
+  overflow-y: scroll;
 }
-.notify[data-state=open], .notify[data-state=clicked] {
+.notify::-webkit-scrollbar {
+  width: 4px;
+}
+.notify::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.38);
+  border-radius: 2px;
+  width: 4px;
+}
+.notify::-webkit-scrollbar-track {
+  background: white;
+}
+.notify[data-state=open], .notify[data-state=clicked], .notify:hover {
   opacity: 1;
-  max-height: 582px;
+  width: 315px;
+  max-height: 534px;
   transition: all 0.5s ease-in;
 }
 .notify .noti-btn {
   display: flex;
+  position: fixed;
+  top: 610px;
 }
 .notify .noti-btn span {
   font-size: 30px;
@@ -175,7 +216,7 @@ footer .about {
 }
 .notify button {
   height: 48px;
-  width: 158px;
+  width: 310px;
   border: none;
   font-size: 14px;
   font-family: Quicksand;
@@ -184,7 +225,7 @@ footer .about {
   color: #1F7A54;
   justify-content: center;
   align-items: center;
-  box-shadow: rgba(0, 0, 0, 0.2392156863);
+  box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.2392156863);
 }
 .notify .content {
   margin: 3px;
@@ -192,16 +233,18 @@ footer .about {
   border-bottom: 1px solid #222222;
   padding-inline: 10px;
 }
-.notify .content[data-state=true] {
-  background: #FFFFFF;
+.notify .content div {
+  display: flex;
 }
-.notify .content[data-state=true] div:nth-child(1) span:nth-child(2) {
-  background: url(../check_circle_.svg);
+.notify .content .timestamp {
+  margin-left: auto;
+  font-size: 12px;
+  font-family: Quicksand;
 }
 .notify .content p {
   font: 14px/18px;
   font-family: Quicksand;
-  font-weight: 600;
+  font-weight: 500;
   margin: 2px 0px 2px 0px;
 }
 .notify .content div:nth-child(1) {
@@ -227,8 +270,14 @@ footer .about {
   font-size: 12px;
   font-family: Quicksand;
 }
-.notify .content div:nth-child(3) span:nth-child(1) {
+.notify .content div:nth-child(3) span:nth-child(3) {
   margin-left: auto;
+}
+.notify .content[data-state=true] {
+  background: #FFFFFF;
+}
+.notify .content[data-state=true] div:nth-child(1) span:nth-child(2) {
+  background: url(../check_circle_.svg);
 }
 
 /* header */
@@ -340,7 +389,7 @@ header .drop-down {
   top: 80px;
   right: 0px;
   text-align: start;
-  width: 280px;
+  width: 0px;
   height: -moz-max-content;
   height: max-content;
   color: #1F7A54;
@@ -349,13 +398,15 @@ header .drop-down {
 }
 header .drop-down[data-state=closed] {
   opacity: 0;
-  transition: 0.3s ease-out;
+  width: 0px;
+  transition: 0.5s ease-out;
 }
-header .drop-down[data-state=open], header .drop-down[data-state=clicked] {
+header .drop-down[data-state=open], header .drop-down[data-state=clicked], header .drop-down:hover {
   display: block;
   opacity: 1;
+  width: 280px;
   margin-right: 20px;
-  transition: all 0.5s ease-in-out;
+  transition: all 0.8s ease-in-out;
 }
 header .drop-down ul {
   padding-inline-start: 0px;

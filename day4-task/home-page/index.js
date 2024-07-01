@@ -76,7 +76,7 @@ announceicon.addEventListener("mouseleave",()=>{
 var notifyicon = document.querySelector(".notifyicon")
 var notifylist = document.querySelector(".notify")
 notifyicon.addEventListener("click",()=>{
-    notifylist.dataset["state"] = announcementlist.dataset["state"]!=="clicked" ? "clicked" : "closed"
+    notifylist.dataset["state"] = notifylist.dataset["state"]!=="clicked" ? "clicked" : "closed"
 })
 notifyicon.addEventListener("mouseover" ,()=>{
     if(notifylist.dataset["state"]==="closed"){
@@ -90,16 +90,17 @@ notifyicon.addEventListener("mouseleave",()=>{
 })
 
 import c from './data.json' with {type:"json"}
-console.log(c);
+// console.log(c);
+//          course data from json function
 function createCourse(c){
-    // let card = `<div class="card" ${c.favourite ? "data-starred" : ""} ${c.preview ? "data-visible" : ""} ${c.manage ? "data-calendar" : ""} ${c.grade : "data-shop" : ""}  ${ c.report ? "data-chart" : ""}>`;
+    
     let contentCard = document.createElement("div");
     contentCard.classList.add("content-card")
-    // if(c.preview){contentCard.dataset["visible"]=true}
-    // if(c.manage){contentCard.dataset["calendar"]=true}
-    // if(c.grade){contentCard.dataset["shop"]=true}
-    // if(c.report){contentCard.dataset["chart"]=true}
-  
+    
+    if (c.expired) {
+        contentCard.dataset["expired"] = true;
+    }
+
     let card = document.createElement("div");
     card.classList.add("card")
   
@@ -164,7 +165,7 @@ function createCourse(c){
       let studentsSchedule = document.createElement("span")
       // studentsSchedule.classList.add("students-schedule")
       if(c.numberOfStudents){studentsSchedule.innerHTML = studentsSchedule.innerHTML + `${c.numberOfStudents} students`}
-    //   if(c.numberOfStudents && c.time){studentsSchedule.innerHTML = studentsSchedule.innerHTML + `<span>&#124;</span>`}
+      if(c.numberOfStudents && c.time){studentsSchedule.innerHTML = studentsSchedule.innerHTML + `<span>&#124;</span>`}
       if(c.time){studentsSchedule.innerHTML = studentsSchedule.innerHTML + `${c.time.startDate} - ${c.time.endDate}`}
      
       content.appendChild(studentsSchedule)
@@ -173,30 +174,87 @@ function createCourse(c){
     
     let interactables = document.createElement("div")
     interactables.classList.add("content-icons")
-    interactables.innerHTML = `<span class="material-symbols-outlined">
-                        <img src="../home-page/icons/icons/preview.svg">
-                    </span>
-                    <span class="material-symbols-outlined" data-unstared="">
-                        <img src="../home-page/icons/icons/manage course.svg">
-                    </span>
-                    <span class="material-symbols-outlined" data-unstared="">
-                        <img src="../home-page/icons/icons/grade submissions.svg">
-                    </span>
-                    <span class="material-symbols-outlined chart-icon">
-                        <img src="../home-page/icons/icons/reports.svg">
-                    </span>`
     if(c.preview){contentCard.dataset["visible"]=true}
     if(c.manage){contentCard.dataset["calendar"]=true}
     if(c.grade){contentCard.dataset["shop"]=true}
     if(c.report){contentCard.dataset["chart"]=true}
+    interactables.innerHTML = `<span class="material-symbols-outlined" ${c.preview ? '' : 'data-unstared'}>
+                        <img src="../home-page/icons/icons/preview.svg">
+                    </span>
+                    <span class="material-symbols-outlined" ${c.manage ? '' : 'data-unstared'}>
+                        <img src="../home-page/icons/icons/manage course.svg">
+                    </span>
+                    <span class="material-symbols-outlined" ${c.grade ? '' : 'data-unstared'}>
+                        <img src="../home-page/icons/icons/grade submissions.svg">  
+                    </span>
+                    <span class="material-symbols-outlined chart-icon" ${c.report ? '' : 'data-unstared'}>
+                        <img src="../home-page/icons/icons/reports.svg">
+                    </span>`
+    
     contentCard.appendChild(card)
     contentCard.appendChild(interactables)
    return contentCard;
-  }
-  c.course.forEach( (x)=>{
+}
+c.course.forEach( (x)=>{
     // console.log(x);
     document.querySelector("main").appendChild(createCourse(x))
-  })
+})
 //   document.body.appendChild(createCourse(c.course[0]));
 // document.body.appendChild(createCourse(course));
 // console.log(createCourse(course))
+
+//          announcement function
+
+function createAnnouncementCard(c) {
+    let container = `
+      <div class="content" data-state=${c.new}><div><span>${
+      c.name
+    }</span><span></span></div><p>${c.content}</p>`;
+    if (c.course) {
+      container = container + `<span>Course: ${c.course}</span>`;
+    }
+    container = container + `<div>`;
+    if (c.attachments) {
+      container =
+        container +
+        `<span class="attachmentlogo"></span><span>${c.attachments} files attached</span>`;
+    }
+    container = container +`<span class="timestamp">${c.timestamp}</span></div>`
+  
+    let temp = document.createElement("div");
+    temp.innerHTML = container;
+    return temp.querySelector("div");
+}
+console.log(createAnnouncementCard(c.announcements[0]))
+// document.querySelector(".anouncement").appendChild(createAnnouncementCard(c))
+c.announcements.forEach((x)=>{
+    document.querySelector(".anouncement").appendChild(createAnnouncementCard(x))
+})
+
+//          Notification function
+
+function createNotificationCard(c) {
+    let container = `
+      <div class="content" data-state=${c.new}><div><span>${
+      c.name
+    }</span><span></span></div><p>${c.content}</p>`;
+    if (c.course) {
+      container = container + `<span>Course: ${c.course}</span>`;
+    }
+    container = container + `<div>`;
+    if (c.attachments) {
+      container =
+        container +
+        `<span class="attachments">${c.attachments}</span>`;
+    }
+    container = container + `<span class="timestamp">${c.timestamp}</span></div>`
+  
+    let temp = document.createElement("div");
+    temp.innerHTML = container;
+    return temp.querySelector("div");
+}
+console.log(createNotificationCard(c.notifications[0]))
+// document.querySelector(".anouncement").appendChild(createAnnouncementCard(c))
+c.notifications.forEach((x)=>{
+    document.querySelector(".notify").appendChild(createNotificationCard(x))
+})
