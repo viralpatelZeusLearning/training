@@ -109,7 +109,10 @@ footer{
         max-height: 534px;
         width: 315px;
         transition: all 0.5s ease-out;
-        
+        & button{
+            width: 155px;
+            display: block;
+        }
     }
     & .noti-btn{
         display: flex;
@@ -123,8 +126,9 @@ footer{
         }
     }
     & button{
+        display: none;
         height: 48px;
-        width: 155px;
+        width: 0px;
         border: none;
         font-size: 14px;
         font-family: $font;
@@ -214,6 +218,9 @@ footer{
         position:absolute;
         top:80px;
         right:20%;
+        @media (width<400px){
+            right:10%;
+        }
         max-height: 534px;
         overflow-y: scroll;
         &::-webkit-scrollbar{
@@ -233,7 +240,10 @@ footer{
             width:315px;
             max-height: 534px;
             transition: all 0.5s ease-in;
-            
+            & button{
+                width: 310px;
+                display: block;
+            }
         }
         & .noti-btn{
             display: flex;
@@ -247,7 +257,8 @@ footer{
         }
         & button{
             height: 48px;
-            width: 310px;
+            width: 0px;
+            display: none;
             border: none;
             font-size: 14px;
             font-family: $font;

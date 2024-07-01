@@ -89,6 +89,10 @@ footer .about {
   width: 315px;
   transition: all 0.5s ease-out;
 }
+.anouncement[data-state=open] button, .anouncement[data-state=clicked] button, .anouncement:hover button {
+  width: 155px;
+  display: block;
+}
 .anouncement .noti-btn {
   display: flex;
   position: fixed;
@@ -101,8 +105,9 @@ footer .about {
   color: gray;
 }
 .anouncement button {
+  display: none;
   height: 48px;
-  width: 155px;
+  width: 0px;
   border: none;
   font-size: 14px;
   font-family: Quicksand;
@@ -187,6 +192,11 @@ footer .about {
   max-height: 534px;
   overflow-y: scroll;
 }
+@media (width < 400px) {
+  .notify {
+    right: 10%;
+  }
+}
 .notify::-webkit-scrollbar {
   width: 4px;
 }
@@ -204,6 +214,10 @@ footer .about {
   max-height: 534px;
   transition: all 0.5s ease-in;
 }
+.notify[data-state=open] button, .notify[data-state=clicked] button, .notify:hover button {
+  width: 310px;
+  display: block;
+}
 .notify .noti-btn {
   display: flex;
   position: fixed;
@@ -216,7 +230,8 @@ footer .about {
 }
 .notify button {
   height: 48px;
-  width: 310px;
+  width: 0px;
+  display: none;
   border: none;
   font-size: 14px;
   font-family: Quicksand;
