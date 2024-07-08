@@ -164,7 +164,7 @@ const rows = [
     }
 ];
 
-const columnArr = [120,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100];
+const columnArr = [150,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100];
 canvaref.width = dataColumns.length * columnWidth;
 canvaref.height = rows.length * rowHeight;
 ctx = canvaref.getContext("2d");
@@ -199,22 +199,23 @@ async function table() {
     }
 
     //cell data
+    var sum = 0;
     for (let i = 0; i < dataColumns.length; i++) {
       for (let j = 0; j < rows.length; j++) {
         // console.log(i,j,rows[j][dataColumns[i]]);
         ctx.beginPath();
         ctx.save();
-        ctx.rect(i * columnWidth, (j + 1) * rowHeight, columnWidth, rowHeight);
+        ctx.rect(sum, (j + 1) * rowHeight, columnArr[i], rowHeight);
         ctx.clip();
         ctx.font = `${15}px Arial`;
         // console.log(selectedCell);
         if(selectedCell && selectedCell.col === i && selectedCell.row===j){
           // console.log(inputref);
           inputref.style.display="block";
-          inputref.style.left=((columnWidth*i)+8)+"px";
+          inputref.style.left=((sum)+8)+"px";
           inputref.style.top=((rowHeight*(j+1))+8) +"px";
           inputref.value=rows[j][dataColumns[i]];
-          inputref.style.width=columnWidth + "px";
+          inputref.style.width=columnArr[i] + "px";
           inputref.style.height=rowHeight +"px";  
         }
         
@@ -222,7 +223,7 @@ async function table() {
         else if (starting && ending && starting.row<=j && j<=ending.row && starting.col<=i && i<=ending.col){
           // console.log("seklsdedf");
           ctx.fillStyle="skyblue";
-          ctx.fillRect(i*columnWidth,(j+1)*rowHeight,columnWidth,rowHeight);
+          ctx.fillRect(sum,(j+1)*rowHeight,columnArr[i],rowHeight);
           selectedCell=null;
           // inputref.style.display='none';
         }
@@ -230,21 +231,23 @@ async function table() {
         else if (starting && ending && starting.row>=j && j>=ending.row && starting.col>=i && i>=ending.col){
           // console.log("61216216262");
           ctx.fillStyle="skyblue";
-          ctx.fillRect(i*columnWidth,(j+1)*rowHeight,columnWidth,rowHeight);
+          ctx.fillRect(sum,(j+1)*rowHeight,columnArr[i],rowHeight);
           selectedCell=null;
           // inputref.style.display='none';
         }
         ctx.fillStyle="black"
         ctx.fillText(
           rows[j][dataColumns[i]],
-          i * columnWidth + 10,
+          sum + 10,
           (j + 2) * rowHeight - 10
         );
-        ctx.moveTo(i * columnWidth, 0);
-        ctx.lineTo(i * columnWidth, canvaref.height);
+        ctx.moveTo(sum, 0);
+        ctx.lineTo(sum, canvaref.height);
         ctx.stroke();
         ctx.restore();
       }
+      sum += (columnArr[i]);
+      console.log(sum);
     }
     ctx.save();
 }
