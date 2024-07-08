@@ -1,0 +1,22 @@
+.table{
+    position: relative;
+    top: 50px;
+    padding: 10px;
+}
+#myCanvas{
+    background-color: rgb(202, 187, 187);
+}
+input{
+    position: absolute;
+    display: none;
+    border: none;
+}
+.FileUpload{
+    display: grid;
+    padding: 10px;
+}
+#file{
+    padding-top: 20px;
+    display: grid;
+    border: 1px solid black;
+}
