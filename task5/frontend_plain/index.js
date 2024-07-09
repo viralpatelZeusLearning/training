@@ -36,12 +36,15 @@ const rows = [
     },
     {
       Name: "shreyas",
+      Age:24
     },
     {
       Name: "manav",
+      Age:22
     },
     {
       Name: "yash",
+      Age:20
     },
     {
       Name: "Asher",
@@ -283,7 +286,7 @@ function handleClick(e) {
   // let xcord = Math.floor(e.offsetX / columnWidth); //horizontal mouse click control
   let xcord = changeCordinates(e);
   let ycord = Math.floor((e.offsetY / rowHeight)); //vertocal mouse roll
-  console.log(ycord);
+  // console.log(ycord);
   console.log("cell position : " + ycord + " " + xcord);
     console.log("Cell data : ", rows[ycord][dataColumns[xcord]]);
     selectedCell= { row: ycord, col: xcord };
@@ -353,6 +356,7 @@ function handlemouseDown(e){
         ending= { row: ncord, col: mcord };
         console.log("ending",ending)
         table();
+        calculate(starting,ending);
     }
     e.target.addEventListener("mouseup",handlemouseUp);
 }
@@ -371,7 +375,8 @@ function resize(e){
     x-=columnArr[i];
   }
 }
-headerref.addEventListener("pointerdown",function changesize(edown){
+
+function changesize(edown){
   headerref.removeEventListener("pointermove",resize);
   let x = edown.offsetX;
   for(let i=0;i<columnArr.length;i++){
@@ -394,19 +399,31 @@ headerref.addEventListener("pointerdown",function changesize(edown){
     let u = v-edown.offsetX;
     console.log(u);
     console.log(calledindex);
-    if ((columnArr[calledindex] = columnArr[calledindex]+u)>2){
+    if ((columnArr[calledindex] = columnArr[calledindex]+u)>50){
       table();
       headers();
     }
     else{
       console.log("none");
     }
-    
     eup.target.removeEventListener("pointerup",change);
     headerref.addEventListener("pointermove",resize);
   }
   headerref.addEventListener("pointerup",change)
-})
+}
+
+function calculate(starting,ending){
+  let arr = [];
+  if (starting.col == ending.col){
+    for(let i=starting.row;i<=ending.row;i++){
+      arr.push(rows[i][dataColumns[starting.col]])
+    }
+    let min = Math.min(...arr);
+    let max = Math.max(...arr);
+    console.log(min,max);
+  }
+  console.log(arr);
+}
 
 formref.addEventListener("change",handleSubmit);
 canvaref.addEventListener("mousedown", handlemouseDown);
@@ -414,5 +431,6 @@ canvaref.addEventListener("click", handleClick);
 inputref.addEventListener("keydown", handleKeyInputEnter);
 document.addEventListener("keydown", handlekeyInputEscape);
 headerref.addEventListener("pointermove",resize);
+headerref.addEventListener("pointerdown",changesize);
 
 table();
