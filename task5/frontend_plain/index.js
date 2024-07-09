@@ -1,9 +1,9 @@
 var canvaref = document.querySelector("#myCanvas");
+var headerref = document.querySelector("#headers")
 var inputref = document.querySelector(".inputtext");
 var formref = document.querySelector("#file");
 
 let file = null;
-let ctx = myCanvas.getContext("2d");
 let columnWidth = 100;
 let rowHeight = 30;
 let selectedCell = null;
@@ -14,8 +14,6 @@ const dataColumns = [
     "Name",
     "email",
     "Age",
-    "year",
-    "pay",
     "address line 1",
     "address line2",
     "addressline3",
@@ -26,12 +24,15 @@ const dataColumns = [
     "phone no",
     "Nationality",
     "Gender",
+    "2020 salary",
     "2021 salary",
     "2024 salary"
 ];
 const rows = [
     {
       Name: "viral",
+      email:"user@gmail.com",
+      Age:22
     },
     {
       Name: "shreyas",
@@ -164,39 +165,49 @@ const rows = [
     }
 ];
 
-const columnArr = [150,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100];
-canvaref.width = dataColumns.length * columnWidth;
-canvaref.height = rows.length * rowHeight;
+const columnArr = [180,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100];
+// let currIndex = 0;
+// canvaref.width = dataColumns.length * columnWidth;
+
 ctx = canvaref.getContext("2d");
+let ctxheaders = headerref.getContext("2d");
+headers();
 table();
 console.log(rows.length);
 function handleSubmit(e){
   file = e.target.files[0];
   console.log(file);
 }
-
+async function headers(){
+  //header data and table
+  headerref.width = columnArr.reduce((prev,curr)=>prev + curr ,0)
+  headerref.height = rowHeight;
+  ctxheaders.restore();
+  ctxheaders.clearRect(0, 0, canvaref.width, canvaref.height);
+  let x=0;
+  for (let i = 0; i < columnArr.length; i++) {
+    ctxheaders.beginPath();
+    ctxheaders.save();
+    ctxheaders.rect(x, 0, columnArr[i], rowHeight); //x position y position width height
+    ctxheaders.clip();
+    ctxheaders.fillStyle = "black";
+    ctxheaders.font = `bold ${15}px Quicksand`;
+    ctxheaders.fillText(dataColumns[i].toUpperCase(), x+4 , rowHeight - 10);
+    ctxheaders.restore();
+    ctxheaders.moveTo(columnArr[i]+x, 0);
+    ctxheaders.lineTo(columnArr[i]+x, canvaref.height);
+    ctxheaders.stroke();
+    x+=columnArr[i];
+  }
+  ctxheaders.save();
+}
 async function table() {
-    console.log("table");
+    // console.log("table");
+    canvaref.width = columnArr.reduce((prev,curr)=>prev + curr ,0)
+    canvaref.height = (rows.length +1) * rowHeight;
     ctx.restore();
     ctx.clearRect(0, 0, canvaref.width, canvaref.height);
-    // let columnWidth = Math.floor(canvaref.current.width/dataColumns.length);
-    console.log(columnWidth);
-    // let rowHeight = Math.floor(canvaref.current.height/rows.length);
-
-    //header data and table
-    for (let i = 0; i < columnWidth; i++) {
-      ctx.beginPath();
-      ctx.save();
-      ctx.rect(i * columnWidth, 0, columnWidth, rowHeight); //x position y position width height
-      ctx.clip();
-      ctx.fillStyle = "black";
-      ctx.font = `bold ${15}px Arial`;
-      ctx.fillText(dataColumns[i], i * columnWidth + 10, rowHeight - 10);
-      ctx.restore();
-      ctx.moveTo(i * columnWidth, 0);
-      ctx.lineTo(i * columnWidth, canvaref.height);
-      ctx.stroke();
-    }
+    
 
     //cell data
     var sum = 0;
@@ -205,12 +216,12 @@ async function table() {
         // console.log(i,j,rows[j][dataColumns[i]]);
         ctx.beginPath();
         ctx.save();
-        ctx.rect(sum, (j + 1) * rowHeight, columnArr[i], rowHeight);
+        ctx.rect(sum, (j ) * rowHeight, columnArr[i], rowHeight);
         ctx.clip();
-        ctx.font = `${15}px Arial`;
-        // console.log(selectedCell);
+        ctx.font = `${15}px Quicksand`;
+        // console.log(selectedCell,i,j);
         if(selectedCell && selectedCell.col === i && selectedCell.row===j){
-          // console.log(inputref);
+          // console.log(selectedCell);
           inputref.style.display="block";
           inputref.style.left=((sum)+8)+"px";
           inputref.style.top=((rowHeight*(j+1))+8) +"px";
@@ -222,24 +233,24 @@ async function table() {
         //range selection
         else if (starting && ending && starting.row<=j && j<=ending.row && starting.col<=i && i<=ending.col){
           // console.log("seklsdedf");
-          ctx.fillStyle="skyblue";
-          ctx.fillRect(sum,(j+1)*rowHeight,columnArr[i],rowHeight);
+          ctx.fillStyle="rgb(178, 218, 245)";
+          ctx.fillRect(sum,(j)*rowHeight,columnArr[i],rowHeight);
           selectedCell=null;
           // inputref.style.display='none';
         }
 
         else if (starting && ending && starting.row>=j && j>=ending.row && starting.col>=i && i>=ending.col){
           // console.log("61216216262");
-          ctx.fillStyle="skyblue";
-          ctx.fillRect(sum,(j+1)*rowHeight,columnArr[i],rowHeight);
-          selectedCell=null;
+          ctx.fillStyle="rgb(178, 218, 245)";
+          ctx.fillRect(sum,(j)*rowHeight,columnArr[i],rowHeight);
+          // selectedCell=null;
           // inputref.style.display='none';
         }
         ctx.fillStyle="black"
         ctx.fillText(
           rows[j][dataColumns[i]],
-          sum + 10,
-          (j + 2) * rowHeight - 10
+          sum +4,
+          (j + 1) * rowHeight - 10
         );
         ctx.moveTo(sum, 0);
         ctx.lineTo(sum, canvaref.height);
@@ -247,24 +258,39 @@ async function table() {
         ctx.restore();
       }
       sum += (columnArr[i]);
-      console.log(sum);
+      // console.log(sum);
     }
     ctx.save();
 }
 
+function changeCordinates(e){
+  let xcord;
+  let off = e.offsetX;
+  for(xcord = 0; xcord<columnArr.length;xcord++){
+    // console.log("xcord");
+    off =(off - columnArr[xcord]);
+    if (off <= 0){
+      break;
+      // xcord = Math.floor(e.offsetX - columnArr[i]);
+      
+    }
+  }
+  return xcord;
+}
+
 function handleClick(e) {
   e = e || window.Event;
-  let xcord = Math.floor(e.offsetX / columnWidth); //horizontal mouse click control
-  let ycord = Math.floor(e.offsetY / rowHeight); //vertocal mouse roll
-  if (ycord > 0) {
-    ycord--;
-    console.log("cell position : " + ycord + " " + xcord);
+  // let xcord = Math.floor(e.offsetX / columnWidth); //horizontal mouse click control
+  let xcord = changeCordinates(e);
+  let ycord = Math.floor((e.offsetY / rowHeight)); //vertocal mouse roll
+  console.log(ycord);
+  console.log("cell position : " + ycord + " " + xcord);
     console.log("Cell data : ", rows[ycord][dataColumns[xcord]]);
     selectedCell= { row: ycord, col: xcord };
+    console.log("slecet data",selectedCell);
     table();
-  }
-  starting=null;
-  ending=null;
+    starting=null;
+    ending=null;
 }
 
 function handleKeyInputEnter(e){
@@ -299,35 +325,94 @@ function handlekeyInputEscape(e){
 
 function handlemouseDown(e){
     e = e || window.Event;
-    let xcord = Math.floor(e.offsetX / columnWidth);
+    let xcord = changeCordinates(e);
     let ycord = Math.floor(e.offsetY / rowHeight);
-    if (ycord>0){
-      ycord--;
-      starting= { row: ycord, col: xcord };
-      console.log("starting",starting);
-    }
+    starting= { row: ycord, col: xcord };
+    console.log("starting",starting);
     table();
+
+    let temp1,temp2;
+    function mouseMoveHandler(e) {
+      let iMove = changeCordinates(e);
+      let jMove = Math.floor(e.offsetY / rowHeight);
+      // console.log(jMove, iMove);
+      if(temp1!==jMove || temp2!==iMove){
+        temp1=jMove;
+        temp2 = iMove;
+        ending = { row: jMove, col: iMove };
+        table();
+      }
+    }
+
+    e.target.addEventListener("mousemove", mouseMoveHandler);
     function handlemouseUp(e){
+      e.target.removeEventListener("mousemove", mouseMoveHandler);
         e = e || window.Event;
-        let mcord = Math.floor(e.offsetX / columnWidth);
+        let mcord = changeCordinates(e);
         let ncord = Math.floor(e.offsetY / rowHeight);
-        if (ncord>0){
-          ncord--;
-          ending= { row: ncord, col: mcord };
-          console.log("ending",ending)
-        }
+        ending= { row: ncord, col: mcord };
+        console.log("ending",ending)
         table();
     }
     e.target.addEventListener("mouseup",handlemouseUp);
 }
+
+//pointer move
+function resize(e){
+  let x = e.offsetX;
+  for(let i=0;i<columnArr.length;i++){
+    if (Math.abs(x-columnArr[i])<5){
+      e.target.style.cursor = "col-resize";
+      break;
+    }
+    else{
+      e.target.style.cursor="default"
+    }
+    x-=columnArr[i];
+  }
+}
+headerref.addEventListener("pointerdown",function changesize(edown){
+  headerref.removeEventListener("pointermove",resize);
+  let x = edown.offsetX;
+  for(let i=0;i<columnArr.length;i++){
+    if (Math.abs(x-columnArr[i])<5){
+      edown.target.style.cursor = "col-resize";
+      doresize=true;
+      calledindex=i;
+      break;
+    }
+    else{
+      edown.target.style.cursor="default"
+    }
+    x-=columnArr[i];
+  }
+  if (!doresize){
+    return;
+  }
+  function change(eup){
+    let v = eup.offsetX;
+    let u = v-edown.offsetX;
+    console.log(u);
+    console.log(calledindex);
+    if ((columnArr[calledindex] = columnArr[calledindex]+u)>2){
+      table();
+      headers();
+    }
+    else{
+      console.log("none");
+    }
+    
+    eup.target.removeEventListener("pointerup",change);
+    headerref.addEventListener("pointermove",resize);
+  }
+  headerref.addEventListener("pointerup",change)
+})
 
 formref.addEventListener("change",handleSubmit);
 canvaref.addEventListener("mousedown", handlemouseDown);
 canvaref.addEventListener("click", handleClick);
 inputref.addEventListener("keydown", handleKeyInputEnter);
 document.addEventListener("keydown", handlekeyInputEscape);
+headerref.addEventListener("pointermove",resize);
 
-canvaref.width = dataColumns.length * columnWidth;
-canvaref.height = rows.length * rowHeight;
-ctx = canvaref.getContext("2d");
 table();

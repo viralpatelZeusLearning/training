@@ -4,7 +4,11 @@
     padding: 10px;
 }
 #myCanvas{
-    background-color: rgb(202, 187, 187);
+    background-color: rgb(243, 238, 238);
+}
+#headers{
+    background-color: rgb(243, 238, 238);
+    margin-bottom: -4px;
 }
 input{
     position: absolute;
