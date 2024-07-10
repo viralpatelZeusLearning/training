@@ -9,6 +9,8 @@ let rowHeight = 30;
 let selectedCell = null;
 let starting = null;
 let ending = null;
+let dashOffset = 0;
+let marchloop = null;
 
 const dataColumns = [
   "Name",
@@ -205,6 +207,7 @@ async function headers() {
     ctxheaders.restore();
     ctxheaders.moveTo(columnArr[i] + x, 0);
     ctxheaders.lineTo(columnArr[i] + x, canvaref.height);
+    ctxheaders.strokeStyle="#00000055";
     ctxheaders.stroke();
     x += columnArr[i];
   }
@@ -230,6 +233,7 @@ async function table() {
       ctx.rect(sum, j * rowHeight, columnArr[i], rowHeight);
       ctx.clip();
       ctx.font = `${15}px Quicksand`;
+      //select cell and input
       if (
         selectedCell &&
         selectedCell.col === i &&
@@ -261,8 +265,10 @@ async function table() {
       ctx.fillText(rows[j][dataColumns[i]], sum + 4, (j + 1) * rowHeight - 10);
       ctx.moveTo(sum, 0);
       ctx.lineTo(sum, canvaref.height);
+      ctx.strokeStyle="#00000055";
       ctx.stroke();
       ctx.restore();
+
     }
     sum += columnArr[i];
     // console.log(sum);
@@ -307,8 +313,10 @@ function handleKeyInputEnter(e) {
     rows[selectedCell.row][dataColumns[selectedCell.col]] = newValue;
     e.target.style.display = "none";
     selectedCell = null;
+    ending=null;
     table();
-  } else if (e.key === "Escape") {
+  }
+  else if (e.key === "Escape") {
     inputref.style.display = "none";
     selectedCell = null;
     starting = null;
@@ -320,6 +328,7 @@ function handlekeyInputEscape(e) {
   console.log(e.target, e.key);
   if (e.key === "Escape") {
     // e.target.style.display="none";
+    window.cancelAnimationFrame(marchloop);
     selectedCell = null;
     starting=null;
     ending=null;
@@ -330,6 +339,7 @@ function handlekeyInputEscape(e) {
     if(e.target != inputref){
       console.log("copy");
       copyRangeClipboard()
+      marchants();
     }
   }
 }
@@ -340,6 +350,7 @@ function handlemouseDown(e) {
   let ycord = Math.floor(e.offsetY / rowHeight);
   starting = { row: ycord, col: xcord };
   console.log("starting", starting);
+  ending=null;
   table();
 
   let temp1, temp2;
@@ -454,6 +465,38 @@ function copyRangeClipboard(){
       text += `\n`
     }
     navigator.clipboard.writeText(text);
+  }
+}
+
+function marchants(){
+  if(starting && ending){
+    console.log("march ants")
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.lineDashOffset = dashOffset;
+    let [posX,posY,rectWidth, rectHeight] = [0,0,0,0];
+    let i=0;
+    while(i<Math.min(starting.col, ending.col)){
+      posX+=columnArr[i];
+      i++;
+    }
+    while(i<Math.max(starting.col+1, ending.col+1)){
+      rectWidth+=columnArr[i];
+      i++;
+    }
+    i=0;
+    posY = rowHeight*(Math.min(starting.row, ending.row));
+    rectHeight = (Math.abs(ending.row - starting.row)+1)*rowHeight;
+
+    ctx.strokeRect(posX, posY, rectWidth, rectHeight);
+    ctx.restore();
+    dashOffset+=1;
+    if(dashOffset>8){dashOffset=0;}
+    
+    marchloop=window.requestAnimationFrame(()=>{
+      table();
+      marchants();
+    });
   }
 }
 

@@ -33,7 +33,7 @@ body{
 .operations{
     display: flex;
     justify-content: space-around;
-    background: rgb(243, 238, 238);
+    background:rgb(178, 218, 245);
     margin: 0px;
     padding: 10px;
     /* height: 30px; */
@@ -50,5 +50,7 @@ body{
     border-radius: 5px;
     /* height: 28px; */
     width: fit-content;
+    background: rgb(255, 255, 255);
+    font-style: QuickSand;
     justify-content: center;
 }
