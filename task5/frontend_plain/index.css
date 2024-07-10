@@ -1,26 +1,54 @@
+body{
+    margin: 0px;
+}
 .table{
     position: relative;
-    top: 50px;
     padding: 10px;
+    padding-top: 0px;
+    overflow: scroll;
+    height: 80dvh;
 }
 #myCanvas{
-    background-color: rgb(243, 238, 238);
+    background-color: rgb(255, 255, 255);
 }
 #headers{
-    background-color: rgb(243, 238, 238);
+    background-color: rgb(255, 255, 255);
     margin-bottom: -4px;
 }
-input{
+.inputtext{
     position: absolute;
     display: none;
     border: none;
 }
 .FileUpload{
-    display: grid;
-    padding: 10px;
+    display: flex;
+    padding: 0px 0px 10px 10px;
+    width: 88px;
 }
 #file{
-    padding-top: 20px;
-    display: grid;
+    display: flex;
+    width: 88px;
+    margin-top: 20px;
+}
+.operations{
+    display: flex;
+    justify-content: space-around;
+    background: rgb(243, 238, 238);
+    margin: 0px;
+    padding: 10px;
+    /* height: 30px; */
+    align-items: center;
+}
+.operations > input{
+    border-radius: 10px;
+    height: 20px;
+}
+.min , .max , .mean , button{
     border: 1px solid black;
+    margin: 0px;
+    padding: 5px;
+    border-radius: 5px;
+    /* height: 28px; */
+    width: fit-content;
+    justify-content: center;
 }
