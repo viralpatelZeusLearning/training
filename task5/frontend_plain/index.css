@@ -10,15 +10,19 @@ body{
 }
 #myCanvas{
     background-color: rgb(255, 255, 255);
+    position: relative;
+    z-index: 1;
 }
 #headers{
     background-color: rgb(255, 255, 255);
     margin-bottom: -4px;
+    position: relative;
 }
 .inputtext{
     position: absolute;
     display: none;
     border: none;
+    z-index: 2;
 }
 .FileUpload{
     display: flex;
@@ -44,7 +48,7 @@ body{
     height: 20px;
 }
 .min , .max , .mean , button{
-    border: 1px solid black;
+    border: 1px solid black ;
     margin: 0px;
     padding: 5px;
     border-radius: 5px;
@@ -54,3 +58,15 @@ body{
     font-style: QuickSand;
     justify-content: center;
 }
+
+#graph{
+    outline: 1px solid black;
+    display: none;
+    cursor: move;
+}
+.graphcanvas{
+    width: 50%;
+    /* height: 500px;
+    margin-left: 100px;
+    margin-top: 50px; */
+}   

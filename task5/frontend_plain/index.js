@@ -2,13 +2,15 @@ var canvaref = document.querySelector("#myCanvas");
 var headerref = document.querySelector("#headers");
 var inputref = document.querySelector(".inputtext");
 var formref = document.querySelector("#file");
+var graph = document.querySelector(".graphbtn");
+var ctxgraph = document.querySelector("#graph");
 
 let file = null;
 let columnWidth = 100;
 let rowHeight = 30;
 let selectedCell = null;
-let starting = null;
-let ending = null;
+let starting ;
+let ending ;
 let dashOffset = 0;
 let marchloop = null;
 
@@ -26,36 +28,50 @@ const dataColumns = [
   "phone no",
   "Nationality",
   "Gender",
-  "2020 salary",
-  "2021 salary",
-  "2024 salary",
+  "2020-salary",
+  "2021-salary",
+  "2024-salary",
 ];
 const rows = [
   {
     Name: "viral",
     email: "user@gmail.com",
     Age: 22,
+    "2020-salary": 20000,
+    "2021-salary":25000,
   },
   {
     Name: "shreyas",
     Age: 24,
+    "2020-salary": 20000,
+    "2021-salary":25000,
   },
   {
     Name: "manav",
     Age: 22,
+    "2020-salary": 20000,
+    "2021-salary":25000,
   },
   {
     Name: "yash",
     Age: 20,
+    "2020-salary": 20000,
+    "2021-salary":25000,
   },
   {
     Name: "Asher",
+    "2020-salary": 20000,
+    "2021-salary":25000,
   },
   {
     Name: "shubham",
+    "2020-salary": 20000,
+    "2021-salary":25000,
   },
   {
     Name: "nihal",
+    "2020-salary": 20000,
+    "2021-salary":25000,
   },
   {
     Name: "viral",
@@ -186,8 +202,8 @@ function handleSubmit(e) {
   file = e.target.files[0];
   console.log(file);
 }
+//header data and table
 async function headers() {
-  //header data and table
   headerref.width = Math.max(
     columnArr.reduce((prev, curr) => prev + curr, 0),
     window.innerWidth
@@ -202,7 +218,7 @@ async function headers() {
     ctxheaders.rect(x, 0, columnArr[i], rowHeight); //x position y position width height
     ctxheaders.clip();
     ctxheaders.fillStyle = "black";
-    ctxheaders.font = `bold ${15}px Quicksand`;
+    ctxheaders.font = `bold ${15}px Arial`;
     ctxheaders.fillText(dataColumns[i].toUpperCase(), x + 4, rowHeight - 10);
     ctxheaders.restore();
     ctxheaders.moveTo(columnArr[i] + x, 0);
@@ -213,6 +229,7 @@ async function headers() {
   }
   ctxheaders.save();
 }
+//canva table and filling data
 async function table() {
   // console.log("table");
   canvaref.width = Math.max(
@@ -232,8 +249,8 @@ async function table() {
       ctx.save();
       ctx.rect(sum, j * rowHeight, columnArr[i], rowHeight);
       ctx.clip();
-      ctx.font = `${15}px Quicksand`;
-      //select cell and input
+      ctx.font = `${15}px Arial`;
+      //select cell and input box
       if (
         selectedCell &&
         selectedCell.col === i &&
@@ -290,6 +307,7 @@ function changeCordinates(e) {
   return xcord;
 }
 
+//select cell click function
 function handleClick(e) {
   e = e || window.Event;
   // let xcord = Math.floor(e.offsetX / columnWidth); //horizontal mouse click control
@@ -305,6 +323,7 @@ function handleClick(e) {
   // ending = null;
 }
 
+//enter and escape after a function in canva
 function handleKeyInputEnter(e) {
   console.log(selectedCell);
   if (e.key === "Enter") {
@@ -324,6 +343,8 @@ function handleKeyInputEnter(e) {
     table();
   }
 }
+
+//escape outside the canva and for entire window
 function handlekeyInputEscape(e) {
   console.log(e.target, e.key);
   if (e.key === "Escape") {
@@ -344,6 +365,7 @@ function handlekeyInputEscape(e) {
   }
 }
 
+//range selection mouse down and move and up function
 function handlemouseDown(e) {
   e = e || window.Event;
   let xcord = changeCordinates(e);
@@ -380,7 +402,7 @@ function handlemouseDown(e) {
   e.target.addEventListener("mouseup", handlemouseUp);
 }
 
-//pointer move
+//pointer move for resize
 function resize(e) {
   let x = e.offsetX;
   for (let i = 0; i < columnArr.length; i++) {
@@ -414,20 +436,23 @@ function changesize(edown) {
   function change(eup) {
     let v = eup.offsetX;
     let u = v - edown.offsetX;
+    doresize=false;
     console.log(u);
     console.log(calledindex);
-    if ((columnArr[calledindex] = columnArr[calledindex] + u) > 50) {
+    if ((columnArr[calledindex] + u) > 30) {
+      columnArr[calledindex] = ((columnArr[calledindex] + u))
       table();
       headers();
     } else {
       console.log("none");
     }
     eup.target.removeEventListener("pointerup", change);
-    headerref.addEventListener("pointermove", resize);
+    headerref.addEventListener("pointermove", resize);  
   }
   headerref.addEventListener("pointerup", change);
 }
 
+//for calculations on the selected range
 function calculate(starting, ending) {
   let arr = [];
   let min;
@@ -453,7 +478,7 @@ function calculate(starting, ending) {
   }
 }
 
-
+//clipboard copy in text
 function copyRangeClipboard(){
   if (starting && ending){
     let text = "";
@@ -468,6 +493,7 @@ function copyRangeClipboard(){
   }
 }
 
+//animations for the copy function
 function marchants(){
   if(starting && ending){
     console.log("march ants")
@@ -487,7 +513,8 @@ function marchants(){
     i=0;
     posY = rowHeight*(Math.min(starting.row, ending.row));
     rectHeight = (Math.abs(ending.row - starting.row)+1)*rowHeight;
-
+    ctx.lineWidth=2.5;
+    ctx.strokeStyle="rgb(86, 74, 190)";
     ctx.strokeRect(posX, posY, rectWidth, rectHeight);
     ctx.restore();
     dashOffset+=1;
@@ -500,12 +527,64 @@ function marchants(){
   }
 }
 
+//creating graph
+var drawgraph = null;
+var toogle = false;
+function createGraph(){
+  if (!toogle){
+    console.log(starting,ending);
+    arr=[]
+    dataarr=[]
+    let sum=0;
+    for(let i=starting.col;i<=ending.col;i++){
+      for(let j=starting.row;j<=ending.row;j++){
+        sum += rows[j][dataColumns[i]];
+      }
+      avg = (sum/(Math.abs(starting.row-ending.row)+1))
+      if (!isNaN(avg)){console.log(sum);
+        dataarr.push(avg);
+        arr.push(dataColumns[i]);
+      }
+      sum = 0;
+    }
+    if (arr.length == 0){
+      return
+    }
+    console.log("arr",dataarr);
+    console.log("arr",arr);
+    ctxgraph.style.display="block";
+    drawgraph = new Chart(ctxgraph, {
+      type: 'bar',
+      data: {
+        labels: arr,
+        datasets: [{
+          data: dataarr,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    toogle = !toogle;
+  }
+  else{
+    drawgraph.destroy();  
+    ctxgraph.style.display="none";
+  }
+}
+
 formref.addEventListener("change", handleSubmit);
 canvaref.addEventListener("mousedown", handlemouseDown);
 canvaref.addEventListener("click", handleClick);
 inputref.addEventListener("keydown", handleKeyInputEnter);
-document.addEventListener("keydown", handlekeyInputEscape);
 headerref.addEventListener("pointermove", resize);
 headerref.addEventListener("pointerdown", changesize);
+graph.addEventListener("click",createGraph);
+document.addEventListener("keydown", handlekeyInputEscape);
 
 table();
