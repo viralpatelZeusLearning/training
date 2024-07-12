@@ -1,0 +1,19 @@
+form {
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  background: aqua;
+  font-family: QuickSand;
+  width: -moz-max-content;
+  width: max-content;
+  margin: auto;
+  margin-top: 30%;
+  height: -moz-max-content;
+  height: max-content;
+  padding: 20px;
+}
+form input {
+  padding: 20px;
+  display: grid;
+  align-items: center;
+}/*# sourceMappingURL=dashboard.css.map */

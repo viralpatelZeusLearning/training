@@ -1,0 +1,11 @@
+.table {
+  position: relative;
+}
+.table #myCanvas {
+  background-color: rgb(202, 187, 187);
+}
+.table input {
+  position: absolute;
+  display: none;
+  border: none;
+}/*# sourceMappingURL=canvatable.css.map */

@@ -1,0 +1,55 @@
+body {
+  position: relative;
+  margin: 0px;
+}
+
+#maindiv {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px auto;
+  grid-template-rows: 30px auto;
+  height: 500px;
+  overflow: scroll;
+  scrollbar-width: thin;
+  resize: both;
+  outline: 1px solid black;
+}
+
+.header, .row, .table {
+  display: block;
+}
+
+.header {
+  left: 30px;
+  top: 0px;
+  outline: 1px solid black;
+  position: sticky;
+  z-index: 2;
+  background-color: rgb(212, 208, 208);
+}
+
+.row {
+  top: 30px;
+  left: 0px;
+  width: 30px;
+  outline: 1px solid black;
+  position: sticky;
+  z-index: 2;
+  background-color: rgb(212, 208, 208);
+}
+
+.table {
+  left: 30px;
+  top: 30px;
+  position: absolute;
+}
+
+.btn {
+  background: none;
+  border: none;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  background-color: gray;
+}/*# sourceMappingURL=sheet.css.map */

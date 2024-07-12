@@ -186,10 +186,7 @@ const rows = [
   },
 ];
 
-const columnArr = [
-  180, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-  100,
-];
+const columnArr = [180, 120, 120, 120, 120, 174, 120, 120, 120, 120, 120, 100, 100, 100, 100,100];
 // let currIndex = 0;
 // canvaref.width = dataColumns.length * columnWidth;
 
