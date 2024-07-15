@@ -1,6 +1,6 @@
 let data = await fetch("./tempData.json")
 data = await data.json();
-console.log(data);
+// console.log(data);
 
 export class sheet{
     // columnArr = [180, 120, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150, 100];
@@ -74,28 +74,7 @@ export class sheet{
         })
 
         this.canvaref.addEventListener("click",(e)=>{
-            console.log(e.offsetX,e.offsetY);
-            let xcord;
-            let colposition =0;
-            let rowposition =0;
-            let off = e.offsetX;
-            for (xcord = 0; xcord < this.columnsize.length; xcord++) {
-                // console.log("xcord",this.containerdiv.scrollLeft);
-                if (off + this.containerdiv.scrollLeft <= colposition) {
-                break;
-                // xcord = Math.floor(e.offsetX - columnArr[i]);
-                }
-                colposition += this.columnsize[xcord]
-            }
-            let ycord;
-            let offy = e.offsetY;
-            for(ycord=0;ycord<this.rowsize.length;ycord++){
-                if (offy + this.containerdiv.scrollTop <=rowposition){
-                    break;
-                }
-                rowposition += this.rowsize[ycord]
-            }
-            console.log(colposition,rowposition);
+            this.handleclick(e);
         })
         
     }
@@ -204,7 +183,7 @@ export class sheet{
             this.ctx.font = `${15}px Arial`;
             this.ctx.fillStyle = "black";
             // console.log(data[j][this.dataColumns[i]]);
-            // this.ctx.fillText(data[j][this.dataColumns[i]], sum + 4, (j + 1) * this.rowHeight - 5);
+            this.ctx.fillText(data[j][this.dataColumns[i]] === undefined ? " " :data[j][this.dataColumns[i]] , sum + 4, (j + 1) * this.rowHeight - 5);
             this.ctx.restore();
         }
         colcount+=1;
@@ -239,5 +218,30 @@ export class sheet{
     }
 
     //click function for select cell
-    
+    handleclick(e){
+        console.log(e.offsetX,e.offsetY);
+        let xcord;
+        let colposition =0;
+        let rowposition =0;
+        let off = e.offsetX;
+        for (xcord = 0; xcord < this.columnsize.length; xcord++) {
+            // console.log("xcord",this.containerdiv.scrollLeft);
+            if (off + this.containerdiv.scrollLeft <= colposition) {
+            break;
+            // xcord = Math.floor(e.offsetX - columnArr[i]);
+            }
+            colposition += this.columnsize[xcord]
+            // colposition = colposition / this.columnsize[xcord]
+        }
+        let ycord;
+        let offy = e.offsetY;
+        for(ycord=0;ycord<this.rowsize.length;ycord++){
+            if (offy + this.containerdiv.scrollTop <=rowposition){
+                break;
+            }
+            rowposition += this.rowsize[ycord]
+        }
+        console.log(colposition,rowposition , xcord-1 , ycord-1);
+        return {columnstart:colposition,rowstart:rowposition , xcordinate:xcord-1 , ycordinate:ycord-1}
+    }
 }
