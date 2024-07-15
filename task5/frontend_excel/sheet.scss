@@ -2,17 +2,19 @@ body{
     position: relative;
     margin: 00px;
 }
-#maindiv{
-    position: relative;
+.containerDiv{
+    position:relative;
     display: grid;
-    grid-template-columns: 30px auto;
-    grid-template-rows: 30px auto;
-    height: 500px;
+    grid-template-columns: 30px calc(100% - 30px) ;
+    grid-template-rows: 30px calc(100% - 30px) ;
+    position: relative;
     overflow: scroll;
     scrollbar-width: thin;
+    height: 100%;
+    // max-height: 50dvh;
+    width: 100%;
     resize: both;
     outline: 1px solid black;
-
 }
 .header , .row , .table{
     display: block;
@@ -37,8 +39,11 @@ body{
 .table{
     left: 30px;
     top: 30px;
-    position: absolute;
+    position: sticky;
 }
+// .childDiv{
+    
+// }
 .btn{
     background: none;
     border: none;
@@ -48,3 +53,12 @@ body{
     z-index: 3;
     background-color: gray;
 }
+
+// this.containerdiv.addEventListener("scroll",(e)=>{
+        //     console.log("scroll");
+        //     this.checkcolumn();
+        //     this.checkrow();
+        //     this.headers();
+        //     this.table();
+        //     this.rows();
+        // })

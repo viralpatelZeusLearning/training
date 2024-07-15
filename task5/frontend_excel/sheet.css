@@ -3,14 +3,16 @@ body {
   margin: 0px;
 }
 
-#maindiv {
+.containerDiv {
   position: relative;
   display: grid;
-  grid-template-columns: 30px auto;
-  grid-template-rows: 30px auto;
-  height: 500px;
+  grid-template-columns: 30px calc(100% - 30px);
+  grid-template-rows: 30px calc(100% - 30px);
+  position: relative;
   overflow: scroll;
   scrollbar-width: thin;
+  height: 100%;
+  width: 100%;
   resize: both;
   outline: 1px solid black;
 }
@@ -41,7 +43,7 @@ body {
 .table {
   left: 30px;
   top: 30px;
-  position: absolute;
+  position: sticky;
 }
 
 .btn {
