@@ -54,4 +54,22 @@ body {
   left: 0;
   z-index: 3;
   background-color: gray;
+}
+
+.inputDiv {
+  display: none;
+  position: absolute;
+  box-sizing: border-box;
+  background-color: white;
+  border: 2px solid green;
+}
+.inputDiv .textinput {
+  box-sizing: border-box;
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  margin: 0px 5px 2px 2px;
+  background-color: transparent;
+  border: none;
+  outline: none;
 }/*# sourceMappingURL=sheet.css.map */

@@ -54,11 +54,22 @@ body{
     background-color: gray;
 }
 
-// this.containerdiv.addEventListener("scroll",(e)=>{
-        //     console.log("scroll");
-        //     this.checkcolumn();
-        //     this.checkrow();
-        //     this.headers();
-        //     this.table();
-        //     this.rows();
-        // })
+.inputDiv{
+    display: none;
+    position: absolute;
+    box-sizing: border-box;
+    background-color: white;
+    border: 2px solid green;
+    // margin: 5px 5px 2px 2px;
+    .textinput{
+        box-sizing: border-box;
+        position: absolute;
+        bottom: 0px;
+        width: 100%;
+        margin: 0px 5px 2px 2px;
+        background-color: transparent;
+        border: none;
+        outline: none;
+    }
+}
+
