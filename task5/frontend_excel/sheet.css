@@ -63,7 +63,7 @@ body {
   background-color: white;
   border: 2px solid green;
 }
-.inputDiv .textinput {
+.inputDiv input {
   box-sizing: border-box;
   position: absolute;
   bottom: 0px;

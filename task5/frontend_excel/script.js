@@ -2,7 +2,8 @@ import {sheet} from './sheet.js'
 
 let maindiv = document.querySelector("#mainDiv")
 console.log(maindiv);
-let sheet_1 = new sheet(maindiv)
+let sheet_1 = new sheet(maindiv);
+window.s = sheet_1;
 
 // window.addEventListener("load",async (e)=>{
 //     let data = await fetch("./tempData.json")
