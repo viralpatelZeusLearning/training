@@ -323,7 +323,7 @@ export class sheet{
                 if(this.selectedcell && this.selectedcell.col === i && this.selectedcell.row === j){
                     // console.log("selected in draw");
                     console.log(this.starting,this.ending);
-                    this.ctx.lineWidth=6;
+                    this.ctx.lineWidth=3;
                     this.ctx.strokeStyle="#107c41"; 
                 }
                 else if (this.starting && this.ending && 
@@ -358,7 +358,7 @@ export class sheet{
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.strokeStyle = "#107c41"
-            this.ctx.lineWidth = 2
+            this.ctx.lineWidth = 3
             if(this.dashOffset!=0){
                 this.ctx.setLineDash([4, 4]);
                 this.ctx.lineDashOffset = this.dashOffset;
@@ -519,6 +519,9 @@ export class sheet{
                     this.selectedcell.col = this.selectedcell.col -1;
                     this.selectedcell.columnstart = this.selectedcell.columnstart - this.columnsize[this.selectedcell.col]
                     // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
+                    
+                    this.starting=this.selectedcell;
+                    this.ending=this.selectedcell;
                     if(this.containerdiv.scrollLeft>this.selectedcell.columnstart){
                         this.containerdiv.scrollBy(-this.columnsize[this.selectedcell.col],0)
                     }
@@ -553,6 +556,8 @@ export class sheet{
                 this.selectedcell.col = this.selectedcell.col +1;
                 this.selectedcell.columnstart = this.selectedcell.columnstart + this.columnsize[this.selectedcell.col]
                     // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
+                    this.starting=this.selectedcell;
+                    this.ending=this.selectedcell;
                 if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart){
                     this.containerdiv.scrollBy(+this.columnsize[this.selectedcell.col],0)
                 }
@@ -585,6 +590,8 @@ export class sheet{
                 if (this.selectedcell.row!=0){
                     this.selectedcell.row = this.selectedcell.row -1;
                     this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
+                    this.starting=this.selectedcell;
+                    this.ending=this.selectedcell;
                     // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
                     if(this.containerdiv.scrollTop>this.selectedcell.rowstart){
                         this.containerdiv.scrollBy(+this.rowsize[this.selectedcell.row],0)
@@ -617,6 +624,8 @@ export class sheet{
                 e.preventDefault();
                 this.inputdiv.style.display="none";
                 this.selectedcell.row = this.selectedcell.row +1;
+                this.starting=this.selectedcell;
+                    this.ending=this.selectedcell;
                 if (!this.marchloop){
                     this.table();
                     }
