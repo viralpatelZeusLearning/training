@@ -1,27 +1,28 @@
 let data = await fetch("./tempData.json")
 data = await data.json();
+data = window.localStorage.getItem("data") ? JSON.parse(window.localStorage.getItem("data")) : data
 // console.log(data);
 
 export class sheet{
     // columnArr = [180, 120, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150, 100];
     columnsize= Array(10).fill(100);
     rowsize=Array(25).fill(30);
-    dataColumns = [
-        "Email ID",
-        "Name",
-        "Country",
-        "State",
-        "City",
-        "Telephone number",
-        "Address line 1",
-        "Address line 2",
-        "Date of Birth",
-        "FY2019-20",
-        "FY2020-21",
-        "FY2021-22",
-        "FY2022-23",
-        "FY2023-24",
-      ];
+    // dataColumns = [
+    //     "Email ID",
+    //     "Name",
+    //     "Country",
+    //     "State",
+    //     "City",
+    //     "Telephone number",
+    //     "Address line 1",
+    //     "Address line 2",
+    //     "Date of Birth",
+    //     "FY2019-20",
+    //     "FY2020-21",
+    //     "FY2021-22",
+    //     "FY2022-23",
+    //     "FY2023-24",
+    //   ];
     columnWidth = 100;
     rowHeight = 30;
     // file = null;
@@ -31,6 +32,9 @@ export class sheet{
     dashOffset = 0;
     marchloop = null;
     constructor(div){
+        // this.columnsize = window.localStorage.getItem("column") ? JSON.parse(window.localStorage.getItem("column")) : Array(10).fill(100)
+        // this.rowsize = window.localStorage.getItem("rows") ? JSON.parse(window.localStorage.getItem("rows")) : Array(25).fill(30)
+
         this.data = data;
         this.containerdiv = document.createElement("div");
         this.btn = document.createElement("button");
@@ -321,8 +325,6 @@ export class sheet{
                 // console.log(rowsend+5 , colstart+this.rowsize[i]-5);
                 // this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[i] - 5)
                 if(this.selectedcell && this.selectedcell.col === i && this.selectedcell.row === j){
-                    // console.log("selected in draw");
-                    console.log(this.starting,this.ending);
                     this.ctx.lineWidth=3;
                     this.ctx.strokeStyle="#107c41"; 
                 }
@@ -334,18 +336,29 @@ export class sheet{
                         this.ctx.fillStyle = "#e7f1ec";
                         this.ctx.fillRect(colstart,rowsend,this.columnsize[i],this.rowsize[j])
                     }
-                else{
-                    this.ctx.strokeStyle="#cbd5d0";
+                if (data[j] && data[j][i] &&data[j][i].wrap){
+                    this.ctx.textBaseline="bottom";
+                    this.ctx.fillStyle = "black";
+                    this.ctx.font = `${15}px Arial`;
+                    let base = 0
+                    for(let v of data[j][i].text.split("\n").reverse()){
+                        this.ctx.fillText(v, colstart+5 , rowsend-base+this.rowsize[j])
+                        base+=15
+                    }
                 }
+                
+                else{
+                    this.ctx.fillStyle = "black";
+                    this.ctx.font = `${15}px Arial`;
+                    this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
+                }
+                this.ctx.strokeStyle="#cbd5d0";
+                this.ctx.stroke();
                 // this.ctx.moveTo(colstart,0);
                 // this.ctx.lineTo(colstart,this.canvaref.height);
                 // this.ctx.strokeStyle="#00000055";
-                this.ctx.stroke();
-                this.ctx.fillStyle = "black";
-                this.ctx.font = `${15}px Arial`;
                 // if(i==1 && j==0){console.log(i,j, colstart + 5, rowsend + this.rowsize[i] - 5);}
                 
-                this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
                 // // this.ctx.fillText(data[j][this.dataColumns[i]] === undefined ? " " :data[j][this.dataColumns[i]] , colstart + this.columnsize[i] + 4, rowsend + this.rowsize[j] - 5);
                 
                 this.ctx.restore();
@@ -479,13 +492,18 @@ export class sheet{
                 data[this.selectedcell.row][this.selectedcell.col] = newValue;
             }
             this.inputdiv.style.display="none";
+            this.wraptext();
+            this.find()
+            window.localStorage.setItem("data",JSON.stringify(data))
+            window.localStorage.setItem("column",JSON.stringify(this.columnsize))
+            window.localStorage.setItem("rows",JSON.stringify(this.rowsize))
         }
         else if (e.key === "Escape"){
             this.inputdiv.style.display = "none"
         }
         if (!this.marchloop){
             this.table();
-            }
+        }
     }
 
     //key handlers
@@ -503,6 +521,10 @@ export class sheet{
                 }
                 else{
                     this.ending.col = this.ending.col -1;
+                    this.selectedcell.columnstart = this.selectedcell.columnstart - this.columnsize[this.selectedcell.col]
+                    if(this.containerdiv.scrollLeft>this.selectedcell.columnstart){
+                        this.containerdiv.scrollBy(-this.columnsize[this.selectedcell.col],0)
+                    }
                     if (!this.marchloop){
                         this.table();
                         }
@@ -520,8 +542,8 @@ export class sheet{
                     this.selectedcell.columnstart = this.selectedcell.columnstart - this.columnsize[this.selectedcell.col]
                     // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
                     
-                    this.starting=this.selectedcell;
-                    this.ending=this.selectedcell;
+                    this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+                    this.ending=JSON.parse(JSON.stringify(this.selectedcell))
                     if(this.containerdiv.scrollLeft>this.selectedcell.columnstart){
                         this.containerdiv.scrollBy(-this.columnsize[this.selectedcell.col],0)
                     }
@@ -544,6 +566,10 @@ export class sheet{
                 }
                 else{
                     this.ending.col = this.ending.col +1;
+                    this.selectedcell.columnstart = this.selectedcell.columnstart + this.columnsize[this.selectedcell.col]
+                    if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+this.columnsize[this.selectedcell.col]){
+                        this.containerdiv.scrollBy(+this.columnsize[this.selectedcell.col],0)
+                    }
                     if (!this.marchloop){
                         this.table();
                         }
@@ -556,9 +582,9 @@ export class sheet{
                 this.selectedcell.col = this.selectedcell.col +1;
                 this.selectedcell.columnstart = this.selectedcell.columnstart + this.columnsize[this.selectedcell.col]
                     // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
-                    this.starting=this.selectedcell;
-                    this.ending=this.selectedcell;
-                if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart){
+                    this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+                    this.ending=JSON.parse(JSON.stringify(this.selectedcell))
+                if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+this.columnsize[this.selectedcell.col]){
                     this.containerdiv.scrollBy(+this.columnsize[this.selectedcell.col],0)
                 }
                 if (!this.marchloop){
@@ -578,10 +604,16 @@ export class sheet{
                 }
                 else{
                     this.ending.row = this.ending.row - 1;
+                    this.selectedcell.rowstart = this.selectedcell.rowstart - this.rowsize[this.selectedcell.row]
+                    if(this.containerdiv.scrollTop>this.selectedcell.rowstart){
+                        this.containerdiv.scrollBy(0,-this.rowsize[this.selectedcell.row])
+                    }
                     if (!this.marchloop){
                         this.table();
                         }
                 }
+                
+                // console.log(this.selectedcell,this.starting,this.ending);
             }
             else{
                 e.preventDefault();
@@ -589,12 +621,12 @@ export class sheet{
                 this.inputdiv.style.display="none";
                 if (this.selectedcell.row!=0){
                     this.selectedcell.row = this.selectedcell.row -1;
-                    this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
-                    this.starting=this.selectedcell;
-                    this.ending=this.selectedcell;
+                    this.selectedcell.rowstart = this.selectedcell.rowstart - this.rowsize[this.selectedcell.row]
+                    this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+                    this.ending=JSON.parse(JSON.stringify(this.selectedcell))
                     // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
                     if(this.containerdiv.scrollTop>this.selectedcell.rowstart){
-                        this.containerdiv.scrollBy(+this.rowsize[this.selectedcell.row],0)
+                        this.containerdiv.scrollBy(0,-this.rowsize[this.selectedcell.row])
                     }
                     if (!this.marchloop){
                         this.table();
@@ -614,6 +646,10 @@ export class sheet{
                 }
                 else{
                     this.ending.row = this.ending.row + 1;
+                    this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
+                    if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
+                        this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
+                    }
                     if (!this.marchloop){
                         this.table();
                         }
@@ -623,9 +659,14 @@ export class sheet{
                 this.starting=null;
                 e.preventDefault();
                 this.inputdiv.style.display="none";
+                this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
                 this.selectedcell.row = this.selectedcell.row +1;
-                this.starting=this.selectedcell;
-                    this.ending=this.selectedcell;
+                this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+                    this.ending=JSON.parse(JSON.stringify(this.selectedcell))
+                // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
+                if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
+                    this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
+                }
                 if (!this.marchloop){
                     this.table();
                     }
@@ -685,15 +726,17 @@ export class sheet{
         // console.log("always check");
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
         let x = e.offsetX + this.containerdiv.scrollLeft;
-        for(let i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft);i++){
-            if (Math.abs(x-this.columnsize[i]) <5){
+        // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
+        for(let i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft);i+=this.columnsize[ycordinate]){
+            if (Math.abs(x-this.columnsize[ycordinate]) <5){
                 e.target.style.cursor = "col-resize";
                 break;
             }
             else{
                 e.target.style.cursor = "default";
             }
-            x -=this.columnsize[i];
+            x -=this.columnsize[ycordinate];
+            ycordinate++
         }
     }
     changesize(edown){
@@ -702,8 +745,8 @@ export class sheet{
         let x = edown.offsetX + this.containerdiv.scrollLeft;
         // console.log(x);
         let doresize = false;
-        for(var i = xcordinate ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft);i++){
-            if (Math.abs(x-this.columnsize[i]) <=15){
+        for(var i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft);i+=this.columnsize[ycordinate]){
+            if (Math.abs(x-this.columnsize[ycordinate]) <=15){
                 // console.log(x-this.columnsize[i]);
                 edown.target.style.cursor = "col-resize";
                 doresize=true
@@ -713,14 +756,15 @@ export class sheet{
             else{
                 edown.target.style.cursor = "default";
             }
-            x -=this.columnsize[i];
+            x -=this.columnsize[ycordinate];
+            ycordinate++
         }
         if (!doresize){
             return
         }
         let resize = (e) =>{
-            if ((this.columnsize[i]+e.movementX)>30){
-                this.columnsize[i] = this.columnsize[i] + e.movementX
+            if ((this.columnsize[ycordinate]+e.movementX)>30){
+                this.columnsize[ycordinate] = this.columnsize[ycordinate] + e.movementX
                 if (!this.marchloop){
                     this.table();
                 }
@@ -741,15 +785,16 @@ export class sheet{
     moverow(e){
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
         let x = e.offsetY + this.containerdiv.scrollTop;
-        for(let i = rowstart ; x<(this.rowref.clientHeight+this.containerdiv.scrollTop);i++){
-            if (Math.abs(x-this.rowsize[i]) <5){
+        for(let i = rowstart ; x<(this.rowref.clientHeight+this.containerdiv.scrollTop);i+=this.rowsize[xcordinate]){
+            if (Math.abs(x-this.rowsize[xcordinate]) <5){
                 e.target.style.cursor = "row-resize";
                 break;
             }
             else{
                 e.target.style.cursor = "default";
             }
-            x -=this.rowsize[i];
+            x -=this.rowsize[xcordinate];
+            xcordinate++
         }
     }
     changerowsize(edown){
@@ -758,8 +803,8 @@ export class sheet{
         let x = edown.offsetY + this.containerdiv.scrollTop;
         // console.log(x);
         let doresize = false;
-        for(var i = rowstart ; x<(this.rowref.clientHeight+this.containerdiv.scrollTop);i++){
-            if (Math.abs(x-this.rowsize[i]) <=10){
+        for(var i = rowstart ; x<(this.rowref.clientHeight+this.containerdiv.scrollTop);i+=this.rowsize[xcordinate]){
+            if (Math.abs(x-this.rowsize[xcordinate]) <=10){
                 edown.target.style.cursor = "row-resize";
                 doresize=true
                 break;
@@ -767,14 +812,15 @@ export class sheet{
             else{
                 edown.target.style.cursor = "default";
             }
-            x -=this.rowsize[i];
+            x -=this.rowsize[xcordinate];
+            xcordinate++
         }
         if (!doresize){
             return
         }
         let rowresize = (e) =>{
-            if ((this.rowsize[i]+e.movementY)>10){
-                this.rowsize[i] = this.rowsize[i] + e.movementY
+            if ((this.rowsize[xcordinate]+e.movementY)>10){
+                this.rowsize[xcordinate] = this.rowsize[xcordinate] + e.movementY
                 if (!this.marchloop){
                     this.table();
                 }
@@ -867,8 +913,8 @@ export class sheet{
         let doresize = false
         let x = e.offsetX + this.containerdiv.scrollLeft;
         let i;
-        for(i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft);i++){
-            if (Math.abs(x-this.columnsize[i]) <5){
+        for(i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft);i+=this.columnsize[ycordinate]){
+            if (Math.abs(x-this.columnsize[ycordinate]) <5){
                 e.target.style.cursor = "col-resize";
                 doresize = true;
                 break;
@@ -876,13 +922,14 @@ export class sheet{
             else{
                 e.target.style.cursor = "default";
             }
-            x -=this.columnsize[i];
+            x -=this.columnsize[ycordinate];
+            ycordinate++
         }
-        if (doresize = true){
+        if (doresize == true){
             this.ctx.font=`${15}px Arial`
-            let tempdatacolumn = (Object.keys(data).filter(x=>data[x][i])).map(x=>Math.ceil(this.ctx.measureText(data[x][i].text).width))   
+            let tempdatacolumn = (Object.keys(data).filter(x=>data[x][ycordinate] )).map(x=>Math.ceil(this.ctx.measureText(data[x][ycordinate].text).width))   
             if (tempdatacolumn.length===0){return}
-            this.columnsize[i] = Math.max(...tempdatacolumn) + 5 
+            this.columnsize[ycordinate] = Math.max(...tempdatacolumn) + 5 
             // console.log(this.columnsize[i]);
             if (!this.marchloop){
             this.table();
@@ -892,5 +939,44 @@ export class sheet{
             // console.log(this.ctx.measureText(tempdatacolumn));
             // this.ctx.measureText()
         }
+    }
+
+    //text wrap
+    wraptext(){
+        let s1="";
+        let w=15;
+        this.ctx.save()
+        this.ctx.font=`${15}px Arial`;
+        for(let x of data[this.selectedcell.row][this.selectedcell.col].text){
+            w+=this.ctx.measureText(x).width
+            if(w > (this.columnsize[this.selectedcell.col])-5){
+                data[this.selectedcell.row][this.selectedcell.col]["wrap"]=true 
+                // console.log(s1)
+                s1+="\n"
+                w=15;
+            }
+            s1+=x
+        }
+        data[this.selectedcell.row][this.selectedcell.col].text = s1; 
+        console.log(s1);
+        console.log(s1.split("\n").length);
+        let val = s1.split("\n").length
+        this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
+        this.rows()
+        // this.ctxrow([this.selectedcell.row] = val * this.rowsize[this.selectedcell.row])
+        this.ctx.restore()
+    }
+
+    //find data
+    find(findtext){
+        let datarow = Object.entries(data).map(v=>[v[0],Object.entries(v[1])])
+        console.log(datarow);
+        let finalarr = datarow.map(x=>{
+            x[1]=x[1].filter(y=>JSON.stringify(y[1]).replaceAll("\\n","").includes(findtext)) 
+            return x 
+        }
+        ).filter(x=>x[1].length)
+        console.log(finalarr);
+        
     }
 }
