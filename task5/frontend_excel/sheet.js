@@ -5,7 +5,7 @@ data = window.localStorage.getItem("data") ? JSON.parse(window.localStorage.getI
 
 export class sheet{
     // columnArr = [180, 120, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150, 100];
-    columnsize= Array(10).fill(100);
+    columnsize= Array(20).fill(100);
     rowsize=Array(25).fill(30);
     // dataColumns = [
     //     "Email ID",
@@ -25,6 +25,9 @@ export class sheet{
     //   ];
     columnWidth = 100;
     rowHeight = 30;
+    rowlimit = 1048576;
+    collimit = 16383;
+    selectInfinity = false
     // file = null;
     selectedcell = null;
     starting ;
@@ -95,7 +98,7 @@ export class sheet{
 
         this.canvaref.addEventListener("click",(e)=>{
             this.handleclick(e);
-            this.canvapointerclick(e);
+            // this.canvapointerclick(e);
             this.headers();
             this.rows();
             if (!this.marchloop){
@@ -105,6 +108,7 @@ export class sheet{
 
         this.canvaref.addEventListener("pointerdown",(e)=>{
             this.handlemouseDown(e);
+            this.canvapointerclick(e);
         })
         
         this.inputdiv.querySelector("input").addEventListener("keyup",(e)=>{
@@ -182,13 +186,29 @@ export class sheet{
         this.ctxheaders.translate(-this.containerdiv.scrollLeft, 0)
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
         let sumcol = columnstart
-        for (let i = xcordinate; sumcol<=(this.containerdiv.clientWidth + this.containerdiv.scrollLeft); i++) {
-            this.ctxheaders.beginPath();
+        for (let i = xcordinate; sumcol<=(this.containerdiv.clientWidth + this.containerdiv.scrollLeft) && i<this.columnsize.length; i++) {
             this.ctxheaders.save();
+            this.ctxheaders.beginPath();
             this.ctxheaders.rect(sumcol, 0, this.columnsize[i], this.rowHeight); //x position y position width height
-            // this.ctxheaders.clip();
             this.ctxheaders.strokeStyle="#cbd5d0";
             this.ctxheaders.stroke();
+            if (this.starting && this.ending && 
+                Math.min(this.starting.col, this.ending.col) <= i && 
+                i <= Math.max(this.starting.col, this.ending.col)){
+                this.ctxheaders.save();
+                this.ctxheaders.fillStyle="#caead8";
+                this.ctxheaders.fill();
+                let [x,y,w,h] = this.marchants()
+                // console.log(x,w);
+                this.ctxheaders.beginPath();
+                this.ctxheaders.moveTo(x,this.rowHeight);
+                this.ctxheaders.lineTo(x+w,this.rowHeight);
+                this.ctxheaders.lineWidth=4;
+                this.ctxheaders.strokeStyle="#107c41";
+                this.ctxheaders.stroke();
+                this.ctxheaders.restore();
+            }
+            // this.ctxheaders.clip();
             this.ctxheaders.fillStyle = "black";
             this.ctxheaders.font = `bold ${15}px Arial`;
           //   this.ctxheaders.fillText(this.dataColumns[i].toUpperCase(), x + 4, this.rowHeight - 5);
@@ -196,18 +216,6 @@ export class sheet{
             this.ctxheaders.restore();
             sumcol += this.columnsize[i];
           }
-          if (this.starting && this.ending){
-            this.ctxheaders.save();
-            let [x,y,w,h] = this.marchants()
-            // console.log(x,w);
-            this.ctxheaders.beginPath();
-            this.ctxheaders.moveTo(x,this.rowHeight);
-            this.ctxheaders.lineTo(x+w,this.rowHeight);
-            this.ctxheaders.lineWidth=4;
-            this.ctxheaders.strokeStyle="#107c41";
-            this.ctxheaders.stroke();
-            this.ctxheaders.restore();
-        }
           this.ctxheaders.restore();
         
     }
@@ -237,27 +245,33 @@ export class sheet{
             this.ctxrow.save();
             this.ctxrow.beginPath();
             this.ctxrow.rect(0,rowstart,this.rowref.width,this.rowsize[i]);
+            this.ctxrow.strokeStyle="#cbd5d0";
+            this.ctxrow.lineWidth=1
+            this.ctxrow.stroke();
+            if (this.starting && this.ending && 
+                Math.min(this.starting.row, this.ending.row) <= i && 
+                i <= Math.max(this.starting.row, this.ending.row) ){
+                this.ctxrow.save();
+                this.ctxrow.fillStyle="#caead8";
+                this.ctxrow.fill()
+                // await new Promise(r=>setTimeout(r,100))
+                let [x,y,w,h] = this.marchants()
+                this.ctxrow.beginPath();
+                this.ctxrow.moveTo(this.rowHeight,y);
+                this.ctxrow.lineTo(this.rowHeight,y+h);
+                this.ctxrow.lineWidth=4;
+                this.ctxrow.strokeStyle="#107c41";
+                this.ctxrow.stroke();
+                this.ctxrow.restore();
+            }
             this.ctxrow.fillStyle="black";
             this.ctxrow.font =`bold ${15}px Arial`;
             this.ctxrow.textAlign="right";
             this.ctxrow.fillText(i,this.rowref.width-4,this.rowsize[i]+rowstart)
-            this.ctxrow.strokeStyle="#cbd5d0";
-            this.ctxrow.lineWidth=1
-            this.ctxrow.stroke();
             this.ctxrow.restore();
             rowstart += this.rowsize[i];
         }
-        if (this.starting && this.ending ){
-            this.ctxrow.save();
-            let [x,y,w,h] = this.marchants()
-            this.ctxrow.beginPath();
-            this.ctxrow.moveTo(this.rowHeight,y);
-            this.ctxrow.lineTo(this.rowHeight,y+h);
-            this.ctxrow.lineWidth=4;
-            this.ctxrow.strokeStyle="#107c41";
-            this.ctxrow.stroke();
-            this.ctxrow.restore();
-        }
+        
     }
     //cell data
     table(){
@@ -311,6 +325,30 @@ export class sheet{
         
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
         let colstart =  columnstart;
+        console.log(this.starting,this.ending);
+        // if (this.selectInfinity == true){
+        //     this.ctx.save()
+        //     this.ctx.beginPath()
+        //     let rectStartX = Math.min(this.starting.colstat, this.ending.colstat)
+        //     let rectStartY = Math.min(this.starting.rowstat, this.ending.rowstat)
+        //     let rectEndX = Math.max(this.starting.colstat, this.ending.colstat) +
+        //     this.columnsize[(Math.max(this.starting.col, this.ending.col))<=this.columnsize.length ? Math.max(this.starting.col, this.ending.col) : 0]
+        //     let rectEndY = Math.max(this.starting.rowstat, this.ending.rowstat) +
+        //     this.rowsize[(Math.max(this.starting.row, this.ending.row))<=this.rowsize.length ? Math.max(this.starting.row, this.ending.row) : 0]
+        //     // rectEndY = isNaN(rectEndY) ? this.tableDiv.scrollTop+this.tableDiv.clientHeight : rectEndY
+        //     rectStartX = Math.max(this.containerdiv.scrollLeft, rectStartX)
+        //     rectStartY = Math.max(this.containerdiv.scrollTop, rectStartY)
+        //     rectEndX = Math.max(Math.min(this.containerdiv.scrollLeft+this.containerdiv.clientWidth,rectEndX), rectStartX-2)
+        //     rectEndY = Math.max(Math.min(this.containerdiv.scrollTop+this.containerdiv.clientHeight, rectEndY), rectStartY-2)
+        //     this.ctx.strokeStyle = "#107c41"
+        //     this.ctx.lineWidth = 3
+        //     this.ctx.fillStyle = "#e7f1ec";
+        //     console.log(rectStartX,rectStartY,(rectEndX-rectStartX),(rectEndY-rectStartY));
+        //     this.ctx.rect(rectStartX,rectStartY,(rectEndX-rectStartX),(rectEndY-rectStartY))
+        //     this.ctx.stroke()
+        //     this.ctx.fill()
+        //     this.ctx.restore()
+        // }
         for (let i= xcordinate; colstart< (this.containerdiv.clientWidth+this.containerdiv.scrollLeft);i++){
             let rowsend = rowstart;
             for(let j=ycordinate; rowsend< (this.containerdiv.clientHeight+this.containerdiv.scrollTop);j++){
@@ -325,8 +363,8 @@ export class sheet{
                 // console.log(rowsend+5 , colstart+this.rowsize[i]-5);
                 // this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[i] - 5)
                 if(this.selectedcell && this.selectedcell.col === i && this.selectedcell.row === j){
-                    this.ctx.lineWidth=3;
-                    this.ctx.strokeStyle="#107c41"; 
+                    // this.ctx.lineWidth=3;
+                    // this.ctx.strokeStyle="#107c41"; 
                 }
                 else if (this.starting && this.ending && 
                     Math.min(this.starting.row, this.ending.row) <= j && 
@@ -341,7 +379,7 @@ export class sheet{
                     this.ctx.fillStyle = "black";
                     this.ctx.font = `${15}px Arial`;
                     let base = 0
-                    for(let v of data[j][i].text.split("\n").reverse()){
+                    for(let v of data[j][i].wrappedarr.slice().reverse()){
                         this.ctx.fillText(v, colstart+5 , rowsend-base+this.rowsize[j])
                         base+=15
                     }
@@ -366,6 +404,7 @@ export class sheet{
             }
             colstart+=this.columnsize[i];
         }
+       
         if(this.starting && this.ending){
             let [x,y,w,h] = this.marchants()
             this.ctx.save();
@@ -417,7 +456,7 @@ export class sheet{
         }
     }
 
-    //click function for select cell
+    //click function for select cell to get position of selected
     handleclick(e){
         // console.log(e.offsetX,e.offsetY);
         let xcord;
@@ -445,7 +484,7 @@ export class sheet{
         return {columnstart:colposition,rowstart:rowposition , xcordinate:xcord , ycordinate:ycord}
     }
 
-    //click color change
+    //click color change and selected cell data change and position
     canvapointerclick(e){
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
         this.selectedcell = {col:xcordinate , row:ycordinate , columnstart:columnstart , rowstart:rowstart}
@@ -520,8 +559,10 @@ export class sheet{
                     this.ending.col = this.selectedcell.col;
                 }
                 else{
-                    this.ending.col = this.ending.col -1;
-                    this.selectedcell.columnstart = this.selectedcell.columnstart - this.columnsize[this.selectedcell.col]
+                    if (this.ending.col>0){
+                        this.ending.col = this.ending.col -1;
+                        this.selectedcell.columnstart = this.selectedcell.columnstart - this.columnsize[this.selectedcell.col]
+                    }
                     if(this.containerdiv.scrollLeft>this.selectedcell.columnstart){
                         this.containerdiv.scrollBy(-this.columnsize[this.selectedcell.col],0)
                     }
@@ -532,7 +573,7 @@ export class sheet{
             }
             else{
                 e.preventDefault();
-                this.starting=null;
+                // this.starting=null;
                 this.inputdiv.style.display="none";
                 if (this.selectedcell.col == 0){
                     this.selectedcell.col=0
@@ -603,8 +644,10 @@ export class sheet{
                     this.ending.col = this.selectedcell.col;
                 }
                 else{
-                    this.ending.row = this.ending.row - 1;
-                    this.selectedcell.rowstart = this.selectedcell.rowstart - this.rowsize[this.selectedcell.row]
+                    if (this.ending.row>0){
+                        this.ending.row = this.ending.row - 1;
+                        this.selectedcell.rowstart = this.selectedcell.rowstart - this.rowsize[this.selectedcell.row]
+                    }
                     if(this.containerdiv.scrollTop>this.selectedcell.rowstart){
                         this.containerdiv.scrollBy(0,-this.rowsize[this.selectedcell.row])
                     }
@@ -612,12 +655,12 @@ export class sheet{
                         this.table();
                         }
                 }
-                
+                this.rows()
                 // console.log(this.selectedcell,this.starting,this.ending);
             }
             else{
                 e.preventDefault();
-                this.starting=null;
+                // this.starting=null;
                 this.inputdiv.style.display="none";
                 if (this.selectedcell.row!=0){
                     this.selectedcell.row = this.selectedcell.row -1;
@@ -654,6 +697,7 @@ export class sheet{
                         this.table();
                         }
                 }
+                this.rows()
             }
             else{
                 this.starting=null;
@@ -687,7 +731,7 @@ export class sheet{
     //range selection
     handlemouseDown(e){
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
-        this.starting = {col:xcordinate , row:ycordinate}
+        this.starting = {col:xcordinate , row:ycordinate , colstat:columnstart , rowstat:rowstart}
         this.ending = null;
         this.dashOffset=0;
         this.marchloop=null;
@@ -696,10 +740,12 @@ export class sheet{
         // let temp1, temp2;
         function handleMouseMove(i){
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(i)
-            this.ending = { row: ycordinate, col: xcordinate };
+            this.ending = { row: ycordinate, col: xcordinate ,colstat:columnstart,rowstat:rowstart};
             if (!this.marchloop){
                 this.table();
                 }
+            this.headers()
+            this.rows()
             // console.log(this.ending);
         }
         
@@ -711,7 +757,7 @@ export class sheet{
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(j)
             // console.log(e.target);
             e.target.removeEventListener("pointermove",temp1);
-            this.ending = {col:xcordinate , row:ycordinate}
+            this.ending = {col:xcordinate , row:ycordinate ,colstat:columnstart,rowstat:rowstart}
             // console.log("final ending",this.ending);
             if(!this.marchloop) {this.marchants();}
             this.calculate();
@@ -741,11 +787,13 @@ export class sheet{
     }
     changesize(edown){
         // console.log("down");
+        console.log(this.handleclick({offsetX:0 , offsetY:0}));
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
         let x = edown.offsetX + this.containerdiv.scrollLeft;
         // console.log(x);
+        let boundry = columnstart + this.columnsize[ycordinate]
         let doresize = false;
-        for(var i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft);i+=this.columnsize[ycordinate]){
+        for(var i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft) ;i+=this.columnsize[ycordinate]){
             if (Math.abs(x-this.columnsize[ycordinate]) <=15){
                 // console.log(x-this.columnsize[i]);
                 edown.target.style.cursor = "col-resize";
@@ -759,7 +807,24 @@ export class sheet{
             x -=this.columnsize[ycordinate];
             ycordinate++
         }
+
+        
         if (!doresize){
+            // this.selectInfinity = true
+            // // console.log(i,x,ycordinate);
+            // this.starting.col = ycordinate;
+            // this.ending.col = ycordinate;
+            // this.starting.colstat = i - this.columnsize[ycordinate]
+            // this.ending.colstat = i - this.columnsize[ycordinate]
+            // // this.starting.colstat = boundry - this.columnsize[i]
+            // // this.ending.colstat = boundry - this.columnsize[i];
+            // this.starting.row = 0;
+            // this.ending.row = this.rowlimit;
+            // this.starting.rowstat = 0;
+            // this.ending.rowstat = Infinity;
+            // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
+            // this.headers();
+            // this.table()
             return
         }
         let resize = (e) =>{
@@ -773,7 +838,7 @@ export class sheet{
             
         }
         let resizeup = (eup) =>{
-            
+            this.wraptextforcol(ycordinate)
             window.removeEventListener("pointerup",resizeup);
             window.removeEventListener("pointermove",resize);
         }
@@ -851,8 +916,9 @@ export class sheet{
               i++;
             }
             while(i<Math.max(this.starting.col+1, this.ending.col+1)){
-              rectWidth+=this.columnsize[i];
-              i++;
+                    rectWidth+=this.columnsize[i];
+                    i++;
+                
             }
             i=0;
             while(i<Math.min(this.starting.row, this.ending.row)){
@@ -860,8 +926,9 @@ export class sheet{
                 i++;
             }
             while(i<Math.max(this.starting.row+1, this.ending.row+1)){
-                rectHeight+=this.rowsize[i];
-                i++;
+                    rectHeight+=this.rowsize[i];
+                    i++;
+                
             }
             return [posX,posY,rectWidth, rectHeight]
             
@@ -927,7 +994,7 @@ export class sheet{
         }
         if (doresize == true){
             this.ctx.font=`${15}px Arial`
-            let tempdatacolumn = (Object.keys(data).filter(x=>data[x][ycordinate] )).map(x=>Math.ceil(this.ctx.measureText(data[x][ycordinate].text).width))   
+            let tempdatacolumn = (Object.keys(data).filter(x=>data[x][ycordinate] && !data[x][ycordinate].wrap)).map(x=>Math.ceil(this.ctx.measureText(data[x][ycordinate].text).width))   
             if (tempdatacolumn.length===0){return}
             this.columnsize[ycordinate] = Math.max(...tempdatacolumn) + 5 
             // console.log(this.columnsize[i]);
@@ -939,12 +1006,14 @@ export class sheet{
             // console.log(this.ctx.measureText(tempdatacolumn));
             // this.ctx.measureText()
         }
+        // this.wraptextforcol(ycordinate)
     }
 
     //text wrap
     wraptext(){
         let s1="";
         let w=15;
+        let wrappedarr = []
         this.ctx.save()
         this.ctx.font=`${15}px Arial`;
         for(let x of data[this.selectedcell.row][this.selectedcell.col].text){
@@ -952,20 +1021,55 @@ export class sheet{
             if(w > (this.columnsize[this.selectedcell.col])-5){
                 data[this.selectedcell.row][this.selectedcell.col]["wrap"]=true 
                 // console.log(s1)
-                s1+="\n"
+                wrappedarr.push(s1)
+                s1=""
                 w=15;
             }
             s1+=x
         }
-        data[this.selectedcell.row][this.selectedcell.col].text = s1; 
-        console.log(s1);
-        console.log(s1.split("\n").length);
-        let val = s1.split("\n").length
-        this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
+        wrappedarr.push(s1)
+        data[this.selectedcell.row][this.selectedcell.col].wrappedarr = wrappedarr; 
+        // let val = s1.split("\n").length
+        // this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
+        this.rowsize[this.selectedcell.row] = Math.max(wrappedarr.length *15,this.rowsize[this.selectedcell.row]);
         this.rows()
         // this.ctxrow([this.selectedcell.row] = val * this.rowsize[this.selectedcell.row])
         this.ctx.restore()
     }
+
+    //column resize wrap text
+    wraptextforcol(ycordinate){
+        let rows = Object.keys(data).filter(x=>data[x][ycordinate]?.wrap)
+        rows.forEach(r=>{
+            let s1="";
+            let w=15;
+            let wrappedarr = []
+            this.ctx.save()
+            this.ctx.font=`${15}px Arial`;
+            for(let x of data[r][ycordinate].text){
+                w+=this.ctx.measureText(x).width
+                if(w > (this.columnsize[ycordinate])-5){
+                    // console.log(s1)
+                    wrappedarr.push(s1)
+                    s1=""
+                    w=15;
+                }
+                s1+=x
+            }
+            wrappedarr.push(s1)
+            data[r][ycordinate].wrappedarr = wrappedarr; 
+            // console.log(s1);
+            // console.log(s1.split("\n").length);
+            // let val = s1.split("\n").length
+            // this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
+            this.rowsize[r] = Math.max(wrappedarr.length *15,this.rowsize[r]);
+            this.rows()
+            this.table()
+            // this.ctxrow([this.selectedcell.row] = val * this.rowsize[this.selectedcell.row])
+            this.ctx.restore()
+        })
+    }
+
 
     //find data
     find(findtext){
@@ -979,4 +1083,6 @@ export class sheet{
         console.log(finalarr);
         
     }
+
+    //
 }
