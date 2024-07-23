@@ -3,6 +3,14 @@ body {
   margin: 0px;
 }
 
+.options_menu {
+  display: flex;
+  justify-content: space-around;
+  padding: 30px 0 30px 0;
+  background-color: #f5f5f5;
+  border: 1px solid black;
+}
+
 .containerDiv {
   position: relative;
   display: grid;

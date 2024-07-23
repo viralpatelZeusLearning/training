@@ -1,9 +1,9 @@
-import {sheet} from './sheet.js'
+import {Main} from './main.js'
 
 let maindiv = document.querySelector("#mainDiv")
 console.log(maindiv);
-let sheet_1 = new sheet(maindiv);
-window.s = sheet_1;
+let main = new Main(maindiv);
+window.s = main;
 
 // window.addEventListener("load",async (e)=>{
 //     let data = await fetch("./tempData.json")
