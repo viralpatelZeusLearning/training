@@ -47,6 +47,8 @@ export class Sheet{
         this.childdiv = document.createElement("div");
         this.inputdiv = document.createElement("div");
         this.inputdiv.innerHTML = "<input type='text'>"
+        this.graphdiv = document.createElement("div");
+        this.graphref = document.createElement("canvas")
         // this.inputtext = document.createElement("input");
         this.canvaref  = document.createElement("canvas");
     
@@ -58,6 +60,8 @@ export class Sheet{
         this.childdiv.classList.add("childDiv");
         this.inputdiv.classList.add("inputDiv");
         // this.inputtext.classList.add("textinput")
+        this.graphdiv.classList.add("graphdiv");
+        this.graphref.classList.add("graphref");
         this.canvaref.classList.add("table");
     
         this.ctxheaders = this.headerref.getContext("2d");
@@ -72,6 +76,8 @@ export class Sheet{
         this.containerdiv.appendChild(this.containertable);
         this.containertable.appendChild(this.childdiv);
         this.childdiv.appendChild(this.inputdiv)
+        this.childdiv.appendChild(this.graphdiv)
+        this.graphdiv.appendChild(this.graphref)
         // this.inputdiv.appendChild(this.inputtext)
         
         this.canvasize();
@@ -533,7 +539,7 @@ export class Sheet{
                 data[this.selectedcell.row][this.selectedcell.col] = newValue;
             }
             this.inputdiv.style.display="none";
-            this.wraptext();
+            // this.wraptext();
             this.find()
             window.localStorage.setItem("data",JSON.stringify(data))
             window.localStorage.setItem("column",JSON.stringify(this.columnsize))
@@ -708,7 +714,7 @@ export class Sheet{
                 this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
                 this.selectedcell.row = this.selectedcell.row +1;
                 this.starting=JSON.parse(JSON.stringify(this.selectedcell))
-                    this.ending=JSON.parse(JSON.stringify(this.selectedcell))
+                this.ending=JSON.parse(JSON.stringify(this.selectedcell))
                 // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
                 if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
                     this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
@@ -1026,6 +1032,7 @@ export class Sheet{
             mean = arr.reduce((prev, curr) => prev + curr,0) / arr.length;
             sum = mean * arr.length
             console.log(min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum);
+            return[min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum];
     
         }
         // console.log(arr);
@@ -1142,5 +1149,53 @@ export class Sheet{
         
     }
     
-    //
+    //graph function
+    drawgraph=null;
+    graph(){
+        if(this.drawgraph)this.drawgraph.destroy()
+        let dataarr=[]
+        // let arr=[]
+        let sum = 0
+        let count = 0
+        for (let i=this.starting.col ; i<=this.ending.col;i++){
+            for (let j=this.starting.row;j<=this.ending.row;j++){
+                console.log(sum);
+                console.log(j,i);
+                if (data[j] && data[j][i] && Number(data[j][i].text)){
+                    sum+=Number(data[j][i].text)
+                    count+=1
+                }
+            }
+            let avg = (sum/count)
+            if (!isNaN(avg)){
+                dataarr.push(avg)
+                // arr.push(data[i].text)
+            }
+            sum=0
+            count=0
+        }
+        let arr = dataarr.map((x,v)=>Sheet.headerdata(this.starting.col + v))
+        console.log(dataarr);
+        this.drawgraph = new Chart(this.canvaref, {
+            type: 'pie',
+            data: {
+              labels: arr,
+              datasets: [{
+                data: dataarr,
+                borderWidth: 1
+              }]
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+        // else{
+        //   drawgraph.destroy();  
+        //   ctxgraph.style.display="none";
+        // }
+    }
 }

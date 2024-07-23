@@ -19,17 +19,14 @@ export class Main{
         this.next.addEventListener("click",()=>this.nextSheet())
         this.wrap = document.createElement("button")
         this.wrap.textContent="Wrap Text"
-        // this.wrap.addEventListener("click",Sheet.wraptext)
+        this.wrap.addEventListener("click",()=>this.wraptextfeild())
         this.calc = document.createElement("button")
         this.calc.textContent="Calculate"
+        this.calc.addEventListener("click",()=>this.calcaggregate())
         this.min = document.createElement("span")
-        this.min.textContent="Min:"
         this.max = document.createElement("span")
-        this.max.textContent="Max:"
         this.mean = document.createElement("span")
-        this.mean.textContent="Mean:"
         this.sum = document.createElement("span")
-        this.sum.textContent="Sum:"
 
         this.optionsdiv.appendChild(this.new)
         this.optionsdiv.appendChild(this.prev)
@@ -76,5 +73,20 @@ export class Main{
             console.log(this.currentsheetIndex);
             this.currsheet(this.currentsheetIndex+1)
         }
+    }
+    calcaggregate(){
+        let val = this.sheets[this.currentsheetIndex].calculate()
+        console.log(val[0]);
+        this.min.textContent="Min:"+`${val[0]}`
+        this.max.textContent="Max:"+`${val[1]}`
+        this.mean.textContent="Mean:"+`${val[2]}`
+        this.sum.textContent="Sum:"+`${val[3]}`
+    }
+    wraptextfeild(){
+        this.sheets[this.currentsheetIndex].wraptext()
+        this.sheets[this.currentsheetIndex].canvasize();
+        this.sheets[this.currentsheetIndex].rows();
+        this.sheets[this.currentsheetIndex].headers();
+        this.sheets[this.currentsheetIndex].table();
     }
 }
