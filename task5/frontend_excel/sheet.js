@@ -195,7 +195,7 @@ export class Sheet{
         for (let i = xcordinate; sumcol<=(this.containerdiv.clientWidth + this.containerdiv.scrollLeft) && i<this.columnsize.length; i++) {
             this.ctxheaders.save();
             this.ctxheaders.beginPath();
-            this.ctxheaders.rect(sumcol, 0, this.columnsize[i], this.rowHeight); //x position y position width height
+            this.ctxheaders.rect(sumcol-0.5, 0, this.columnsize[i], this.rowHeight); //x position y position width height
             this.ctxheaders.strokeStyle="#cbd5d0";
             this.ctxheaders.stroke();
             if (this.starting && this.ending && 
@@ -250,7 +250,7 @@ export class Sheet{
         for(let i=ycordinate; rowstart<=(this.containerdiv.clientHeight + this.containerdiv.scrollTop);i++){
             this.ctxrow.save();
             this.ctxrow.beginPath();
-            this.ctxrow.rect(0,rowstart,this.rowref.width,this.rowsize[i]);
+            this.ctxrow.rect(0,rowstart-0.5,this.rowref.width,this.rowsize[i]);
             this.ctxrow.strokeStyle="#cbd5d0";
             this.ctxrow.lineWidth=1
             this.ctxrow.stroke();
@@ -360,7 +360,7 @@ export class Sheet{
             for(let j=ycordinate; rowsend< (this.containerdiv.clientHeight+this.containerdiv.scrollTop);j++){
                 this.ctx.beginPath();
                 this.ctx.save();
-                this.ctx.rect(colstart,rowsend,this.columnsize[i],this.rowsize[j]);
+                this.ctx.rect(colstart-0.5,rowsend-0.5,this.columnsize[i],this.rowsize[j]);
                 this.ctx.clip();
                 // console.log(i,j);
                 // this.ctx.fillText(!this.data[j] || !this.data[j][i] ? " ": this.data[j][i].text ,rowsend + 4, (j + 1) * this.rowsize[j] - 5);
