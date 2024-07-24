@@ -788,21 +788,39 @@ export class Sheet{
             this.clipboard();
         }
         else if (e.key === "Enter"){
-            this.dashOffset=0
-            this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
-            this.selectedcell.row = this.selectedcell.row +1;
-            this.starting=JSON.parse(JSON.stringify(this.selectedcell))
-            this.ending=JSON.parse(JSON.stringify(this.selectedcell))
-                // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
-            if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
-                this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
-            }
-            this.marchloop=null
-            if (!this.marchloop){
-                this.table();
+            if (e.shiftKey == true ){
+                if (this.selectedcell.row!=0){
+                    this.selectedcell.row = this.selectedcell.row -1;
+                    this.selectedcell.rowstart = this.selectedcell.rowstart - this.rowsize[this.selectedcell.row]
+                    this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+                    this.ending=JSON.parse(JSON.stringify(this.selectedcell))
+                    // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
+                    if(this.containerdiv.scrollTop>this.selectedcell.rowstart){
+                        this.containerdiv.scrollBy(0,-this.rowsize[this.selectedcell.row])
+                    }
+                    this.marchloop=null
+                    if (!this.marchloop){
+                        this.table();
+                        }
+                this.rows()
                 }
-            this.rows()
-            this.headers()
+            }
+            else{
+                this.dashOffset=0
+                this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
+                this.selectedcell.row = this.selectedcell.row +1;
+                this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+                this.ending=JSON.parse(JSON.stringify(this.selectedcell))
+                    // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
+                if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
+                    this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
+                }
+                this.marchloop=null
+                if (!this.marchloop){
+                    this.table();
+                    }
+                this.rows()
+            }
         }
     }
     
