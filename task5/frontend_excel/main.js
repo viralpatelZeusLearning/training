@@ -83,7 +83,8 @@ export class Main{
         this.sum.textContent="Sum:"+`${val[3]}`
     }
     wraptextfeild(){
-        this.sheets[this.currentsheetIndex].wraptext()
+        // this.sheets[this.currentsheetIndex].wraptext()
+        this.sheets[this.currentsheetIndex].wraprange()
         this.sheets[this.currentsheetIndex].canvasize();
         this.sheets[this.currentsheetIndex].rows();
         this.sheets[this.currentsheetIndex].headers();
