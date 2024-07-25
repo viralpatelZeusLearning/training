@@ -6,7 +6,7 @@ data = await data.json();
 export class Sheet{
     // columnArr = [180, 120, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150, 100];
     columnsize= Array(20).fill(100);
-    rowsize=Array(25).fill(30);
+    rowsize=Array(35).fill(30);
     // dataColumns = [
     //     "Email ID",
     //     "Name",
@@ -27,11 +27,11 @@ export class Sheet{
     rowHeight = 30;
     rowlimit = 1048576;
     collimit = 16383;
-    selectInfinity = false
+    // selectInfinity = false
     // file = null;
-    selectedcell = {col:0,row:0};
-    starting ;
-    ending =null;
+    selectedcell= {col:0,row:0,columnstart:0,rowstart:0};
+    starting  = {col:0,row:0,colstat:0,rowstat:0};
+    ending = {col:0,row:0,colstat:0,rowstat:0};
     dashOffset = 0;
     marchloop = null;
     constructor(div){
@@ -409,7 +409,8 @@ export class Sheet{
                 // this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[i] - 5)
                 if(this.selectedcell && this.selectedcell.col === i && this.selectedcell.row === j){
                     // this.ctx.lineWidth=3;
-                    // this.ctx.strokeStyle="#107c41"; 
+                    // this.ctx.strokeStyle="#107c41";
+                    // this.ctx.stroke()
                 }
                 else if (this.starting && this.ending && 
                     Math.min(this.starting.row, this.ending.row) <= j && 
@@ -531,11 +532,20 @@ export class Sheet{
     
     //click color change and selected cell data change and position
     canvapointerclick(e){
-        let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
-        this.selectedcell = {col:xcordinate , row:ycordinate , columnstart:columnstart , rowstart:rowstart}
-        this.inputdiv.style.display = "none";
-        this.selectInfinity=false
-        this.selectrowInfinity=false
+        if (e.shiftKey == true){
+            this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+            let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
+            // console.log(e.target);
+            this.ending = {col:xcordinate , row:ycordinate ,colstat:columnstart,rowstat:rowstart}
+        }
+        else{
+            let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
+            this.selectedcell = {col:xcordinate , row:ycordinate , columnstart:columnstart , rowstart:rowstart}
+            this.inputdiv.style.display = "none";
+            // this.selectInfinity=false
+            // this.selectrowInfinity=false
+        }
+        
         // this.starting=null
         // this.ending=null
         // console.log("Cell data : ", data[ycordinate][xcordinate]);
@@ -837,6 +847,19 @@ export class Sheet{
         function handleMouseMove(i){
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(i)
             this.ending = { row: ycordinate, col: xcordinate ,colstat:columnstart,rowstat:rowstart};
+            if(this.containerdiv.scrollLeft>=this.ending.colstat-50){ //scroll left
+                this.containerdiv.scrollBy(-this.columnsize[this.ending.col],0)
+            }
+            if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<=this.ending.colstat+this.columnsize[this.ending.col]+50){ //scroll right
+                this.containerdiv.scrollBy(+this.columnsize[this.ending.col],0)
+            }
+            if(this.containerdiv.scrollTop>=this.ending.rowstat-50){ //up
+                this.containerdiv.scrollBy(0,-this.rowsize[this.ending.row])
+            }
+            // console.log(this.containerdiv.scrollTop+this.containerdiv.clientHeight,this.ending.rowstat+this.rowsize[this.ending.row]);
+            if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<=this.ending.rowstat+this.rowsize[this.ending.row]+50){
+                this.containerdiv.scrollBy(0,+this.rowsize[this.ending.row])
+            }
             if (!this.marchloop){
                 this.table();
                 }
@@ -934,20 +957,44 @@ export class Sheet{
         }   
         
         if (!doresize){
-            this.selectInfinity = true
+            // this.selectInfinity = true
             // console.log(i,x,ycordinate);
+            this.selectedcell.row = 0
+            this.selectedcell.col = i
             this.starting.col = i;
             this.ending.col = i;
-            // this.starting.colstat = i - this.columnsize[ycordinate]
-            // this.ending.colstat = i - this.columnsize[ycordinate]
             this.starting.colstat = boundry - this.columnsize[i]
             this.ending.colstat = boundry - this.columnsize[i];
             this.starting.row = 0;
             this.ending.row = this.rowlimit;
             this.starting.rowstat = 0;
             this.ending.rowstat = Infinity;
-            this.selectedCell = JSON.parse(JSON.stringify(this.starting))
+            // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
+            let count =0
+            let moveinfinity = (em)=>{
+                if ((em.offsetX+this.containerdiv.scrollLeft)>=(boundry)){
+                    count+=1
+                    boundry +=this.columnsize[i+count]
+                    // this.columnsize[i] = this.columnsize[i+count]
+                    this.ending.col = i+count
+                }
+                if ((em.offsetX+this.containerdiv.scrollLeft)<=(boundry - this.columnsize[i+count])){
+                    count-=1
+                    boundry -=this.columnsize[i+count]
+                    // this.columnsize[i] = this.columnsize[i+count]
+                    this.ending.col = i+count
+                }
+                this.headers()
+                this.table()
+            }
+            let upinfinity =()=>{
+                window.removeEventListener("pointerup",upinfinity);
+                edown.target.removeEventListener("pointermove",moveinfinity);
+            }
+            edown.target.addEventListener("pointermove",moveinfinity)
+            window.addEventListener("pointerup",upinfinity)
             this.headers();
+            this.rows();
             if (!this.marchloop){
                 this.table();
             }
@@ -1015,8 +1062,10 @@ export class Sheet{
             }
         }
         let miny = boundry - this.rowsize[i]
-        if (!doresize){
-            this.selectrowInfinity=true
+        if (!doresize){ 
+            this.selectedcell.row = i
+            this.selectedcell.col = 0
+            // this.selectrowInfinity=true
             this.starting.col = 0
             this.ending.col = this.collimit
             this.starting.colstat=0
@@ -1026,7 +1075,8 @@ export class Sheet{
             this.starting.rowstat = boundry - this.rowsize[i]
             this.ending.rowstat = boundry - this.rowsize[i]
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
-            this.rows();
+            this.headers();
+            this.rows()
             if (!this.marchloop){
                 this.table();
             }
