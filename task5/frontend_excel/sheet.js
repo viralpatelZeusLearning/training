@@ -23,7 +23,7 @@ export class Sheet{
     //     "FY2022-23",
     //     "FY2023-24",
     //   ];
-    columnWidth = 100;
+    // columnWidth = 100;
     rowHeight = 30;
     rowlimit = 1048576;
     collimit = 16383;
@@ -841,6 +841,7 @@ export class Sheet{
         this.ending = null;
         this.dashOffset=0;
         this.marchloop=null;
+
         // console.log(this.starting);
         // e.target.addEventListener("pointerdown",handlemouseDown);
         // let temp1, temp2;
@@ -882,8 +883,14 @@ export class Sheet{
             this.calculate();
         }
         let temp2 = handlemouseup.bind(this)
-        e.target.addEventListener("pointerup",temp2);    
-        e.target.removeEventListener("pointerdown",this.handlemouseDown)
+        e.target.addEventListener("pointerup",temp2);  
+
+        let handlemouseleave=(eleave)=>{
+            eleave.target.removeEventListener("pointerup",temp2);
+            eleave.target.removeEventListener("pointermove",temp1)
+        }  
+        e.target.addEventListener("pointerleave",handlemouseleave)
+        // e.target.removeEventListener("pointerdown",this.handlemouseDown)
     }
     
     // column resize move pointer function 
@@ -948,6 +955,7 @@ export class Sheet{
         for(var i = firstcell.xcordinate ; boundry< this.containerdiv.clientWidth+this.containerdiv.scrollLeft && i<this.columnsize.length && (boundry<x || Math.abs(boundry-x)<=10);i++,boundry+=this.columnsize[i]){
             if (Math.abs(x-boundry) <=10){
                 edown.target.style.cursor = "col-resize";
+                console.log("boundry",boundry);
                 doresize = true
                 break;
             }
@@ -955,7 +963,7 @@ export class Sheet{
                 edown.target.style.cursor = "default";
             }
         }   
-        
+        // console.log("jashfjhd",boundry);
         if (!doresize){
             // this.selectInfinity = true
             // console.log(i,x,ycordinate);
@@ -971,16 +979,19 @@ export class Sheet{
             this.ending.rowstat = Infinity;
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
             let count =0
+            // console.log("bound",boundry);
             let moveinfinity = (em)=>{
-                if ((em.offsetX+this.containerdiv.scrollLeft)>=(boundry)){
+                while ((em.offsetX+this.containerdiv.scrollLeft)>=(boundry)){
+                    // console.log("inc",em.offsetX+this.containerdiv.scrollLeft);
                     count+=1
                     boundry +=this.columnsize[i+count]
                     // this.columnsize[i] = this.columnsize[i+count]
                     this.ending.col = i+count
                 }
-                if ((em.offsetX+this.containerdiv.scrollLeft)<=(boundry - this.columnsize[i+count])){
-                    count-=1
+                while ((em.offsetX+this.containerdiv.scrollLeft)<(boundry - this.columnsize[i+count])){
+                    // console.log("dec",em.offsetX+this.containerdiv.scrollLeft);
                     boundry -=this.columnsize[i+count]
+                    count-=1
                     // this.columnsize[i] = this.columnsize[i+count]
                     this.ending.col = i+count
                 }
@@ -1000,32 +1011,28 @@ export class Sheet{
             }
             return
         }
-    
-        let minx = boundry - this.columnsize[i]
-        let resize = (emove) =>{
-            if ((this.columnsize[i]+emove.movementX>=30) && (emove.offsetX+this.containerdiv.scrollLeft >=minx)){
-                // if (i<this.selectedcell.col){
-                //     this.selectedcell.columnstart+=emove.movementX
-                //     this.starting.colstart+=emove.movementX
-                // }
-                // if (i<this.ending.col){
-                //     this.ending.colstat+=emove.movementX
-                // }
-                this.columnsize[i]+=emove.movementX/window.devicePixelRatio
-                if (!this.marchloop){
-                    this.table();
+        else{
+            let minx = boundry - this.columnsize[i]
+            let resize = (emove) =>{
+                if ((this.columnsize[i]+emove.movementX>=30) && (emove.offsetX+this.containerdiv.scrollLeft >=minx)){
+                    this.columnsize[i]+=emove.movementX/window.devicePixelRatio
+                    // console.log(this.columnsize[i]);
+                    if (!this.marchloop){
+                        this.table();
+                    }
+                    this.headers();
                 }
-                this.headers();
+                
             }
-            
+            let resizeup = (eup) =>{
+                this.wraptextforcol(i)
+                window.removeEventListener("pointerup",resizeup);
+                window.removeEventListener("pointermove",resize);
+            }
+            window.addEventListener("pointermove",resize)
+            window.addEventListener("pointerup",resizeup);
         }
-        let resizeup = (eup) =>{
-            this.wraptextforcol(i)
-            window.removeEventListener("pointerup",resizeup);
-            window.removeEventListener("pointermove",resize);
-        }
-        window.addEventListener("pointermove",resize)
-        window.addEventListener("pointerup",resizeup);
+        
     }
     
     // row resize
@@ -1069,14 +1076,37 @@ export class Sheet{
             this.starting.col = 0
             this.ending.col = this.collimit
             this.starting.colstat=0
-            this.ending.colstart=Infinity
+            this.ending.colstat=Infinity
             this.starting.row=i
             this.ending.row=i
             this.starting.rowstat = boundry - this.rowsize[i]
             this.ending.rowstat = boundry - this.rowsize[i]
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
+            let count =0
+            let moveinfinity = (em)=>{
+                while ((em.offsetY+this.containerdiv.scrollTop)>=(boundry)){
+                    count+=1
+                    boundry +=this.rowsize[i+count]
+                    // this.columnsize[i] = this.columnsize[i+count]
+                    this.ending.row = i+count
+                }
+                while ((em.offsetY+this.containerdiv.scrollTop)<=(boundry - this.rowsize[i+count])){
+                    boundry -=this.rowsize[i+count]
+                    count-=1
+                    // this.columnsize[i] = this.columnsize[i+count]
+                    this.ending.row = i+count
+                }
+                this.rows()
+                this.table()
+            }
+            let upinfinity =()=>{
+                window.removeEventListener("pointerup",upinfinity);
+                edown.target.removeEventListener("pointermove",moveinfinity);
+            }
+            edown.target.addEventListener("pointermove",moveinfinity)
+            window.addEventListener("pointerup",upinfinity)
             this.headers();
-            this.rows()
+            this.rows();
             if (!this.marchloop){
                 this.table();
             }
