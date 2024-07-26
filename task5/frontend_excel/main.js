@@ -76,7 +76,7 @@ export class Main{
     }
     calcaggregate(){
         let val = this.sheets[this.currentsheetIndex].calculate()
-        console.log(val[0]);
+        console.log(this.sheets[this.currentsheetIndex]);
         this.min.textContent="Min:"+`${val[0]}`
         this.max.textContent="Max:"+`${val[1]}`
         this.mean.textContent="Mean:"+`${val[2]}`
