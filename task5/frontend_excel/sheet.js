@@ -38,7 +38,7 @@ export class Sheet{
         // this.columnsize = window.localStorage.getItem("column") ? JSON.parse(window.localStorage.getItem("column")) : Array(10).fill(100)
         // this.rowsize = window.localStorage.getItem("rows") ? JSON.parse(window.localStorage.getItem("rows")) : Array(25).fill(30)
 
-        this.data = data;
+        this.data = JSON.parse(JSON.stringify(data));
         this.containerdiv = document.createElement("div");
         this.btn = document.createElement("button");
         this.headerref = document.createElement("canvas");
@@ -316,21 +316,21 @@ export class Sheet{
         }
         if (this.starting && this.ending){
             this.ctxrow.save()
-                let [x,y,w,h] = this.marchants()
-                let startrowpixel = Math.max(this.containerdiv.scrollTop,y)
-                let newHeight = Math.min(this.containerdiv.clientHeight,y>this.containerdiv.scrollTop ? h : h-this.containerdiv.scrollTop +y)
-                this.ctxrow.beginPath();
-                if (startrowpixel<this.containerdiv.scrollTop+this.containerdiv.clientHeight && newHeight>0){
-                    // console.log("drawing");
-                    this.ctxrow.moveTo(this.rowHeight,startrowpixel-2);
-                    this.ctxrow.lineTo(this.rowHeight,startrowpixel+newHeight);
-                }
+            let [x,y,w,h] = this.marchants()
+            let startrowpixel = Math.max(this.containerdiv.scrollTop,y)
+            let newHeight = Math.min(this.containerdiv.clientHeight,y>this.containerdiv.scrollTop ? h : h-this.containerdiv.scrollTop +y)
+            this.ctxrow.beginPath();
+            if (startrowpixel<this.containerdiv.scrollTop+this.containerdiv.clientHeight && newHeight>0){
+                // console.log("drawing");
+                this.ctxrow.moveTo(this.rowHeight,startrowpixel-2);
+                this.ctxrow.lineTo(this.rowHeight,startrowpixel+newHeight);
+            }
                 // this.ctxrow.moveTo(this.rowHeight,y-2);
                 // this.ctxrow.lineTo(this.rowHeight,y+h);
-                this.ctxrow.lineWidth=4;
-                this.ctxrow.strokeStyle="#107c41";
-                this.ctxrow.stroke();
-                this.ctxrow.restore();
+            this.ctxrow.lineWidth=4;
+            this.ctxrow.strokeStyle="#107c41";
+            this.ctxrow.stroke();
+            this.ctxrow.restore();
         }
         
     }
@@ -425,8 +425,8 @@ export class Sheet{
                 // console.log(rowsend+5 , colstart+this.rowsize[i]-5);
                 // this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[i] - 5)
                 if (this.selectedcell && this.selectedcell.col == i && this.selectedcell.row == j){
-                    this.ctx.strokeStyle = "#107c41"
-                    this.ctx.lineWidth = 2
+                    // this.ctx.strokeStyle = "#107c41"
+                    // this.ctx.lineWidth = 2
                 }
                 else if (this.starting && this.ending && 
                     Math.min(this.starting.row, this.ending.row) <= j && 
@@ -436,12 +436,12 @@ export class Sheet{
                         this.ctx.fillStyle = "#e7f1ec";
                         this.ctx.fillRect(colstart,rowsend,this.columnsize[i],this.rowsize[j])
                     }
-                if (data[j] && data[j][i] &&data[j][i].wrap){
+                if (this.data[j] && this.data[j][i] && this.data[j][i].wrap){
                     this.ctx.textBaseline="bottom";
                     this.ctx.fillStyle = "black";
                     this.ctx.font = `${15}px Arial`;
                     let base = 0
-                    for(let v of data[j][i].wrappedarr.slice().reverse()){
+                    for(let v of this.data[j][i].wrappedarr.slice().reverse()){
                         this.ctx.fillText(v, colstart+5 , rowsend-base+this.rowsize[j])
                         base+=15
                     }
@@ -449,7 +449,7 @@ export class Sheet{
                 else{
                     this.ctx.fillStyle = "black";
                     this.ctx.font = `${15}px Arial`;
-                    this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
+                    this.ctx.fillText(this.data[j] && this.data[j][i] ? this.data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
                 }
                 this.ctx.strokeStyle="#cbd5d0";
                 this.ctx.stroke();
@@ -473,6 +473,8 @@ export class Sheet{
             let startrowpixel = Math.max(this.containerdiv.scrollTop , y)
             let newwidth = Math.min(this.containerdiv.clientWidth, x>this.containerdiv.scrollLeft ? w : w-this.containerdiv.scrollLeft+x)
             let newHeight = Math.min(this.containerdiv.clientHeight,y>this.containerdiv.scrollTop ? h : h-this.containerdiv.scrollTop +y)
+            // if (isNaN(newHeight)){debugger}
+            console.log(startpixel,startrowpixel,newwidth,newHeight);
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.strokeStyle = "#107c41"
@@ -484,7 +486,7 @@ export class Sheet{
                 if(this.dashOffset>8){this.dashOffset=1;}
                 this.marchloop=window.requestAnimationFrame(()=>{
                     this.table();
-                    this.marchants();
+                    // this.marchants();
                 });                        
             }
             if (newwidth>0 && newHeight>0 && startpixel<this.containerdiv.scrollLeft+this.containerdiv.clientWidth && startrowpixel<this.containerdiv.scrollTop+this.containerdiv.clientHeight){
@@ -586,7 +588,7 @@ export class Sheet{
         this.inputdiv.style.height = this.rowsize[this.selectedcell.row] - 2 + "px"
         let inputref = this.inputdiv.querySelector("input")
         inputref.font= `${15}px Arial`;
-        inputref.value = data[this.selectedcell.row] && data[this.selectedcell.row][this.selectedcell.col] ? data[this.selectedcell.row][this.selectedcell.col]['text'] : "" ; 
+        inputref.value = this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col] ? this.data[this.selectedcell.row][this.selectedcell.col]['text'] : "" ; 
         inputref.focus();
         if (!this.marchloop){
             this.table();
@@ -598,27 +600,27 @@ export class Sheet{
         if (e.key === "Enter") {
             let newValue = {text:e.target.value};
           // console.log(selectedCell);
-            if(data[this.selectedcell.row]){
-                if(data[this.selectedcell.row][this.selectedcell.col]){
-                    data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
+            if(this.data[this.selectedcell.row]){
+                if(this.data[this.selectedcell.row][this.selectedcell.col]){
+                    this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
                 }
                 else{
-                    data[this.selectedcell.row][this.selectedcell.col] = newValue;
+                    this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
                 }
             }
             else{
                 let newrow = {}
-                data[this.selectedcell.row] = newrow;
-                data[this.selectedcell.row][this.selectedcell.col] = newValue;
+                this.data[this.selectedcell.row] = newrow;
+                this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
             }
             this.inputdiv.style.display="none";
-            if (data[this.selectedcell.row][this.selectedcell.col].wrap){
+            if (this.data[this.selectedcell.row][this.selectedcell.col].wrap){
                 this.wraptext();
             }
             // this.find()
-            window.localStorage.setItem("data",JSON.stringify(data))
-            window.localStorage.setItem("column",JSON.stringify(this.columnsize))
-            window.localStorage.setItem("rows",JSON.stringify(this.rowsize))
+            // window.localStorage.setItem("data",JSON.stringify(data))
+            // window.localStorage.setItem("column",JSON.stringify(this.columnsize))
+            // window.localStorage.setItem("rows",JSON.stringify(this.rowsize))
         }
         else if (e.key === "Escape"){
             this.inputdiv.style.display = "none"
@@ -856,12 +858,30 @@ export class Sheet{
                 this.rows()
             }
         }
+        else if (e.key === "Delete"){
+            // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
+            // this.selectedcell= {col:xcordinate,row:ycordinate,columnstart:columnstart,rowstart:rowstart};
+            // console.log(this.starting);
+            // data[this.starting.row][this.starting.col].text = ""
+            if (this.starting && this.ending){
+                for(let i=this.starting.col;i<=this.ending.col;i++){
+                    for(let j=this.starting.row;j<=this.ending.row;j++){
+                        if(this.data[j]?.[i]?.text){
+                            this.data[j][i].text=""
+                        }
+                    }
+                }
+            }
+            this.table()
+            console.log("delete");
+        }
     }
     
     //range selection
     handlemouseDown(e){
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
         this.starting = {col:xcordinate , row:ycordinate , colstat:columnstart , rowstat:rowstart}
+        console.log(this.starting);
         this.ending = null;
         this.dashOffset=0;
         this.marchloop=null;
@@ -975,6 +995,7 @@ export class Sheet{
         let x = edown.offsetX + this.containerdiv.scrollLeft;
         let boundry = firstcell.columnstart + this.columnsize[firstcell.xcordinate]
         let doresize=false
+        // let colsizearr = 0
         // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
         for(var i = firstcell.xcordinate ; boundry< this.containerdiv.clientWidth+this.containerdiv.scrollLeft && i<this.columnsize.length && (boundry<x || Math.abs(boundry-x)<=10);i++,boundry+=this.columnsize[i]){
             if (Math.abs(x-boundry) <=10){
@@ -1059,7 +1080,7 @@ export class Sheet{
         else{
             let minx = boundry - this.columnsize[i]
             let resize = (emove) =>{
-                if ((this.columnsize[i]+emove.movementX>=30) && (emove.offsetX+this.containerdiv.scrollLeft >=minx)){
+                if ((this.columnsize[i]+emove.movementX>=20) && (emove.offsetX+this.containerdiv.scrollLeft >=minx)){
                     this.columnsize[i]+=emove.movementX/window.devicePixelRatio
                     // console.log(this.columnsize[i]);
                     if (!this.marchloop){
@@ -1208,7 +1229,7 @@ export class Sheet{
               posX+=this.columnsize[i];
               i++;
             }
-            while(i<Math.max(this.starting.col+1, this.ending.col+1)){
+            while(i<Math.max(this.starting.col+1, this.ending.col+1)&& i<this.columnsize.length){
                     rectWidth+=this.columnsize[i];
                     i++;
                 
@@ -1218,7 +1239,7 @@ export class Sheet{
                 posY+=this.rowsize[i];
                 i++;
             }
-            while(i<Math.max(this.starting.row+1, this.ending.row+1)){
+            while(i<Math.max(this.starting.row+1, this.ending.row+1)&&i<this.rowsize.length){
                     rectHeight+=this.rowsize[i];
                     i++;
                 
@@ -1235,7 +1256,7 @@ export class Sheet{
             for (let i = Math.min(this.starting.row,this.ending.row); i <= Math.max(this.starting.row,this.ending.row); i++) {
                 for (let j = Math.min(this.starting.col,this.ending.col); j <= Math.max(this.starting.col,this.ending.col); j++){
                   // console.log(i,j);
-                  text +=`${(data[i] && data[i][j] ? data[i][j].text : " ")}\t`;
+                  text +=`${(this.data[i] && this.data[i][j] ? this.data[i][j].text : " ")}\t`;
                 }
                 text += `\n`
             }
@@ -1255,8 +1276,8 @@ export class Sheet{
             let start = Math.min(this.starting.row , this.ending.row);
             let end = Math.max(this.starting.row , this.ending.row);
             for(let i = start ; i<=end ; i++){
-                if (data[i] && data[i][this.starting.col] && !isNaN(Number(data[i][this.starting.col].text))){
-                    arr.push(Number(data[i][this.starting.col].text))
+                if (this.data[i] && this.data[i][this.starting.col] && !isNaN(Number(this.data[i][this.starting.col].text))){
+                    arr.push(Number(this.data[i][this.starting.col].text))
                 }
                 
             }
@@ -1291,7 +1312,7 @@ export class Sheet{
         if (!doresize){return}
             this.ctx.save()
             this.ctx.font=`${15}px Arial`
-            let tempdatacolumn = (Object.keys(data).filter(x=>data[x][i] && !data[x][i].wrap)).map(x=>Math.ceil(this.ctx.measureText(data[x][i].text).width))   
+            let tempdatacolumn = (Object.keys(this.data).filter(x=>this.data[x][i] && !this.data[x][i].wrap)).map(x=>Math.ceil(this.ctx.measureText(this.data[x][i].text).width))   
             if (tempdatacolumn.length===0){return}
             this.columnsize[i] = Math.max(...tempdatacolumn) + 5 
             // console.log(this.columnsize[i]);
@@ -1314,11 +1335,11 @@ export class Sheet{
         let wrappedarr = []
         this.ctx.save()
         this.ctx.font=`${15}px Arial`;
-        if (data[this.selectedcell.row] && data[this.selectedcell.row][this.selectedcell.col]?.text){
-            for(let x of data[this.selectedcell.row][this.selectedcell.col].text){
+        if (this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col]?.text){
+            for(let x of this.data[this.selectedcell.row][this.selectedcell.col].text){
                 w+=this.ctx.measureText(x).width
                 if(w > (this.columnsize[this.selectedcell.col])-5){
-                    data[this.selectedcell.row][this.selectedcell.col]["wrap"]=true 
+                    this.data[this.selectedcell.row][this.selectedcell.col]["wrap"]=true 
                     // console.log(s1)
                     wrappedarr.push(s1)
                     s1=""
@@ -1327,7 +1348,7 @@ export class Sheet{
                 s1+=x
             }
             wrappedarr.push(s1)
-            data[this.selectedcell.row][this.selectedcell.col].wrappedarr = wrappedarr; 
+            this.data[this.selectedcell.row][this.selectedcell.col].wrappedarr = wrappedarr; 
             // let val = s1.split("\n").length
             // this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
             this.rowsize[this.selectedcell.row] = Math.max(wrappedarr.length *15,this.rowsize[this.selectedcell.row]);
@@ -1347,10 +1368,10 @@ export class Sheet{
         this.ctx.save()
         this.ctx.font=`${15}px Arial`;
         for(let i=Math.min(this.starting.row, this.ending.row) ; i<=Math.max(this.starting.row, this.ending.row);i++){
-            if (data[i]){
+            if (this.data[i]){
                 for(let j=Math.min(this.starting.col, this.ending.col);j<=Math.max(this.starting.col, this.ending.col);j++){
-                    if (data[i][j]){
-                        data[i][j].wrap = true
+                    if (this.data[i][j]){
+                        this.data[i][j].wrap = true
                     }
                 }
             }
@@ -1364,14 +1385,14 @@ export class Sheet{
     
     //column resize wrap text
     wraptextforcol(xcordinate){
-        let rows = Object.keys(data).filter(x=>data[x][xcordinate]?.wrap)
+        let rows = Object.keys(this.data).filter(x=>this.data[x][xcordinate]?.wrap)
         rows.forEach(r=>{
             let s1="";
             let w=15;
             let wrappedarr = []
             this.ctx.save()
             this.ctx.font=`${15}px Arial`;
-            for(let x of data[r][xcordinate].text){
+            for(let x of this.data[r][xcordinate].text){
                 w+=this.ctx.measureText(x).width
                 if(w > (this.columnsize[xcordinate])-5){
                     // console.log(s1)
@@ -1382,7 +1403,7 @@ export class Sheet{
                 s1+=x
             }
             wrappedarr.push(s1)
-            data[r][xcordinate].wrappedarr = wrappedarr; 
+            this.data[r][xcordinate].wrappedarr = wrappedarr; 
             // console.log(s1);
             // console.log(s1.split("\n").length);
             // let val = s1.split("\n").length
@@ -1396,7 +1417,7 @@ export class Sheet{
     
     //find data
     find(findtext){
-        let datarow = Object.entries(data).map(v=>[v[0],Object.entries(v[1])])
+        let datarow = Object.entries(this.data).map(v=>[v[0],Object.entries(v[1])])
         console.log(datarow);
         let finalarr = datarow.map(x=>{
             x[1]=x[1].filter(y=>JSON.stringify(y[1]).replaceAll("\\n","").includes(findtext)) 
@@ -1404,7 +1425,31 @@ export class Sheet{
         }
         ).filter(x=>x[1].length)
         console.log(finalarr);
-        
+        let rowpos = (finalarr.map(v=>v[0]));
+        let colpos = (finalarr.map(v=>v[1][0][0]));
+        console.log(finalarr,rowpos[0],colpos[0]);
+        this.starting.row = Number(rowpos[0])
+        this.starting.col = Number(colpos[0])
+        this.ending.row = Number(rowpos[0])
+        this.ending.col = Number(colpos[0])
+        this.ending.colstat=0
+        this.starting.colstat=0
+        for (let i=0;i<this.ending.col;i++){
+            this.starting.colstat+=this.columnsize[i]
+            this.ending.colstat+=this.columnsize[i]
+        }
+        this.ending.rowstat=0
+        this.starting.rowstat=0
+        for(let i=0;i<this.ending.row;i++){
+            this.starting.rowstat+=this.rowsize[i]
+            this.ending.rowstat+=this.rowsize[i]
+        }
+        console.log(this.starting,this.ending);
+        this.containerdiv.scrollTo(this.ending.colstat,this.ending.rowstat)
+        this.table()
+        this.headers()
+        this.rows()
+        // console.log(finalarr.map(v=>v[1][0]));
     }
     
     //graph function
@@ -1419,8 +1464,8 @@ export class Sheet{
             for (let j=this.starting.row;j<=this.ending.row;j++){
                 console.log(sum);
                 console.log(j,i);
-                if (data[j] && data[j][i] && Number(data[j][i].text)){
-                    sum+=Number(data[j][i].text)
+                if (this.data[j] && this.data[j][i] && Number(this.data[j][i].text)){
+                    sum+=Number(this.data[j][i].text)
                     count+=1
                 }
             }

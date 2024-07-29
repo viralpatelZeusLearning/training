@@ -7,10 +7,15 @@ export class Main{
         this.optionsdiv.classList.add("options_menu")
         this.sheetcontainer = sheetcontainer
         this.sheetcontainer.appendChild(this.optionsdiv)
+        this.sheetchange = document.createElement("div");
+        this.sheetchange.classList.add("change_sheet");
 
         this.new = document.createElement("button")
         this.new.textContent="+"
         this.new.addEventListener("click",()=>this.newSheet())
+        this.del = document.createElement("button")
+        this.del.textContent="-"
+        this.del.addEventListener("click",()=>this.delSheet())
         this.prev = document.createElement("button")
         this.prev.textContent="←"
         this.prev.addEventListener("click",()=>this.prevSheet())
@@ -28,15 +33,33 @@ export class Main{
         this.mean = document.createElement("span")
         this.sum = document.createElement("span")
 
-        this.optionsdiv.appendChild(this.new)
-        this.optionsdiv.appendChild(this.prev)
-        this.optionsdiv.appendChild(this.next)
+        this.sheetTabContainer = document.createElement("div")
+        this.sheetTabContainer.classList.add("sheetTabs")
+
+        let firstSheet = document.createElement("input")
+        firstSheet.classList.add("sheetTab")
+        firstSheet.value="Sheet 1";
+        firstSheet.setAttribute("readonly","")
+        firstSheet.setAttribute("data-current","")
+        firstSheet.setAttribute("data-index","0")
+
+        firstSheet.addEventListener("click",e=>this.sheetTabClickHandler(e))
+        firstSheet.addEventListener("dblclick",e=>this.sheetTabDoubleClickHandler(e))
+        firstSheet.addEventListener("keydown",e=>this.sheetTabKeyHandler(e))
+
+
+        this.sheetchange.appendChild(this.new)
+        this.sheetchange.appendChild(this.del)
+        this.sheetchange.appendChild(this.prev)
+        this.sheetchange.appendChild(this.next)
+        this.sheetchange.appendChild(firstSheet)
         this.optionsdiv.appendChild(this.wrap)
         this.optionsdiv.appendChild(this.calc)
         this.optionsdiv.appendChild(this.min)
         this.optionsdiv.appendChild(this.max)
         this.optionsdiv.appendChild(this.mean)
         this.optionsdiv.appendChild(this.sum)
+        this.sheetcontainer.appendChild(this.sheetchange)
 
         let sheet_1 = new Sheet(sheetcontainer)
         this.sheets.push(sheet_1)
@@ -45,7 +68,8 @@ export class Main{
     }
     currsheet(i){
         if(i>=0){
-            this.sheets[this.currentsheetIndex].containerdiv.remove()
+            this.sheets?.[this.currentsheetIndex]?.containerdiv?.remove()
+            // this.sheetcontainer?.[0]?.remove()
             console.log(this.sheets[i]);
             this.sheetcontainer.appendChild(this.sheets[i].containerdiv)
             console.log(i,this.sheets);
@@ -53,7 +77,7 @@ export class Main{
             this.sheets[i].rows();
             this.sheets[i].headers();
             this.sheets[i].table();
-            this.currentsheetIndex = i
+            this.currentsheetIndex = Number(i)
         }
     }
     newSheet(){
@@ -61,17 +85,65 @@ export class Main{
         this.sheets.push(newSheet)
         this.currsheet(this.sheets.length -1)
         console.log(this.sheets);
+        let newSheetdiv = document.createElement("input")
+        newSheetdiv.classList.add("sheetcontainer")
+        newSheetdiv.value=`Sheet ${this.sheets.length}`;
+        newSheetdiv.setAttribute("readonly","")
+        newSheetdiv.setAttribute("data-index",this.sheets.length-1)
+        newSheetdiv.addEventListener("click",e=>this.sheetTabClickHandler(e))
+        newSheetdiv.addEventListener("dblclick",e=>this.sheetTabDoubleClickHandler(e))
+        newSheetdiv.addEventListener("keydown",e=>this.sheetTabKeyHandler(e))
+        this.sheetchange.appendChild(newSheetdiv)
+    }
+    delSheet(){
+        if (this.sheets.length>1){
+            console.log(this.currentsheetIndex,"delete");
+            this.sheets[this.currentsheetIndex].containerdiv.remove()
+            this.sheets.splice(Number(this.currentsheetIndex),1)
+            console.log(this.sheets);
+            this.sheetchange.children[this.currentsheetIndex+4].remove()
+            this.currsheet(this.currentsheetIndex-1)
+            Array(...this.sheetchange.children).forEach((v,j)=>{
+                // console.log(j);
+                v.setAttribute("data-index",j-4)
+            })
+            // let tabs = this.sheetchange.querySelectorAll("input")
+            // tabs[this.currentsheetIndex].removeAttribute("data-current")
+            // this.sheets[this.currentsheetIndex].sheetchange.remove()
+            // this.sheetchange.removeChild(this.sheets[this.currentsheetIndex].containerdiv)
+        }
     }
     prevSheet(){
+        let tabs = this.sheetchange.querySelectorAll("input")
+        tabs[this.currentsheetIndex].removeAttribute("data-current")
         if (this.currentsheetIndex>0){
             console.log(this.currentsheetIndex);
             this.currsheet(this.currentsheetIndex-1)
         }
     }
     nextSheet(){
+        let tabs = this.sheetchange.querySelectorAll("input")
+        tabs[this.currentsheetIndex].removeAttribute("data-current")
         if (this.currentsheetIndex<this.sheets.length-1){
             console.log(this.currentsheetIndex);
             this.currsheet(this.currentsheetIndex+1)
+        }
+    }
+    sheetTabClickHandler(e){
+        e.target.parentElement.querySelectorAll("input").forEach(t1=>{
+            t1.removeAttribute("data-current")
+            t1.setAttribute("readonly","")
+          })
+        e.target.setAttribute("data-current","true")
+        this.currsheet(e.target.dataset["index"])
+    }
+    sheetTabDoubleClickHandler(e){
+        e.target.focus();
+        e.target.removeAttribute("readonly")
+    }
+    sheetTabKeyHandler(e){
+        if(e.key==="Enter"){
+              e.target.setAttribute("readonly","")
         }
     }
     calcaggregate(){
