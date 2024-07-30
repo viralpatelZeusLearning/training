@@ -418,7 +418,7 @@ export class Sheet{
                 this.ctx.save();
                 this.ctx.rect(colstart-0.5,rowsend-0.5,this.columnsize[i],this.rowsize[j]);
                 this.ctx.clip();
-                // console.log(i,j);
+                // console.log(i,j,"drawing");
                 // this.ctx.fillText(!this.data[j] || !this.data[j][i] ? " ": this.data[j][i].text ,rowsend + 4, (j + 1) * this.rowsize[j] - 5);
                 // console.log(data[j][i]);
                 // console.log(i,j,data[j]?data[j][i]:"nope");
@@ -474,7 +474,7 @@ export class Sheet{
             let newwidth = Math.min(this.containerdiv.clientWidth, x>this.containerdiv.scrollLeft ? w : w-this.containerdiv.scrollLeft+x)
             let newHeight = Math.min(this.containerdiv.clientHeight,y>this.containerdiv.scrollTop ? h : h-this.containerdiv.scrollTop +y)
             // if (isNaN(newHeight)){debugger}
-            console.log(startpixel,startrowpixel,newwidth,newHeight);
+            // console.log(startpixel,startrowpixel,newwidth,newHeight);
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.strokeStyle = "#107c41"
@@ -872,7 +872,9 @@ export class Sheet{
                     }
                 }
             }
-            this.table()
+            if (!this.marchloop){
+                this.table();
+                }
             console.log("delete");
         }
     }
@@ -894,6 +896,7 @@ export class Sheet{
             let newY = e.offsetY+i.clientY-e.clientY
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:newX,offsetY:newY})
             this.ending = { row: ycordinate, col: xcordinate ,colstat:columnstart,rowstat:rowstart};
+
             if(this.containerdiv.scrollLeft>=this.ending.colstat-50){ //scroll left
                 this.containerdiv.scrollBy(-this.columnsize[this.ending.col],0)
             }
@@ -1008,10 +1011,11 @@ export class Sheet{
                 edown.target.style.cursor = "default";
             }
         }   
-        // console.log("jashfjhd",boundry);
+        // console.log("col resize",boundry);
         if (!doresize){
             // this.selectInfinity = true
             // console.log(i,x,ycordinate);
+            this.dashOffset=0
             this.selectedcell.row = 0
             if (edown.shiftKey == true){
                 this.ending.col = i
@@ -1136,6 +1140,7 @@ export class Sheet{
         }
         let miny = boundry - this.rowsize[i]
         if (!doresize){ 
+            this.dashOffset=0
             this.selectedcell.col = 0
             if (edown.shiftKey == true){
                 this.ending.row=i
@@ -1317,6 +1322,7 @@ export class Sheet{
             this.columnsize[i] = Math.max(...tempdatacolumn) + 5 
             // console.log(this.columnsize[i]);
             this.ctx.restore()
+            this.wraptextforcol(i)
             if (!this.marchloop){
             this.table();
             }
@@ -1325,7 +1331,6 @@ export class Sheet{
             // console.log(this.ctx.measureText(tempdatacolumn));
             // this.ctx.measureText()
         
-        // this.wraptextforcol(ycordinate)
     }
     
     //text wrap
@@ -1380,7 +1385,9 @@ export class Sheet{
             this.wraptextforcol(j)
         }
         this.rows()
-        this.table()
+        if (!this.marchloop){
+            this.table();
+        }
     }
     
     //column resize wrap text
@@ -1417,21 +1424,30 @@ export class Sheet{
     
     //find data
     find(findtext){
-        let datarow = Object.entries(this.data).map(v=>[v[0],Object.entries(v[1])])
-        console.log(datarow);
-        let finalarr = datarow.map(x=>{
-            x[1]=x[1].filter(y=>JSON.stringify(y[1]).replaceAll("\\n","").includes(findtext)) 
-            return x 
+        // let datarow = Object.entries(this.data).map(v=>[v[0],Object.entries(v[1])])
+        // console.log(datarow);
+        // let finalarr = datarow.map(x=>{
+        //     x[1]=x[1].filter(y=>JSON.stringify(y[1]).replaceAll("\\n","").includes(findtext)) 
+        //     return x 
+        // }
+        // ).filter(x=>x[1].length)
+        let finalarr = []
+        let r,c
+        for(r of Object.keys(this.data)){
+            for(c of Object.keys(this.data[r])){
+                if (JSON.stringify(this.data[r][c].text).includes(findtext)){
+                    finalarr.push([r,c])
+                    console.log(finalarr,r,c);
+                }
+            }
         }
-        ).filter(x=>x[1].length)
         console.log(finalarr);
-        let rowpos = (finalarr.map(v=>v[0]));
-        let colpos = (finalarr.map(v=>v[1][0][0]));
-        console.log(finalarr,rowpos[0],colpos[0]);
-        this.starting.row = Number(rowpos[0])
-        this.starting.col = Number(colpos[0])
-        this.ending.row = Number(rowpos[0])
-        this.ending.col = Number(colpos[0])
+        // let rowpos = (finalarr.map(v=>v[0]));
+        // let colpos = (finalarr.map(v=>v[1][0][0]));
+        this.starting.row = Number(finalarr[0][0])
+        this.starting.col = Number(finalarr[0][1])
+        this.ending.row = Number(finalarr[0][0])
+        this.ending.col = Number(finalarr[0][1])
         this.ending.colstat=0
         this.starting.colstat=0
         for (let i=0;i<this.ending.col;i++){
@@ -1446,7 +1462,9 @@ export class Sheet{
         }
         console.log(this.starting,this.ending);
         this.containerdiv.scrollTo(this.ending.colstat,this.ending.rowstat)
-        this.table()
+        if (!this.marchloop){
+            this.table();
+        }
         this.headers()
         this.rows()
         // console.log(finalarr.map(v=>v[1][0]));
