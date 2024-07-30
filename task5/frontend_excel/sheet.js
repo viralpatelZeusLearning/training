@@ -6,7 +6,7 @@ data = await data.json();
 export class Sheet{
     // columnArr = [180, 120, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150, 100];
     columnsize= Array(20).fill(100);
-    rowsize=Array(35).fill(30);
+    rowsize=Array(30).fill(30);
     // dataColumns = [
     //     "Email ID",
     //     "Name",
@@ -25,6 +25,7 @@ export class Sheet{
     //   ];
     // columnWidth = 100;
     rowHeight = 30;
+    rowWidth = 50
     rowlimit = 1048576;
     collimit = 16383;
     selectInfinity = false
@@ -217,10 +218,17 @@ export class Sheet{
             this.ctxheaders.stroke();
             if (this.starting && this.ending && 
                 Math.min(this.starting.col, this.ending.col) <= i && 
-                i <= Math.max(this.starting.col, this.ending.col)){
-                this.ctxheaders.save();
-                this.ctxheaders.fillStyle="#caead8";
-                this.ctxheaders.fill();
+                i <= Math.max(this.starting.col, this.ending.col)){ 
+                if (this.ending.rowstat == Infinity){
+                    this.ctxheaders.save();
+                    this.ctxheaders.fillStyle="#107c41";
+                    this.ctxheaders.fill();
+                }
+                else{
+                    this.ctxheaders.save();
+                    this.ctxheaders.fillStyle="#caead8";
+                    this.ctxheaders.fill();
+                }
                 // let [x,y,w,h] = this.marchants()
                 // // console.log(x,w);
                 // this.ctxheaders.beginPath();
@@ -235,10 +243,11 @@ export class Sheet{
             this.ctxheaders.fillStyle = "black";
             this.ctxheaders.font = `bold ${15}px Arial`;
           //   this.ctxheaders.fillText(this.dataColumns[i].toUpperCase(), x + 4, this.rowHeight - 5);
-            this.ctxheaders.fillText(Sheet.headerdata(i), sumcol + 4,this.rowHeight - 5);
+            this.ctxheaders.fillText(Sheet.headerdata(i), sumcol + (this.columnsize[i]/2)-5,this.rowHeight - 5);
             this.ctxheaders.restore();
             sumcol += this.columnsize[i];
           }
+          
           if (this.starting && this.ending){
             this.ctxheaders.save()
             let [x,y,w,h] = this.marchants()
@@ -294,9 +303,16 @@ export class Sheet{
             if (this.starting && this.ending && 
                 Math.min(this.starting.row, this.ending.row) <= i && 
                 i <= Math.max(this.starting.row, this.ending.row) ){
-                this.ctxrow.save();
-                this.ctxrow.fillStyle="#caead8";
-                this.ctxrow.fill()
+                    if (this.ending.colstat == Infinity){
+                        this.ctxrow.save();
+                        this.ctxrow.fillStyle="#107c41";
+                        this.ctxrow.fill();
+                    }
+                    else{
+                        this.ctxrow.save();
+                        this.ctxrow.fillStyle="#caead8";
+                        this.ctxrow.fill()
+                    }
                 // await new Promise(r=>setTimeout(r,100))
                 // let [x,y,w,h] = this.marchants()
                 // this.ctxrow.beginPath();
@@ -963,12 +979,12 @@ export class Sheet{
         let boundry = firstcell.columnstart + this.columnsize[firstcell.xcordinate]
         // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
         for(let i = firstcell.xcordinate ; boundry< this.containerdiv.clientWidth+this.containerdiv.scrollLeft && i<this.columnsize.length;i++,boundry+=this.columnsize[i]){
-            if (Math.abs(x-boundry) <=10){
+            if (Math.abs(x-boundry) <=5){
                 e.target.style.cursor = "col-resize";
                 break;
             }
             else{
-                e.target.style.cursor = "default";
+                e.target.style.cursor = "url(./assets/columnselect.cur),default";
             }
         }
     }
@@ -998,6 +1014,7 @@ export class Sheet{
         let x = edown.offsetX + this.containerdiv.scrollLeft;
         let boundry = firstcell.columnstart + this.columnsize[firstcell.xcordinate]
         let doresize=false
+        let prevWidth = 0
         // let colsizearr = 0
         // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
         for(var i = firstcell.xcordinate ; boundry< this.containerdiv.clientWidth+this.containerdiv.scrollLeft && i<this.columnsize.length && (boundry<x || Math.abs(boundry-x)<=10);i++,boundry+=this.columnsize[i]){
@@ -1008,7 +1025,7 @@ export class Sheet{
                 break;
             }
             else{
-                edown.target.style.cursor = "default";
+                edown.target.style.cursor = "url(./assets/columnselect.cur),default";
             }
         }   
         // console.log("col resize",boundry);
@@ -1041,13 +1058,13 @@ export class Sheet{
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
             let count =0
             // console.log("bound",boundry);
-            let moveinfinity = async (em)=>{
+            let moveinfinity = (em)=>{
                 if ((edown.offsetX+em.clientX-edown.clientX+this.containerdiv.scrollLeft)>=(boundry)){
                     count+=1
                     boundry +=this.columnsize[i+count]
                     this.ending.colstat = this.ending.colstat+this.columnsize[i+count]
                     this.ending.col = i+count
-                    console.log(this.containerdiv.scrollLeft+this.containerdiv.clientWidth, boundry +100)
+                    console.log(this.containerdiv.scrollLeft+this.containerdiv.clientWidth, boundry )
                 }
                 if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth <= boundry +100){ //scroll right
                     this.containerdiv.scrollBy(+100,0)
@@ -1084,17 +1101,29 @@ export class Sheet{
         else{
             let minx = boundry - this.columnsize[i]
             let resize = (emove) =>{
+                // let deltaX = emove.clientX - edown.clientX
+                // console.log(deltaX);
                 if ((this.columnsize[i]+emove.movementX>=20) && (emove.offsetX+this.containerdiv.scrollLeft >=minx)){
+                    // console.log(emove.movementX);
                     this.columnsize[i]+=emove.movementX/window.devicePixelRatio
+                    prevWidth = this.columnsize[i]
                     // console.log(this.columnsize[i]);
                     if (!this.marchloop){
                         this.table();
                     }
                     this.headers();
                 }
-                
             }
             let resizeup = (eup) =>{
+                console.log(prevWidth);
+                if (this.starting.col != this.ending.col && i>=Math.min(this.starting.col,this.ending.col) && i<=Math.max(this.starting.col,this.ending.col) && this.ending.rowstat == Infinity){
+                    for(let i=Math.min(this.starting.col,this.ending.col);i<=Math.max(this.starting.col,this.ending.col);i++){
+                        this.columnsize[i] = prevWidth 
+                    }
+                }
+                console.log(this.columnsize);
+                this.table()
+                this.headers()
                 this.wraptextforcol(i)
                 window.removeEventListener("pointerup",resizeup);
                 window.removeEventListener("pointermove",resize);
@@ -1117,7 +1146,7 @@ export class Sheet{
                 break;
             }
             else{
-                e.target.style.cursor = "default";
+                e.target.style.cursor = "url(./assets/rowselect.cur),default";
             }
         }
     }
@@ -1127,15 +1156,16 @@ export class Sheet{
         let x = edown.offsetY + this.containerdiv.scrollTop;
         let boundry = firstcell.rowstart + this.rowsize[firstcell.ycordinate]
         let doresize = false
+        let prevHeight = 0
         // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
         for(var i = firstcell.ycordinate ; boundry< this.containerdiv.clientHeight+this.containerdiv.scrollTop && i<this.rowsize.length && (boundry<x || Math.abs(boundry-x)<=10);i++,boundry+=this.rowsize[i]){
-            if (Math.abs(x-boundry) <=10){
+            if (Math.abs(x-boundry) <=5){
                 edown.target.style.cursor = "row-resize";
                 doresize = true
                 break;
             }
             else{
-                edown.target.style.cursor = "default";
+                edown.target.style.cursor = "url(./assets/rowselect.cur),default";
             }
         }
         let miny = boundry - this.rowsize[i]
@@ -1205,16 +1235,25 @@ export class Sheet{
         let rowresize = (e) =>{
             if ((this.rowsize[i]+e.movementY>=5) && (e.offsetY+this.containerdiv.scrollTop>=miny)){
                 this.rowsize[i] = this.rowsize[i] + e.movementY/window.devicePixelRatio
+                prevHeight = this.rowsize[i]
                 if (!this.marchloop){
                     this.table();
                 }
                 this.rows();
-            }
+            }   
             // console.log("move");
         }
         let rowresizeup = (eup) =>{
-            // console.log("up");
-            
+            console.log(prevHeight);
+            if (this.starting.row != this.ending.row && i<=Math.max(this.starting.row,this.ending.row) && i>=Math.min(this.starting.row,this.ending.row) && this.ending.colstat==Infinity){
+                for(let j=Math.min(this.starting.row,this.ending.row);j<=Math.max(this.starting.row,this.ending.row);j++){
+                    console.log("height",prevHeight);
+                    this.rowsize[j] = prevHeight
+                }
+            }
+            console.log(this.rowsize);
+            this.table()
+            this.rows()
             window.removeEventListener("pointerup",rowresizeup);
             window.removeEventListener("pointermove",rowresize);
         }
@@ -1441,6 +1480,7 @@ export class Sheet{
                 }
             }
         }
+
         console.log(finalarr);
         // let rowpos = (finalarr.map(v=>v[0]));
         // let colpos = (finalarr.map(v=>v[1][0][0]));
