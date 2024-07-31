@@ -109,6 +109,34 @@ body {
   outline: none;
 }
 
+.findDiv {
+  display: none;
+  position: fixed;
+  left: 40%;
+  top: 30%;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  height: -moz-fit-content;
+  height: fit-content;
+  gap: 0.5em;
+  grid-template-columns: 50% 50%;
+  grid-template-areas: "a a" "b c" "d d" "e e" "f f" "g g" "h i";
+  padding: 10px;
+  background-color: rgb(255, 255, 255);
+  border: 2px solid black;
+}
+.findDiv h3 {
+  grid-area: a;
+  text-align: center;
+  color: #107c41;
+}
+.findDiv span:hover {
+  text-decoration: underline;
+  color: #107c41;
+}
+.findDiv button:hover {
+  background: #caead8;
+}
+
 .graphdiv {
   width: 300px;
   height: 300px;

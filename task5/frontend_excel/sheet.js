@@ -52,6 +52,7 @@ export class Sheet{
         this.graphref = document.createElement("canvas")
         // this.inputtext = document.createElement("input");
         this.canvaref  = document.createElement("canvas");
+
     
         this.containerdiv.classList.add("containerDiv");
         this.btn.classList.add("btn");
@@ -76,8 +77,9 @@ export class Sheet{
         this.containerdiv.appendChild(this.rowref);
         this.containerdiv.appendChild(this.containertable);
         this.containertable.appendChild(this.childdiv);
-        this.childdiv.appendChild(this.inputdiv)
-        this.childdiv.appendChild(this.graphdiv)
+        this.childdiv.appendChild(this.inputdiv);
+        this.childdiv.appendChild(this.graphdiv);
+        this.childdiv.appendChild(this.findandReplaceForm())
         this.graphdiv.appendChild(this.graphref)
         // this.inputdiv.appendChild(this.inputtext)
         
@@ -156,7 +158,11 @@ export class Sheet{
         this.headerref.addEventListener("dblclick",(e)=>{
             this.headerclick(e);
         })
-    
+        
+        this.findDiv.addEventListener("submit",(e)=>{
+            e.preventDefault()
+        })
+
         window.addEventListener("keydown",(e)=>{
             if (!this.containerdiv.parentElement){return}
             this.keyhandler(e);
@@ -241,7 +247,7 @@ export class Sheet{
             }
             // this.ctxheaders.clip();
             this.ctxheaders.fillStyle = "black";
-            this.ctxheaders.font = `bold ${15}px Arial`;
+            this.ctxheaders.font = ` ${15}px Segoe UI`;
           //   this.ctxheaders.fillText(this.dataColumns[i].toUpperCase(), x + 4, this.rowHeight - 5);
             this.ctxheaders.fillText(Sheet.headerdata(i), sumcol + (this.columnsize[i]/2)-5,this.rowHeight - 5);
             this.ctxheaders.restore();
@@ -282,7 +288,7 @@ export class Sheet{
         //     this.ctxrow.beginPath();
         //     this.ctxrow.rect(0,i*this.rowHeight,this.rowref.width,this.rowHeight);
         //     this.ctxrow.fillStyle="black";
-        //     this.ctxrow.font =`bold ${15}px Arial`;
+        //     this.ctxrow.font =`bold ${15}px Segoe UI`;
         //     this.ctxrow.textAlign="right";
         //     this.ctxrow.fillText(i,this.rowref.width-4,i*this.rowHeight-4)
         //     this.ctxrow.restore();
@@ -324,7 +330,7 @@ export class Sheet{
                 // this.ctxrow.restore();
             }
             this.ctxrow.fillStyle="black";
-            this.ctxrow.font =`bold ${15}px Arial`;
+            this.ctxrow.font =` ${15}px Segoe UI`;
             this.ctxrow.textAlign="right";
             this.ctxrow.fillText(i,this.rowHeight-4,this.rowsize[i]+rowstart -5)
             this.ctxrow.restore();
@@ -389,7 +395,7 @@ export class Sheet{
         //     this.ctx.moveTo(sum, 0);
         //     this.ctx.lineTo(sum, this.canvaref.height);
         //     this.ctx.stroke();
-        //     this.ctx.font = `${15}px Arial`;
+        //     this.ctx.font = `${15}px Segoe UI`;
         //     this.ctx.fillStyle = "black";
         //     // console.log(data[j][this.dataColumns[i]]);
         //     this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " ,sum + 4, (j + 1) * this.rowHeight - 5);
@@ -455,7 +461,7 @@ export class Sheet{
                 if (this.data[j] && this.data[j][i] && this.data[j][i].wrap){
                     this.ctx.textBaseline="bottom";
                     this.ctx.fillStyle = "black";
-                    this.ctx.font = `${15}px Arial`;
+                    this.ctx.font = `${15}px Segoe UI`;
                     let base = 0
                     for(let v of this.data[j][i].wrappedarr.slice().reverse()){
                         this.ctx.fillText(v, colstart+5 , rowsend-base+this.rowsize[j])
@@ -464,7 +470,7 @@ export class Sheet{
                 }
                 else{
                     this.ctx.fillStyle = "black";
-                    this.ctx.font = `${15}px Arial`;
+                    this.ctx.font = `${15}px Segoe UI`;
                     this.ctx.fillText(this.data[j] && this.data[j][i] ? this.data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
                 }
                 this.ctx.strokeStyle="#cbd5d0";
@@ -603,7 +609,7 @@ export class Sheet{
         this.inputdiv.style.width = this.columnsize[this.selectedcell.col]  - 1 + "px"
         this.inputdiv.style.height = this.rowsize[this.selectedcell.row] - 2 + "px"
         let inputref = this.inputdiv.querySelector("input")
-        inputref.font= `${15}px Arial`;
+        inputref.font= `${15}px Segoe UI`;
         inputref.value = this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col] ? this.data[this.selectedcell.row][this.selectedcell.col]['text'] : "" ; 
         inputref.focus();
         if (!this.marchloop){
@@ -833,11 +839,35 @@ export class Sheet{
         }
         else if (e.key === "c" && e.ctrlKey){
             // console.log("ctrl c");
-            this.dashOffset=1;
-            if (!this.marchloop){
-                this.table();
-                }
-            this.clipboard();
+            if (this.ending.colstat == Infinity || this.ending.rowstat == Infinity){
+                window.alert("To Large Text to Copy")
+            }
+            else{
+                this.dashOffset=1;
+                if (!this.marchloop){
+                    this.table();
+                    }
+                this.clipboard();
+            }
+        }
+        else if (e.key === "v"  && e.ctrlKey){
+            this.paste()
+        }
+        else if (e.key === "f" && e.ctrlKey){
+            e.preventDefault()
+            this.findDiv.style.display="grid"
+            document.querySelector(".replacelabel").style.display="none"
+            document.querySelector(".replaceBtn").style.display="none"
+            document.querySelector(".replaceInput").style.display="none"
+            document.querySelector(".findInput").focus()
+        }
+        else if (e.key === "h" && e.ctrlKey){
+            e.preventDefault()
+            this.findDiv.style.display="grid"
+            document.querySelector(".replacelabel").style.display="block"
+            document.querySelector(".replaceBtn").style.display="block"
+            document.querySelector(".replaceInput").style.display="block"
+            document.querySelector(".findInput").focus()
         }
         else if (e.key === "Enter"){
             if (e.shiftKey == true ){
@@ -892,6 +922,10 @@ export class Sheet{
                 this.table();
                 }
             console.log("delete");
+        }
+        else if (e.key === "Escape"){
+            this.findDiv.style.display = "none"
+            this.countFind=0
         }
     }
     
@@ -1120,6 +1154,7 @@ export class Sheet{
                     for(let i=Math.min(this.starting.col,this.ending.col);i<=Math.max(this.starting.col,this.ending.col);i++){
                         this.columnsize[i] = prevWidth 
                     }
+                    this.wraptextforcol(i)
                 }
                 console.log(this.columnsize);
                 this.table()
@@ -1301,16 +1336,86 @@ export class Sheet{
                 for (let j = Math.min(this.starting.col,this.ending.col); j <= Math.max(this.starting.col,this.ending.col); j++){
                   // console.log(i,j);
                   text +=`${(this.data[i] && this.data[i][j] ? this.data[i][j].text : " ")}\t`;
-                }
+                }   
                 text += `\n`
             }
-            navigator.clipboard.writeText(text.trim())
+            navigator.clipboard.writeText(text.trimEnd())
         }
+    }
+    //paste clipboard
+    async paste(){
+        // this.starting.row = 0
+        // this.starting.col=0
+        // this.ending.row = 0
+        // this.ending.col =0
+        let copiedText = await navigator.clipboard.readText()
+        // console.log(copiedText);
+        let count = this.ending.col
+        let t = ""
+        for (let i=0;i<copiedText.length;i++){
+            // debugger
+            console.log(i, copiedText[i]);
+            if (copiedText[i] == "\t"){
+                if(this.data[this.ending.row]){
+                    if(this.data[this.ending.row][this.ending.col]){
+                        this.data[this.ending.row][this.ending.col]['text'] =t;
+                    }
+                    else{
+                        this.data[this.ending.row][this.ending.col] = {text:t};
+                    }
+                }
+                else{
+                    this.data[this.ending.row]={};
+                    this.data[this.ending.row][this.ending.col]={}
+                    this.data[this.ending.row][this.ending.col]['text'] = t;
+                }
+                t =""
+                this.ending.col +=1
+            }
+            else if(copiedText[i] == "\n"){
+                if(this.data[this.ending.row]){
+                    if(this.data[this.ending.row][this.ending.col]){
+                        this.data[this.ending.row][this.ending.col]['text'] =t;
+                    }
+                    else{
+                        this.data[this.ending.row][this.ending.col] = {text:t};
+                    }
+                }
+                else{
+                    this.data[this.ending.row]={};
+                    this.data[this.ending.row][this.ending.col]={}
+                    this.data[this.ending.row][this.ending.col]['text'] = t;
+                }
+                t =""
+                this.ending.col = count
+                this.ending.row+=1
+            }
+            else{
+                // console.log(selectedCell);
+                t+=copiedText[i]
+            }
+        }
+        if(this.data[this.ending.row]){
+            if(this.data[this.ending.row][this.ending.col]){
+                this.data[this.ending.row][this.ending.col]['text'] =t;
+            }
+            else{
+                this.data[this.ending.row][this.ending.col] = {text:t};
+            }
+        }
+        else{
+            this.data[this.ending.row]={};
+            this.data[this.ending.row][this.ending.col]={}
+            this.data[this.ending.row][this.ending.col]['text'] = t;
+        }
+        this.table()
+        this.headers()
+        this.rows()
     }
     
     //calculations aggregate functions
     calculate(){ 
-        console.log("starting",this.starting,"ending",this.ending);
+        // console.log("starting",this.starting,"ending",this.ending);
         let arr = []
         let min;
         let max;
@@ -1355,7 +1460,7 @@ export class Sheet{
         }   
         if (!doresize){return}
             this.ctx.save()
-            this.ctx.font=`${15}px Arial`
+            this.ctx.font=`${15}px Segoe UI`
             let tempdatacolumn = (Object.keys(this.data).filter(x=>this.data[x][i] && !this.data[x][i].wrap)).map(x=>Math.ceil(this.ctx.measureText(this.data[x][i].text).width))   
             if (tempdatacolumn.length===0){return}
             this.columnsize[i] = Math.max(...tempdatacolumn) + 5 
@@ -1378,7 +1483,7 @@ export class Sheet{
         let w=15; //font size
         let wrappedarr = []
         this.ctx.save()
-        this.ctx.font=`${15}px Arial`;
+        this.ctx.font=`${15}px Segoe UI`;
         if (this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col]?.text){
             for(let x of this.data[this.selectedcell.row][this.selectedcell.col].text){
                 w+=this.ctx.measureText(x).width
@@ -1410,7 +1515,7 @@ export class Sheet{
         //     Math.min(this.starting.col, this.ending.col) <= i && 
         //     i <= Math.max(this.starting.col, this.ending.col
         this.ctx.save()
-        this.ctx.font=`${15}px Arial`;
+        this.ctx.font=`${15}px Segoe UI`;
         for(let i=Math.min(this.starting.row, this.ending.row) ; i<=Math.max(this.starting.row, this.ending.row);i++){
             if (this.data[i]){
                 for(let j=Math.min(this.starting.col, this.ending.col);j<=Math.max(this.starting.col, this.ending.col);j++){
@@ -1437,7 +1542,7 @@ export class Sheet{
             let w=15;
             let wrappedarr = []
             this.ctx.save()
-            this.ctx.font=`${15}px Arial`;
+            this.ctx.font=`${15}px Segoe UI`;
             for(let x of this.data[r][xcordinate].text){
                 w+=this.ctx.measureText(x).width
                 if(w > (this.columnsize[xcordinate])-5){
@@ -1462,6 +1567,92 @@ export class Sheet{
     }
     
     //find data
+    findandReplaceForm(){
+        this.findDiv = document.createElement("form")
+        let headerLabel = document.createElement("h3")
+        headerLabel.textContent="Find and Replace"
+        let findRadio = document.createElement("span")
+        findRadio.textContent="Find"
+        let replaceRadio = document.createElement("span")
+        replaceRadio.textContent="Replace"
+        let findlabel = document.createElement("label")
+        findlabel.textContent = "Find"
+        let findInput = document.createElement("input")
+        let replacelabel = document.createElement("label")
+        replacelabel.textContent = "Replace"
+        let replaceInput = document.createElement("input")
+        let findBtn = document.createElement("button")
+        findBtn.textContent = "Find Next"
+        let replaceBtn = document.createElement("button")
+        replaceBtn.textContent = "Replace With"
+
+        this.findDiv.classList.add("findDiv");
+        findRadio.classList.add("findRadio")
+        replaceRadio.classList.add("replaceRadio")
+        findInput.classList.add("findInput");
+        findInput.name="findText"
+        replacelabel.classList.add("replacelabel")
+        replaceInput.classList.add("replaceInput")
+        replaceInput.name = "replaceText"
+        findBtn.classList.add("findBtn")
+        replaceBtn.classList.add("replaceBtn")
+
+        // this.childdiv.appendChild(this.findDiv);
+        this.findDiv.appendChild(headerLabel)
+        this.findDiv.appendChild(findRadio)
+        this.findDiv.appendChild(replaceRadio)
+        this.findDiv.appendChild(findlabel);
+        this.findDiv.appendChild(findInput);
+        this.findDiv.appendChild(replacelabel);
+        this.findDiv.appendChild(replaceInput);
+        this.findDiv.appendChild(findBtn);
+        this.findDiv.appendChild(replaceBtn);
+        
+        replaceBtn.style.display="none"
+        replaceInput.style.display="none"
+        replacelabel.style.display="none"
+
+        findBtn.addEventListener("click",(e)=>{
+            this.find(e.target.form.findText.value)
+        })
+
+        findInput.addEventListener("change",(e)=>{
+            this.countFind = 0
+            this.prevtext = e.target.form.findText.value
+            this.redo = true
+            // console.log(prevtext);
+        })
+        replaceInput.addEventListener("change",(e)=>{
+            this.newText = e.target.form.replaceText.value
+            // console.log(newText);
+        })
+        findRadio.addEventListener("click",()=>{
+            replaceBtn.style.display="none"
+            replaceInput.style.display="none"
+            replacelabel.style.display="none"
+            replaceRadio.style.textDecoration="none"
+            findRadio.style.textDecoration="underline"
+            findRadio.style.textDecorationSkipInk="none"
+            findRadio.style.textDecorationThickness="3px"
+            findRadio.style.textDecorationColor="#107c41"
+        })
+        replaceRadio.addEventListener("click",()=>{
+            replaceBtn.style.display="block"
+            replaceInput.style.display="block"
+            replacelabel.style.display="block"
+            findRadio.style.textDecoration="none"
+            replaceRadio.style.textDecoration="underline"
+            replaceRadio.style.textDecorationSkipInk="none"
+            replaceRadio.style.textDecorationThickness="3px"
+            replaceRadio.style.textDecorationColor="#107c41"
+        })
+        replaceBtn.addEventListener("click",()=>{
+            this.replace()
+        })
+        return this.findDiv
+    }
+    countFind = 0
+    finalarr = []
     find(findtext){
         // let datarow = Object.entries(this.data).map(v=>[v[0],Object.entries(v[1])])
         // console.log(datarow);
@@ -1470,24 +1661,42 @@ export class Sheet{
         //     return x 
         // }
         // ).filter(x=>x[1].length)
-        let finalarr = []
         let r,c
-        for(r of Object.keys(this.data)){
-            for(c of Object.keys(this.data[r])){
-                if (JSON.stringify(this.data[r][c].text).includes(findtext)){
-                    finalarr.push([r,c])
-                    console.log(finalarr,r,c);
+        if (this.redo === true){
+            this.finalarr=[]
+            for(r of Object.keys(this.data)){
+                for(c of Object.keys(this.data[r])){
+                    if (JSON.stringify(this.data[r][c].text).includes(findtext)){
+                        this.finalarr.push([r,c])
+                        console.log(this.finalarr,r,c);
+                    }
                 }
             }
+            this.redo = false
         }
-
-        console.log(finalarr);
+        
+        // console.log(this.finalarr);
+        if (this.finalarr.length>=1){
+            this.starting.row = Number(this.finalarr[this.countFind][0])
+            this.starting.col = Number(this.finalarr[this.countFind][1])
+            this.ending.row = Number(this.finalarr[this.countFind][0])
+            this.ending.col = Number(this.finalarr[this.countFind][1])
+            this.countFind= (this.countFind + 1) %this.finalarr.length
+            // this.finalarr=[]
+        }
         // let rowpos = (finalarr.map(v=>v[0]));
         // let colpos = (finalarr.map(v=>v[1][0][0]));
-        this.starting.row = Number(finalarr[0][0])
-        this.starting.col = Number(finalarr[0][1])
-        this.ending.row = Number(finalarr[0][0])
-        this.ending.col = Number(finalarr[0][1])
+        // else{
+        //     this.countFind=0
+        //     if (this.finalarr.length=1){
+        //         this.starting.row = Number(this.finalarr[0][0])
+        //         this.starting.col = Number(this.finalarr[0][1])
+        //         this.ending.row = Number(this.finalarr[0][0])
+        //         this.ending.col = Number(this.finalarr[0][1])
+        //     }
+        //     // this.finalarr=[]
+        // }
+        
         this.ending.colstat=0
         this.starting.colstat=0
         for (let i=0;i<this.ending.col;i++){
@@ -1507,7 +1716,28 @@ export class Sheet{
         }
         this.headers()
         this.rows()
+        // return finalarr
         // console.log(finalarr.map(v=>v[1][0]));
+    }
+
+    //replace
+    replace(){
+        if (this.finalarr.length>=1){
+            let row = this.finalarr[this.finalarr.length>1 ? this.countFind-1 : this.countFind][0]
+            console.log(row);
+            let col = this.finalarr[this.finalarr.length>1 ? this.countFind-1 : this.countFind][1]
+            this.data[row][col].text=this.data[row][col].text.replaceAll(this.prevtext,this.newText)
+            this.countFind-=1
+            this.finalarr.splice(this.countFind,1)
+        }
+        else{
+            window.alert("No Element Found")
+        }
+        if (!this.marchloop){
+            this.table();
+        }
+        this.headers()
+        this.rows()
     }
     
     //graph function
