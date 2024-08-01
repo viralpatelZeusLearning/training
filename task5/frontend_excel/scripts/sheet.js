@@ -25,7 +25,7 @@ export class Sheet{
     //   ];
     // columnWidth = 100;
     rowHeight = 30;
-    rowWidth = 50
+    rowWidth = 50;
     rowlimit = 1048576;
     collimit = 16383;
     selectInfinity = false
@@ -48,12 +48,12 @@ export class Sheet{
         this.childdiv = document.createElement("div");
         this.inputdiv = document.createElement("div");
         this.inputdiv.innerHTML = "<input type='text'>"
+        // this.inputtext = document.createElement("input");
         this.graphdiv = document.createElement("div");
         this.graphref = document.createElement("canvas")
-        // this.inputtext = document.createElement("input");
         this.canvaref  = document.createElement("canvas");
-
-    
+        
+        
         this.containerdiv.classList.add("containerDiv");
         this.btn.classList.add("btn");
         this.headerref.classList.add("header");
@@ -63,13 +63,13 @@ export class Sheet{
         this.inputdiv.classList.add("inputDiv");
         // this.inputtext.classList.add("textinput")
         this.graphdiv.classList.add("graphdiv");
-        this.graphref.classList.add("graphref");
         this.canvaref.classList.add("table");
-    
+        this.graphref.classList.add("graphref");
+        
         this.ctxheaders = this.headerref.getContext("2d");
         this.ctx = this.canvaref.getContext("2d");
         this.ctxrow = this.rowref.getContext("2d");
-    
+        
         // div.appendChild(this.containerdiv);
         this.childdiv.appendChild(this.canvaref);
         this.containerdiv.appendChild(this.btn);
@@ -79,8 +79,9 @@ export class Sheet{
         this.containertable.appendChild(this.childdiv);
         this.childdiv.appendChild(this.inputdiv);
         this.childdiv.appendChild(this.graphdiv);
-        this.childdiv.appendChild(this.findandReplaceForm())
         this.graphdiv.appendChild(this.graphref)
+        
+        this.childdiv.appendChild(this.findandReplaceForm())
         // this.inputdiv.appendChild(this.inputtext)
         
         this.canvasize();
@@ -163,6 +164,8 @@ export class Sheet{
             e.preventDefault()
         })
 
+        this.graphref.addEventListener("pointerdown",(e)=>this.graphPointerDown(e))
+
         window.addEventListener("keydown",(e)=>{
             if (!this.containerdiv.parentElement){return}
             this.keyhandler(e);
@@ -177,13 +180,13 @@ export class Sheet{
         // console.log(this.containertable.parentElement.clientHeight, this.containertable.parentElement.clientWidth);
         // this.canvaref.width = Math.max(this.columnsize.reduce((prev, curr) => prev + curr, 0), window.innerWidth);
         // this.canvaref.height = (this.rowsize.length ) * this.rowHeight;
-        this.canvaref.width = (this.containerdiv.clientWidth - this.rowHeight)*window.devicePixelRatio ;
+        this.canvaref.width = (this.containerdiv.clientWidth - this.rowWidth)*window.devicePixelRatio ;
         this.canvaref.height = (this.containerdiv.clientHeight - this.rowHeight)*window.devicePixelRatio ;
     
         this.headerref.width = this.canvaref.width 
         this.headerref.height = this.rowHeight * window.devicePixelRatio;
     
-        this.rowref.width=this.rowHeight * window.devicePixelRatio;
+        this.rowref.width=this.rowWidth * window.devicePixelRatio;
         this.rowref.height = this.canvaref.height ;
         // this.rowref.height = this.rowsize
 
@@ -302,7 +305,7 @@ export class Sheet{
         for(let i=ycordinate; rowstart<=(this.containerdiv.clientHeight + this.containerdiv.scrollTop);i++){
             this.ctxrow.save();
             this.ctxrow.beginPath();
-            this.ctxrow.rect(0,rowstart-0.5,this.rowHeight,this.rowsize[i]);
+            this.ctxrow.rect(0,rowstart-0.5,this.rowWidth,this.rowsize[i]);
             this.ctxrow.strokeStyle="#cbd5d0";
             this.ctxrow.lineWidth=1
             this.ctxrow.stroke();
@@ -332,7 +335,7 @@ export class Sheet{
             this.ctxrow.fillStyle="black";
             this.ctxrow.font =` ${15}px Segoe UI`;
             this.ctxrow.textAlign="right";
-            this.ctxrow.fillText(i,this.rowHeight-4,this.rowsize[i]+rowstart -5)
+            this.ctxrow.fillText(i,this.rowWidth-4,this.rowsize[i]+rowstart -5)
             this.ctxrow.restore();
             rowstart += this.rowsize[i];
         }
@@ -344,8 +347,8 @@ export class Sheet{
             this.ctxrow.beginPath();
             if (startrowpixel<this.containerdiv.scrollTop+this.containerdiv.clientHeight && newHeight>0){
                 // console.log("drawing");
-                this.ctxrow.moveTo(this.rowHeight,startrowpixel-2);
-                this.ctxrow.lineTo(this.rowHeight,startrowpixel+newHeight);
+                this.ctxrow.moveTo(this.rowWidth,startrowpixel-2);
+                this.ctxrow.lineTo(this.rowWidth,startrowpixel+newHeight);
             }
                 // this.ctxrow.moveTo(this.rowHeight,y-2);
                 // this.ctxrow.lineTo(this.rowHeight,y+h);
@@ -604,7 +607,7 @@ export class Sheet{
     editfeild(e){
         // console.log("double clk");
         this.inputdiv.style.display = "block"
-        this.inputdiv.style.left=(this.selectedcell.columnstart + this.rowHeight)  + "px"
+        this.inputdiv.style.left=(this.selectedcell.columnstart + this.rowWidth)  + "px"
         this.inputdiv.style.top=(this.selectedcell.rowstart + this.rowHeight) + "px"
         this.inputdiv.style.width = this.columnsize[this.selectedcell.col]  - 1 + "px"
         this.inputdiv.style.height = this.rowsize[this.selectedcell.row] - 2 + "px"
@@ -925,6 +928,9 @@ export class Sheet{
         }
         else if (e.key === "Escape"){
             this.findDiv.style.display = "none"
+            this.findDiv.style.left = "30%"
+            this.findDiv.style.top = "30%"
+            this.graphdiv.style.display="none"
             this.countFind=0
         }
     }
@@ -933,7 +939,7 @@ export class Sheet{
     handlemouseDown(e){
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
         this.starting = {col:xcordinate , row:ycordinate , colstat:columnstart , rowstat:rowstart}
-        console.log(this.starting);
+        // console.log(this.starting);
         this.ending = null;
         this.dashOffset=0;
         this.marchloop=null;
@@ -1354,7 +1360,7 @@ export class Sheet{
         let t = ""
         for (let i=0;i<copiedText.length;i++){
             // debugger
-            console.log(i, copiedText[i]);
+            // console.log(i, copiedText[i]);
             if (copiedText[i] == "\t"){
                 if(this.data[this.ending.row]){
                     if(this.data[this.ending.row][this.ending.col]){
@@ -1649,6 +1655,7 @@ export class Sheet{
         replaceBtn.addEventListener("click",()=>{
             this.replace()
         })
+        headerLabel.addEventListener("pointerdown",(e)=>{this.findPointerDown(e)})
         return this.findDiv
     }
     countFind = 0
@@ -1668,10 +1675,10 @@ export class Sheet{
                 for(c of Object.keys(this.data[r])){
                     if (JSON.stringify(this.data[r][c].text).includes(findtext)){
                         this.finalarr.push([r,c])
-                        console.log(this.finalarr,r,c);
                     }
                 }
             }
+            console.log(this.finalarr,r,c);
             this.redo = false
         }
         
@@ -1709,8 +1716,8 @@ export class Sheet{
             this.starting.rowstat+=this.rowsize[i]
             this.ending.rowstat+=this.rowsize[i]
         }
-        console.log(this.starting,this.ending);
-        this.containerdiv.scrollTo(this.ending.colstat,this.ending.rowstat)
+        // console.log(this.starting,this.ending);
+        this.containerdiv.scrollTo(this.ending.colstat-30,this.ending.rowstat-30)
         if (!this.marchloop){
             this.table();
         }
@@ -1724,7 +1731,7 @@ export class Sheet{
     replace(){
         if (this.finalarr.length>=1){
             let row = this.finalarr[this.finalarr.length>1 ? this.countFind-1 : this.countFind][0]
-            console.log(row);
+            // console.log(row);
             let col = this.finalarr[this.finalarr.length>1 ? this.countFind-1 : this.countFind][1]
             this.data[row][col].text=this.data[row][col].text.replaceAll(this.prevtext,this.newText)
             this.countFind-=1
@@ -1740,46 +1747,95 @@ export class Sheet{
         this.rows()
     }
     
+    //drag find and replace div
+    findPointerDown(edown){
+        edown.preventDefault()
+        var oLeft = edown.pageX - this.findDiv.getBoundingClientRect().x
+        var oTop  = edown.pageY - this.findDiv.getBoundingClientRect().y
+        console.log(oLeft,oTop);
+        let findPointerMove = (emove) =>{
+            // console.log("triggerd");
+            this.findDiv.style.top = emove.pageY - oTop +"px"
+            console.log(this.findDiv.style.left,this.containerdiv.clientWidth);
+            this.findDiv.style.left = emove.pageX - oLeft +"px"
+            // this.findDiv.style.right = emove.pageX + oLeft
+            // this.findDiv.style.bottom = emove.pageY + oTop
+        }
+        window.addEventListener("pointermove",findPointerMove)
+        
+        let findPointerUp = (eup) =>{
+            if (this.findDiv.style.top<=0 +"px"){this.findDiv.style.top = "10%"}
+            else if (this.findDiv.style.left<=0 +"px"){this.findDiv.style.left = "10%"}
+            else if (this.findDiv.style.left>this.containerdiv.clientWidth -100+"px"){this.findDiv.style.left="50%"}
+            window.removeEventListener("pointermove",findPointerMove)
+            window.removeEventListener("pointerup",findPointerUp)
+            // eup.target.removeEventListener("pointerdown",(e)=>{this.findPointerDown(e)})
+        }
+        window.addEventListener("pointerup",findPointerUp)
+    }
     //graph function
     drawgraph=null;
-    graph(){
+    graph(type){
         if(this.drawgraph)this.drawgraph.destroy()
         let dataarr=[]
-        // let arr=[]
+        let arr=new Set()
+        let singlecol = 0
         let sum = 0
         let count = 0
-        for (let i=this.starting.col ; i<=this.ending.col;i++){
-            for (let j=this.starting.row;j<=this.ending.row;j++){
-                console.log(sum);
-                console.log(j,i);
-                if (this.data[j] && this.data[j][i] && Number(this.data[j][i].text)){
-                    sum+=Number(this.data[j][i].text)
-                    count+=1
+            for (let i=Math.min(this.starting.col,this.ending.col) ; i<=Math.max(this.ending.col,this.starting.col);i++){
+                for (let j=Math.min(this.starting.row,this.ending.row);j<=Math.max(this.ending.row,this.starting.row);j++){
+                    // console.log(sum);
+                    // console.log(j,i);
+                    if (this.data[j] && this.data[j][i] && Number(this.data[j][i].text)){
+                        sum+=Number(this.data[j][i].text)
+                        count+=1
+                        arr.add(Sheet.headerdata(i))
+                        singlecol+=1
+                    }
+                }
+                let avg = (sum/count)
+                if (!isNaN(avg)){
+                    dataarr.push(avg)
+                    // arr.push(data[i].text)
+                }
+                sum=0
+                count=0
+        }
+        console.log(arr);
+        if (arr.size == 1){
+            let c = [singlecol][0]
+            arr=new Set()
+            dataarr=[]
+            for (let i=Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row);i++){
+                if (this.data[i] && this.data[i][c] && Number(this.data[i][c].text)){
+                    dataarr.push(Number(this.data[i][c].text))
+                    // count+=1
+                    arr.add(i)
                 }
             }
-            let avg = (sum/count)
-            if (!isNaN(avg)){
-                dataarr.push(avg)
-                // arr.push(data[i].text)
-            }
-            sum=0
-            count=0
         }
-        let arr = dataarr.map((x,v)=>Sheet.headerdata(this.starting.col + v))
         console.log(dataarr);
-        this.drawgraph = new Chart(this.canvaref, {
-            type: 'pie',
+        this.graphref.parentElement.style.display="block"
+        this.drawgraph = new Chart(this.graphref, {
+            type: `${type}`,
             data: {
-              labels: arr,
+              labels: [...arr],
               datasets: [{
                 data: dataarr,
                 borderWidth: 1
               }]
             },
             options: {
+                responsive:true,
+                maintainAspectRatio:false,
               scales: {
                 y: {
                   beginAtZero: true
+                }
+              },
+              plugins:{
+                legend:{
+                    display:type=="pie"?true:false
                 }
               }
             }
@@ -1788,5 +1844,31 @@ export class Sheet{
         //   drawgraph.destroy();  
         //   ctxgraph.style.display="none";
         // }
+    }
+    //graph move
+    graphPointerDown(edown){
+        edown.preventDefault()
+        var oLeft = edown.pageX - this.graphdiv.getBoundingClientRect().x
+        var oTop  = edown.pageY - this.graphdiv.getBoundingClientRect().y
+        console.log(oLeft,oTop);
+        let graphPointerMove = (emove) =>{
+            // console.log("triggerd");
+            this.graphdiv.style.top = emove.pageY - oTop +"px"
+            // console.log(this.graphdiv.style.top,this.containerdiv.clientWidth);
+            this.graphdiv.style.left = emove.pageX - oLeft +"px"
+            // this.findDiv.style.right = emove.pageX + oLeft
+            // this.findDiv.style.bottom = emove.pageY + oTop
+        }
+        window.addEventListener("pointermove",graphPointerMove)
+        
+        let graphPointerUp = (eup) =>{
+            if (this.graphdiv.style.top<=0 +"px"){this.graphdiv.style.top = "10%"}
+            else if (this.graphdiv.style.left<=0 +"px"){this.graphdiv.style.left = "10%"}
+            else if (this.graphdiv.style.left>this.containerdiv.clientWidth -100+"px"){this.graphdiv.style.left="50%"}
+            window.removeEventListener("pointermove",graphPointerMove)
+            window.removeEventListener("pointerup",graphPointerUp)
+            // eup.target.removeEventListener("pointerdown",(e)=>{this.findPointerDown(e)})
+        }
+        window.addEventListener("pointerup",graphPointerUp)
     }
 }

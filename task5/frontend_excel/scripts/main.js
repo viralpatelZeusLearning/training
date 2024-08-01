@@ -28,6 +28,16 @@ export class Main{
         this.calc = document.createElement("button")
         this.calc.textContent="Calculate"
         this.calc.addEventListener("click",()=>this.calcaggregate())
+
+        this.graph = document.createElement("button")
+        this.graph.textContent="graph"
+        let temp = this.graphOptionsDiv()
+        this.sheetcontainer.appendChild(temp)
+        this.graph.addEventListener("click",()=>{
+            console.log(temp.style.display);
+            if(temp.style.display && temp.style.display != "none"){temp.style.display="none"}
+            else{temp.style.display="flex"}
+        })
         this.min = document.createElement("span")
         this.max = document.createElement("span")
         this.mean = document.createElement("span")
@@ -54,6 +64,7 @@ export class Main{
         this.sheetchange.appendChild(this.next)
         this.sheetchange.appendChild(firstSheet)
         this.optionsdiv.appendChild(this.wrap)
+        this.optionsdiv.appendChild(this.graph)
         this.optionsdiv.appendChild(this.calc)
         this.optionsdiv.appendChild(this.min)
         this.optionsdiv.appendChild(this.max)
@@ -161,5 +172,46 @@ export class Main{
         this.sheets[this.currentsheetIndex].rows();
         this.sheets[this.currentsheetIndex].headers();
         this.sheets[this.currentsheetIndex].table();
+    }
+    graphOptionsDiv(){
+        this.graphOptions = document.createElement("div");
+        this.graphOptions.classList.add("graphOptions")
+        let bar = document.createElement("button")
+        bar.classList.add("bar")
+        bar.textContent="Bar"
+        bar.addEventListener("click",()=>{
+            this.sheets[this.currentsheetIndex].graph("bar")
+        })
+        let pie = document.createElement("button")
+        pie.classList.add("pie")
+        pie.addEventListener("click",()=>{
+            this.sheets[this.currentsheetIndex].graph("pie")
+        })
+        pie.textContent="pie"
+        let line = document.createElement("button")
+        line.classList.add("line")
+        line.textContent="Line"
+        line.addEventListener("click",()=>{
+            this.sheets[this.currentsheetIndex].graph("line")
+        })
+        let doughnut = document.createElement("button")
+        doughnut.classList.add("doughnut")
+        doughnut.textContent="doughnut"
+        doughnut.addEventListener("click",()=>{
+            this.sheets[this.currentsheetIndex].graph("doughnut")
+        })
+        let scatter = document.createElement("button")
+        scatter.classList.add("scatter")
+        scatter.textContent="scatter"
+        scatter.addEventListener("click",()=>{
+            this.sheets[this.currentsheetIndex].graph("scatter")
+        })
+        this.graphOptions.appendChild(bar)
+        this.graphOptions.appendChild(scatter)
+        this.graphOptions.appendChild(doughnut)  
+        this.graphOptions.appendChild(pie)
+        this.graphOptions.appendChild(line)
+        
+        return this.graphOptions
     }
 }
