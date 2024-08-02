@@ -1,3 +1,5 @@
+import { Graphcomponent } from "./graph.js";
+
 let data = await fetch("./tempData.json")
 data = await data.json();
 // data = window.localStorage.getItem("data") ? JSON.parse(window.localStorage.getItem("data")) : data
@@ -41,7 +43,8 @@ export class Sheet{
 
         this.data = JSON.parse(JSON.stringify(data));
         this.containerdiv = document.createElement("div");
-        this.btn = document.createElement("button");
+        this.btn = document.createElement("div");
+        // this.btn.setAttribute("data-dot","")
         this.headerref = document.createElement("canvas");
         this.rowref = document.createElement("canvas");
         this.containertable = document.createElement("div");
@@ -49,8 +52,8 @@ export class Sheet{
         this.inputdiv = document.createElement("div");
         this.inputdiv.innerHTML = "<input type='text'>"
         // this.inputtext = document.createElement("input");
-        this.graphdiv = document.createElement("div");
-        this.graphref = document.createElement("canvas")
+        // this.graphdiv = document.createElement("div");
+        // this.graphref = document.createElement("canvas")
         this.canvaref  = document.createElement("canvas");
         
         
@@ -62,9 +65,9 @@ export class Sheet{
         this.childdiv.classList.add("childDiv");
         this.inputdiv.classList.add("inputDiv");
         // this.inputtext.classList.add("textinput")
-        this.graphdiv.classList.add("graphdiv");
+        // this.graphdiv.classList.add("graphdiv");
         this.canvaref.classList.add("table");
-        this.graphref.classList.add("graphref");
+        // this.graphref.classList.add("graphref");
         
         this.ctxheaders = this.headerref.getContext("2d");
         this.ctx = this.canvaref.getContext("2d");
@@ -78,8 +81,8 @@ export class Sheet{
         this.containerdiv.appendChild(this.containertable);
         this.containertable.appendChild(this.childdiv);
         this.childdiv.appendChild(this.inputdiv);
-        this.childdiv.appendChild(this.graphdiv);
-        this.graphdiv.appendChild(this.graphref)
+        // this.childdiv.appendChild(this.graphdiv);
+        // this.graphdiv.appendChild(this.graphref)
         
         this.childdiv.appendChild(this.findandReplaceForm())
         // this.inputdiv.appendChild(this.inputtext)
@@ -163,8 +166,6 @@ export class Sheet{
         this.findDiv.addEventListener("submit",(e)=>{
             e.preventDefault()
         })
-
-        this.graphref.addEventListener("pointerdown",(e)=>this.graphPointerDown(e))
 
         window.addEventListener("keydown",(e)=>{
             if (!this.containerdiv.parentElement){return}
@@ -460,6 +461,7 @@ export class Sheet{
                     i <= Math.max(this.starting.col, this.ending.col)){
                         this.ctx.fillStyle = "#e7f1ec";
                         this.ctx.fillRect(colstart,rowsend,this.columnsize[i],this.rowsize[j])
+                        
                     }
                 if (this.data[j] && this.data[j][i] && this.data[j][i].wrap){
                     this.ctx.textBaseline="bottom";
@@ -597,6 +599,12 @@ export class Sheet{
             // this.selectrowInfinity=false
         }
         
+        if (this.starting.col == 0 || this.starting.row == 0){
+            this.btn.setAttribute("data-dot","")
+        }
+        else{
+            this.btn.removeAttribute("data-dot")
+        }
         // this.starting=null
         // this.ending=null
         // console.log("Cell data : ", data[ycordinate][xcordinate]);
@@ -930,8 +938,14 @@ export class Sheet{
             this.findDiv.style.display = "none"
             this.findDiv.style.left = "30%"
             this.findDiv.style.top = "30%"
-            this.graphdiv.style.display="none"
+            // this.graphdiv.style.display="none"
             this.countFind=0
+        }
+        if (this.starting.col == 0 || this.starting.row == 0){
+            this.btn.setAttribute("data-dot","")
+        }
+        else{
+            this.btn.removeAttribute("data-dot")
         }
     }
     
@@ -940,10 +954,16 @@ export class Sheet{
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
         this.starting = {col:xcordinate , row:ycordinate , colstat:columnstart , rowstat:rowstart}
         // console.log(this.starting);
+        if (this.starting.col == 0 || this.starting.row == 0){
+            this.btn.setAttribute("data-dot","")
+        }
+        else{
+            this.btn.removeAttribute("data-dot")
+        }
         this.ending = null;
         this.dashOffset=0;
         this.marchloop=null;
-
+        
         // console.log(this.starting);
         // e.target.addEventListener("pointerdown",handlemouseDown);
         // let temp1, temp2;
@@ -965,6 +985,13 @@ export class Sheet{
             // console.log(this.containerdiv.scrollTop+this.containerdiv.clientHeight,this.ending.rowstat+this.rowsize[this.ending.row]);
             if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<=this.ending.rowstat+this.rowsize[this.ending.row]+50){
                 this.containerdiv.scrollBy(0,+this.rowsize[this.ending.row])
+            }
+
+            if (this.starting.col == 0 || this.starting.row == 0){
+                this.btn.setAttribute("data-dot","")
+            }
+            else{
+                this.btn.removeAttribute("data-dot")
             }
             if (!this.marchloop){
                 this.table();
@@ -988,7 +1015,7 @@ export class Sheet{
             this.ending = {col:xcordinate , row:ycordinate ,colstat:columnstart,rowstat:rowstart}
             // console.log("final ending",this.ending);
             if(!this.marchloop) {this.marchants();}
-            this.calculate();
+            // if (this.starting.col == this.ending.col){this.calculate();}
             window.removeEventListener("pointerup",temp2)
         }
         let temp2 = handlemouseup.bind(this)
@@ -1414,7 +1441,9 @@ export class Sheet{
             this.data[this.ending.row][this.ending.col]={}
             this.data[this.ending.row][this.ending.col]['text'] = t;
         }
-        this.table()
+        if (!this.marchloop){
+            this.table();
+        }
         this.headers()
         this.rows()
     }
@@ -1427,6 +1456,7 @@ export class Sheet{
         let max;
         let mean;
         let sum;
+        let multiply;
         if (this.starting.col == this.ending.col){
             let start = Math.min(this.starting.row , this.ending.row);
             let end = Math.max(this.starting.row , this.ending.row);
@@ -1440,10 +1470,16 @@ export class Sheet{
             max = Math.max(...arr);
             mean = arr.reduce((prev, curr) => prev + curr,0) / arr.length;
             sum = mean * arr.length
+            if (arr.length>0){
+                multiply = arr.reduce((prev, curr) => prev * curr)
+            }
+            
+            // console.log(arr,multiply);
             // console.log(min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum);
-            return[min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum];
+            return[min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum,isNaN(multiply)?0:multiply];
     
         }
+
         // console.log(arr);
     }
     
@@ -1507,9 +1543,12 @@ export class Sheet{
             // let val = s1.split("\n").length
             // this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
             this.rowsize[this.selectedcell.row] = Math.max(wrappedarr.length *15,this.rowsize[this.selectedcell.row]);
-            this.rows()
             // this.ctxrow([this.selectedcell.row] = val * this.rowsize[this.selectedcell.row])
             this.ctx.restore()
+        }
+        this.rows()
+        if (!this.marchloop){
+            this.table();
         }
     }
 
@@ -1570,6 +1609,9 @@ export class Sheet{
             // this.ctxrow([this.selectedcell.row] = val * this.rowsize[this.selectedcell.row])
             this.ctx.restore()
         })
+        if (!this.marchloop){
+            this.table();
+        }
     }
     
     //find data
@@ -1800,7 +1842,7 @@ export class Sheet{
                 }
                 sum=0
                 count=0
-        }
+            }
         console.log(arr);
         if (arr.size == 1){
             let c = [singlecol][0]
@@ -1815,60 +1857,6 @@ export class Sheet{
             }
         }
         console.log(dataarr);
-        this.graphref.parentElement.style.display="block"
-        this.drawgraph = new Chart(this.graphref, {
-            type: `${type}`,
-            data: {
-              labels: [...arr],
-              datasets: [{
-                data: dataarr,
-                borderWidth: 1
-              }]
-            },
-            options: {
-                responsive:true,
-                maintainAspectRatio:false,
-              scales: {
-                y: {
-                  beginAtZero: true
-                }
-              },
-              plugins:{
-                legend:{
-                    display:type=="pie"?true:false
-                }
-              }
-            }
-          });
-        // else{
-        //   drawgraph.destroy();  
-        //   ctxgraph.style.display="none";
-        // }
-    }
-    //graph move
-    graphPointerDown(edown){
-        edown.preventDefault()
-        var oLeft = edown.pageX - this.graphdiv.getBoundingClientRect().x
-        var oTop  = edown.pageY - this.graphdiv.getBoundingClientRect().y
-        console.log(oLeft,oTop);
-        let graphPointerMove = (emove) =>{
-            // console.log("triggerd");
-            this.graphdiv.style.top = emove.pageY - oTop +"px"
-            // console.log(this.graphdiv.style.top,this.containerdiv.clientWidth);
-            this.graphdiv.style.left = emove.pageX - oLeft +"px"
-            // this.findDiv.style.right = emove.pageX + oLeft
-            // this.findDiv.style.bottom = emove.pageY + oTop
-        }
-        window.addEventListener("pointermove",graphPointerMove)
-        
-        let graphPointerUp = (eup) =>{
-            if (this.graphdiv.style.top<=0 +"px"){this.graphdiv.style.top = "10%"}
-            else if (this.graphdiv.style.left<=0 +"px"){this.graphdiv.style.left = "10%"}
-            else if (this.graphdiv.style.left>this.containerdiv.clientWidth -100+"px"){this.graphdiv.style.left="50%"}
-            window.removeEventListener("pointermove",graphPointerMove)
-            window.removeEventListener("pointerup",graphPointerUp)
-            // eup.target.removeEventListener("pointerdown",(e)=>{this.findPointerDown(e)})
-        }
-        window.addEventListener("pointerup",graphPointerUp)
+        new Graphcomponent(dataarr,arr,type,this.childdiv) 
     }
 }

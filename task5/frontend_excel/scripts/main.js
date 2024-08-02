@@ -22,30 +22,44 @@ export class Main{
         this.next = document.createElement("button")
         this.next.textContent="→"
         this.next.addEventListener("click",()=>this.nextSheet())
-        this.wrap = document.createElement("button")
-        this.wrap.textContent="Wrap Text"
-        this.wrap.addEventListener("click",()=>this.wraptextfeild())
+
         this.calc = document.createElement("button")
         this.calc.textContent="Calculate"
-        this.calc.addEventListener("click",()=>this.calcaggregate())
+        let maths = this.calcaggregate()
+        this.sheetcontainer.appendChild(maths)
+        this.calc.addEventListener("click",()=>{
+            //this.calcaggregate()
+            this.recalc()
+            maths.style.display="flex";graphdiv.style.display="none";textdiv.style.display="none"
+            
+        })
+        
+        this.text = document.createElement("button")
+        this.text.textContent="Text"
+        let textdiv = this.textOptionsdiv()
+        textdiv.style.display="flex"
+        this.sheetcontainer.appendChild(textdiv)
 
         this.graph = document.createElement("button")
         this.graph.textContent="graph"
-        let temp = this.graphOptionsDiv()
-        this.sheetcontainer.appendChild(temp)
-        this.graph.addEventListener("click",()=>{
-            console.log(temp.style.display);
-            if(temp.style.display && temp.style.display != "none"){temp.style.display="none"}
-            else{temp.style.display="flex"}
+        let graphdiv = this.graphOptionsDiv()
+        this.sheetcontainer.appendChild(graphdiv)
+
+        this.text.addEventListener("click",()=>{
+            textdiv.style.display="flex";graphdiv.style.display="none";maths.style.display="none"
         })
-        this.min = document.createElement("span")
-        this.max = document.createElement("span")
-        this.mean = document.createElement("span")
-        this.sum = document.createElement("span")
+
+        this.graph.addEventListener("click",()=>{
+            console.log(graphdiv.style.display);
+            graphdiv.style.display="flex" ; textdiv.style.display="none";maths.style.display="none"
+        })
+        
 
         this.sheetTabContainer = document.createElement("div")
         this.sheetTabContainer.classList.add("sheetTabs")
 
+        this.sheetsdiv = document.createElement("div")
+        this.sheetsdiv.classList.add("sheets_Div")
         let firstSheet = document.createElement("input")
         firstSheet.classList.add("sheetTab")
         firstSheet.value="Sheet 1";
@@ -62,14 +76,11 @@ export class Main{
         this.sheetchange.appendChild(this.del)
         this.sheetchange.appendChild(this.prev)
         this.sheetchange.appendChild(this.next)
-        this.sheetchange.appendChild(firstSheet)
-        this.optionsdiv.appendChild(this.wrap)
+        this.sheetchange.appendChild(this.sheetsdiv)
+        this.sheetsdiv.appendChild(firstSheet)
+        this.optionsdiv.appendChild(this.text)
         this.optionsdiv.appendChild(this.graph)
         this.optionsdiv.appendChild(this.calc)
-        this.optionsdiv.appendChild(this.min)
-        this.optionsdiv.appendChild(this.max)
-        this.optionsdiv.appendChild(this.mean)
-        this.optionsdiv.appendChild(this.sum)
         this.sheetcontainer.appendChild(this.sheetchange)
 
         let sheet_1 = new Sheet(sheetcontainer)
@@ -81,9 +92,9 @@ export class Main{
         if(i>=0){
             this.sheets?.[this.currentsheetIndex]?.containerdiv?.remove()
             // this.sheetcontainer?.[0]?.remove()
-            console.log(this.sheets[i]);
+            // console.log(this.sheets[i]);
             this.sheetcontainer.appendChild(this.sheets[i].containerdiv)
-            console.log(i,this.sheets);
+            // console.log(i,this.sheets);
             this.sheets[i].canvasize();
             this.sheets[i].rows();
             this.sheets[i].headers();
@@ -95,16 +106,24 @@ export class Main{
         let newSheet = new Sheet(this.sheetcontainer)
         this.sheets.push(newSheet)
         this.currsheet(this.sheets.length -1)
-        console.log(this.sheets);
+        // console.log(this.sheets);
         let newSheetdiv = document.createElement("input")
         newSheetdiv.classList.add("sheetcontainer")
-        newSheetdiv.value=`Sheet ${this.sheets.length}`;
         newSheetdiv.setAttribute("readonly","")
         newSheetdiv.setAttribute("data-index",this.sheets.length-1)
         newSheetdiv.addEventListener("click",e=>this.sheetTabClickHandler(e))
         newSheetdiv.addEventListener("dblclick",e=>this.sheetTabDoubleClickHandler(e))
         newSheetdiv.addEventListener("keydown",e=>this.sheetTabKeyHandler(e))
-        this.sheetchange.appendChild(newSheetdiv)
+        this.sheetsdiv.appendChild(newSheetdiv)
+        let tab = this.sheetsdiv.querySelectorAll("input")
+        tab[this.currentsheetIndex].click()
+        for(var i=0;i<this.sheets.length;i++){
+            if(![...tab].map(x=>x.value).includes(`Sheet ${i+1}`)){
+                break
+            }
+        }
+        newSheetdiv.value=`Sheet ${i+1}`;
+        this.sheetsdiv.scrollTo(this.sheetsdiv.scrollWidth,0)
     }
     delSheet(){
         if (this.sheets.length>1){
@@ -112,33 +131,35 @@ export class Main{
             this.sheets[this.currentsheetIndex].containerdiv.remove()
             this.sheets.splice(Number(this.currentsheetIndex),1)
             console.log(this.sheets);
-            this.sheetchange.children[this.currentsheetIndex+4].remove()
+            this.sheetsdiv.children[this.currentsheetIndex].remove()
             this.currsheet(this.currentsheetIndex-1)
-            Array(...this.sheetchange.children).forEach((v,j)=>{
+            Array(...this.sheetsdiv.children).forEach((v,j)=>{
                 // console.log(j);
-                v.setAttribute("data-index",j-4)
+                v.setAttribute("data-index",j)
             })
-            // let tabs = this.sheetchange.querySelectorAll("input")
-            // tabs[this.currentsheetIndex].removeAttribute("data-current")
-            // this.sheets[this.currentsheetIndex].sheetchange.remove()
-            // this.sheetchange.removeChild(this.sheets[this.currentsheetIndex].containerdiv)
+            this.sheetsdiv.querySelectorAll("input")[this.currentsheetIndex].click()
+        }
+        else{
+            window.alert("There Should be atleast 1 sheet")
         }
     }
     prevSheet(){
-        let tabs = this.sheetchange.querySelectorAll("input")
+        let tabs = this.sheetsdiv.querySelectorAll("input")
         tabs[this.currentsheetIndex].removeAttribute("data-current")
         if (this.currentsheetIndex>0){
             console.log(this.currentsheetIndex);
             this.currsheet(this.currentsheetIndex-1)
         }
+        this.sheetsdiv.querySelectorAll("input")[this.currentsheetIndex].click()
     }
     nextSheet(){
-        let tabs = this.sheetchange.querySelectorAll("input")
+        let tabs = this.sheetsdiv.querySelectorAll("input")
         tabs[this.currentsheetIndex].removeAttribute("data-current")
         if (this.currentsheetIndex<this.sheets.length-1){
             console.log(this.currentsheetIndex);
             this.currsheet(this.currentsheetIndex+1)
         }
+        this.sheetsdiv.querySelectorAll("input")[this.currentsheetIndex].click()
     }
     sheetTabClickHandler(e){
         e.target.parentElement.querySelectorAll("input").forEach(t1=>{
@@ -157,14 +178,9 @@ export class Main{
               e.target.setAttribute("readonly","")
         }
     }
-    calcaggregate(){
-        let val = this.sheets[this.currentsheetIndex].calculate()
-        console.log(this.sheets[this.currentsheetIndex]);
-        this.min.textContent="Min:"+`${val[0]}`
-        this.max.textContent="Max:"+`${val[1]}`
-        this.mean.textContent="Mean:"+`${val[2]}`
-        this.sum.textContent="Sum:"+`${val[3]}`
-    }
+    // calcaggregate(){
+        
+    // }
     wraptextfeild(){
         // this.sheets[this.currentsheetIndex].wraptext()
         this.sheets[this.currentsheetIndex].wraprange()
@@ -200,18 +216,50 @@ export class Main{
         doughnut.addEventListener("click",()=>{
             this.sheets[this.currentsheetIndex].graph("doughnut")
         })
-        let scatter = document.createElement("button")
-        scatter.classList.add("scatter")
-        scatter.textContent="scatter"
-        scatter.addEventListener("click",()=>{
-            this.sheets[this.currentsheetIndex].graph("scatter")
-        })
         this.graphOptions.appendChild(bar)
-        this.graphOptions.appendChild(scatter)
         this.graphOptions.appendChild(doughnut)  
         this.graphOptions.appendChild(pie)
         this.graphOptions.appendChild(line)
         
         return this.graphOptions
+    }
+    textOptionsdiv(){
+        this.textOptions = document.createElement("div");
+        this.textOptions.classList.add("textOptions");
+
+        let wrap = document.createElement("button")
+        wrap.textContent="Wrap Text"
+        wrap.addEventListener("click",()=>this.sheets[this.currentsheetIndex].wraprange())
+
+        this.textOptions.appendChild(wrap)
+        return this.textOptions
+    }
+    
+    calcaggregate(){
+        this.calcOptions = document.createElement("div");
+        this.calcOptions.classList.add("calcdiv");
+
+        this.min = document.createElement("span")
+        this.max = document.createElement("span")
+        this.mean = document.createElement("span")
+        this.sum = document.createElement("span")
+        this.multiply = document.createElement("span")
+        this.calcOptions.appendChild(this.min)
+        this.calcOptions.appendChild(this.max)
+        this.calcOptions.appendChild(this.mean)
+        this.calcOptions.appendChild(this.sum)
+        this.calcOptions.appendChild(this.multiply)
+        return this.calcOptions
+    }
+    //for calculation and call from sheets
+    recalc(){
+        // if(!this.sheets[this.currentsheetIndex]){return}
+        let val = this.sheets[this.currentsheetIndex].calculate()
+        console.log(this.sheets[this.currentsheetIndex]);
+        this.min.textContent="Min:"+`${val?.[0] ? val[0] : "Null"}`
+        this.max.textContent="Max:"+`${val?.[1] ? val[1] : "Null"}`
+        this.mean.textContent="Mean:"+`${val?.[2] ? val[2] : "Null"}`
+        this.sum.textContent="Sum:"+`${val?.[3] ? val[3] : "Null"}`
+        this.multiply.textContent="Multiply:"+`${val?.[4] ?val[4] : "Null"}`
     }
 }
