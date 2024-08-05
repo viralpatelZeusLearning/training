@@ -6,41 +6,80 @@ data = await data.json();
 // console.log(data);
 
 export class Sheet{
+    /**
+     * @type {HTMLElement} -Parent and Top most div
+     */
+    containerdiv
+    /**
+     * @type {HTMLCanvasElement} -header canvas
+     */
+    headerref
+    /**
+     * @type {HTMLCanvasElement} - row canvas
+     */
+    rowref
+    /**
+     * @type {HTMLCanvasElement} - table canvas
+     */
+    canvaref
+    /**
+     * @type {HTMLElement} -Top most div of table canvas
+     */
+    containertable
+    /**
+     * @type {HTMLElement} - parent element of an table canvas
+     */
+    childdiv
+    /**
+     * @type {HTMLElement} - parent element of an input element
+     */
+    inputdiv
+    /**
+     * @type {HTMLFormElement} - form for the find and replace boc
+     */
+    findDiv
     // columnArr = [180, 120, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150, 100];
+    /**
+     * @type {Array <Number>} - array of columns size
+     */
     columnsize= Array(20).fill(100);
+    /**
+     * @type {Array <Number>} - array of row sizes
+     */
     rowsize=Array(30).fill(30);
-    // dataColumns = [
-    //     "Email ID",
-    //     "Name",
-    //     "Country",
-    //     "State",
-    //     "City",
-    //     "Telephone number",
-    //     "Address line 1",
-    //     "Address line 2",
-    //     "Date of Birth",
-    //     "FY2019-20",
-    //     "FY2020-21",
-    //     "FY2021-22",
-    //     "FY2022-23",
-    //     "FY2023-24",
-    //   ];
-    // columnWidth = 100;
-    rowHeight = 30;
-    rowWidth = 50;
-    rowlimit = 1048576;
-    collimit = 16383;
-    selectInfinity = false
-    // file = null;
-    selectedcell= {col:0,row:0,columnstart:0,rowstart:0};
-    starting  = {col:0,row:0,colstat:0,rowstat:0};
-    ending = {col:0,row:0,colstat:0,rowstat:0};
-    dashOffset = 0;
+    /**
+     * some default configs
+     */
+    config={
+        fontSize:15,
+        fontStyle:"Segoe UI",
+        rowHeight : 30,
+        rowWidth : 50,
+        rowlimit : 1048576,
+        collimit : 16383,
+        dashOffset : 0,
+        drawgraph:null,
+        countFind : 0,
+        /**
+         * @type {[[Number,Number]]} - stores row and column of data that is present
+         */
+        findarr :[],
+    }
+    /**
+     * @type {(null | Number)} - to check the marchants
+     */
     marchloop = null;
+    /**@type {{col:Number , row:Number , columnstart:Number , rowstart:Number}} */
+    selectedcell= {col:0,row:0,columnstart:0,rowstart:0};
+    /**
+     * @type {(null|{col:Number , row:Number , colstat:Number , rowstat:Number})} - col,row are index and colstat and rowstat are pixel values*/
+    starting  = {col:0,row:0,colstat:0,rowstat:0};
+    /**@type {(null|{col:Number , row:Number , colstat:Number , rowstat:Number})} - col,row are index and colstat and rowstat are pixel values*/
+    ending = {col:0,row:0,colstat:0,rowstat:0};
+
     constructor(div){
         // this.columnsize = window.localStorage.getItem("column") ? JSON.parse(window.localStorage.getItem("column")) : Array(10).fill(100)
         // this.rowsize = window.localStorage.getItem("rows") ? JSON.parse(window.localStorage.getItem("rows")) : Array(25).fill(30)
-
         this.data = JSON.parse(JSON.stringify(data));
         this.containerdiv = document.createElement("div");
         this.btn = document.createElement("div");
@@ -169,25 +208,29 @@ export class Sheet{
 
         window.addEventListener("keydown",(e)=>{
             if (!this.containerdiv.parentElement){return}
+            if (e.target.nodeName != "BODY"){return}
             this.keyhandler(e);
             this.headers();
         })
+        // console.log(this,Object.keys(this));
     }
-    
+    /**
+     * To calculate the height and width of all 3 canvas 
+     */
     canvasize(){
     
         this.childdiv.style.width = Math.max(this.columnsize.reduce((prev, curr) => prev + curr, 0), window.innerWidth) +"px";
-        this.childdiv.style.height = (this.rowsize.length ) * this.rowHeight +"px";
+        this.childdiv.style.height = (this.rowsize.length ) * this.config.rowHeight +"px";
         // console.log(this.containertable.parentElement.clientHeight, this.containertable.parentElement.clientWidth);
         // this.canvaref.width = Math.max(this.columnsize.reduce((prev, curr) => prev + curr, 0), window.innerWidth);
         // this.canvaref.height = (this.rowsize.length ) * this.rowHeight;
-        this.canvaref.width = (this.containerdiv.clientWidth - this.rowWidth)*window.devicePixelRatio ;
-        this.canvaref.height = (this.containerdiv.clientHeight - this.rowHeight)*window.devicePixelRatio ;
+        this.canvaref.width = (this.containerdiv.clientWidth - this.config.rowWidth)*window.devicePixelRatio ;
+        this.canvaref.height = (this.containerdiv.clientHeight - this.config.rowHeight)*window.devicePixelRatio ;
     
         this.headerref.width = this.canvaref.width 
-        this.headerref.height = this.rowHeight * window.devicePixelRatio;
+        this.headerref.height = this.config.rowHeight * window.devicePixelRatio;
     
-        this.rowref.width=this.rowWidth * window.devicePixelRatio;
+        this.rowref.width=this.config.rowWidth * window.devicePixelRatio;
         this.rowref.height = this.canvaref.height ;
         // this.rowref.height = this.rowsize
 
@@ -196,6 +239,11 @@ export class Sheet{
         this.canvaref.style.width =`${width}px`
         this.canvaref.style.height = `${height}px` 
     }
+    /**
+     * Function to convert column Index to Column Name
+     * @param {Number} n - Number to conver it to an char 
+     * @returns - provides the char in string format
+     */
     static headerdata(n){
         let str = "";
         do {
@@ -212,6 +260,9 @@ export class Sheet{
         return str;
     }
     //header data fill
+    /**
+     * Header canvas renderer function
+     */
     headers() {
         this.ctxheaders.save();
         this.ctxheaders.setTransform(1, 0, 0, 1, 0, 0);
@@ -223,7 +274,7 @@ export class Sheet{
         for (let i = xcordinate; sumcol<=(this.containerdiv.clientWidth + this.containerdiv.scrollLeft) && i<this.columnsize.length; i++) {
             this.ctxheaders.save();
             this.ctxheaders.beginPath();
-            this.ctxheaders.rect(sumcol-0.5, 0, this.columnsize[i], this.rowHeight); //x position y position width height
+            this.ctxheaders.rect(sumcol-0.5, 0, this.columnsize[i], this.config.rowHeight); //x position y position width height
             this.ctxheaders.strokeStyle="#cbd5d0";
             this.ctxheaders.stroke();
             if (this.starting && this.ending && 
@@ -251,9 +302,9 @@ export class Sheet{
             }
             // this.ctxheaders.clip();
             this.ctxheaders.fillStyle = "black";
-            this.ctxheaders.font = ` ${15}px Segoe UI`;
+            this.ctxheaders.font = ` ${this.config.fontSize}px ${this.config.fontStyle}`;
           //   this.ctxheaders.fillText(this.dataColumns[i].toUpperCase(), x + 4, this.rowHeight - 5);
-            this.ctxheaders.fillText(Sheet.headerdata(i), sumcol + (this.columnsize[i]/2)-5,this.rowHeight - 5);
+            this.ctxheaders.fillText(Sheet.headerdata(i), sumcol + (this.columnsize[i]/2)-5,this.config.rowHeight - 5);
             this.ctxheaders.restore();
             sumcol += this.columnsize[i];
           }
@@ -267,8 +318,8 @@ export class Sheet{
             this.ctxheaders.beginPath();
             if (startpixel<this.containerdiv.scrollLeft+this.containerdiv.clientWidth && newwidth>0){
                 // console.log("drawing");
-                this.ctxheaders.moveTo(startpixel-1.5,this.rowHeight);
-                this.ctxheaders.lineTo(startpixel+newwidth+0.5,this.rowHeight);
+                this.ctxheaders.moveTo(startpixel-1.5,this.config.rowHeight);
+                this.ctxheaders.lineTo(startpixel+newwidth+0.5,this.config.rowHeight);
             }
             // this.ctxheaders.moveTo(x-1.5,this.rowHeight);
             // this.ctxheaders.lineTo(x+w+0.5,this.rowHeight);
@@ -281,6 +332,9 @@ export class Sheet{
         
     }
     //numbering on rows
+    /**
+     * Row canvas renderer function
+     */
     rows(){
         this.ctxrow.save();
         this.ctxrow.setTransform(1, 0, 0, 1, 0, 0);
@@ -306,7 +360,7 @@ export class Sheet{
         for(let i=ycordinate; rowstart<=(this.containerdiv.clientHeight + this.containerdiv.scrollTop);i++){
             this.ctxrow.save();
             this.ctxrow.beginPath();
-            this.ctxrow.rect(0,rowstart-0.5,this.rowWidth,this.rowsize[i]);
+            this.ctxrow.rect(0,rowstart-0.5,this.config.rowWidth,this.rowsize[i]);
             this.ctxrow.strokeStyle="#cbd5d0";
             this.ctxrow.lineWidth=1
             this.ctxrow.stroke();
@@ -324,19 +378,11 @@ export class Sheet{
                         this.ctxrow.fill()
                     }
                 // await new Promise(r=>setTimeout(r,100))
-                // let [x,y,w,h] = this.marchants()
-                // this.ctxrow.beginPath();
-                // this.ctxrow.moveTo(this.rowHeight,y-5);
-                // this.ctxrow.lineTo(this.rowHeight,y+h+2);
-                // this.ctxrow.lineWidth=4;
-                // this.ctxrow.strokeStyle="#107c41";
-                // this.ctxrow.stroke();
-                // this.ctxrow.restore();
             }
             this.ctxrow.fillStyle="black";
-            this.ctxrow.font =` ${15}px Segoe UI`;
+            this.ctxrow.font =` ${this.config.fontSize}px ${this.config.fontStyle}`;
             this.ctxrow.textAlign="right";
-            this.ctxrow.fillText(i,this.rowWidth-4,this.rowsize[i]+rowstart -5)
+            this.ctxrow.fillText(i,this.config.rowWidth-4,this.rowsize[i]+rowstart -5)
             this.ctxrow.restore();
             rowstart += this.rowsize[i];
         }
@@ -348,8 +394,8 @@ export class Sheet{
             this.ctxrow.beginPath();
             if (startrowpixel<this.containerdiv.scrollTop+this.containerdiv.clientHeight && newHeight>0){
                 // console.log("drawing");
-                this.ctxrow.moveTo(this.rowWidth,startrowpixel-2);
-                this.ctxrow.lineTo(this.rowWidth,startrowpixel+newHeight);
+                this.ctxrow.moveTo(this.config.rowWidth,startrowpixel-2);
+                this.ctxrow.lineTo(this.config.rowWidth,startrowpixel+newHeight);
             }
                 // this.ctxrow.moveTo(this.rowHeight,y-2);
                 // this.ctxrow.lineTo(this.rowHeight,y+h);
@@ -360,7 +406,10 @@ export class Sheet{
         }
         
     }
-    //cell data
+    //cell data all excel
+    /**
+     * Table canvas renderer function
+     */
     table(){
         // console.log("redraw");
         this.ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -413,30 +462,6 @@ export class Sheet{
         
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
         let colstart =  columnstart;
-        // console.log(this.starting,this.ending);
-        // if (this.selectInfinity == true || this.selectrowInfinity == true){
-        //     this.ctx.save()
-        //     this.ctx.beginPath()
-        //     let rectStartX = Math.min(this.starting.colstat, this.ending.colstat)
-        //     let rectStartY = Math.min(this.starting.rowstat, this.ending.rowstat)
-        //     let rectEndX = Math.max(this.starting.colstat, this.ending.colstat) +
-        //     this.columnsize[(Math.max(this.starting.col, this.ending.col))<=this.columnsize.length ? Math.max(this.starting.col, this.ending.col) : 0]
-        //     let rectEndY = Math.max(this.starting.rowstat, this.ending.rowstat) +
-        //     this.rowsize[(Math.max(this.starting.row, this.ending.row))<=this.rowsize.length ? Math.max(this.starting.row, this.ending.row) : 0]
-        //     // rectEndY = isNaN(rectEndY) ? this.tableDiv.scrollTop+this.tableDiv.clientHeight : rectEndY
-        //     rectStartX = Math.max(this.containerdiv.scrollLeft, rectStartX)
-        //     rectStartY = Math.max(this.containerdiv.scrollTop, rectStartY)
-        //     rectEndX = Math.max(Math.min(this.containerdiv.scrollLeft+this.containerdiv.clientWidth,rectEndX), rectStartX-2)
-        //     rectEndY = Math.max(Math.min(this.containerdiv.scrollTop+this.containerdiv.clientHeight, rectEndY), rectStartY-2)
-        //     this.ctx.strokeStyle = "#107c41"
-        //     this.ctx.lineWidth = 3
-        //     this.ctx.fillStyle = "#e7f1ec";
-        //     // console.log(rectStartX,rectStartY,(rectEndX-rectStartX),(rectEndY-rectStartY));
-        //     this.ctx.rect(rectStartX,rectStartY,(rectEndX-rectStartX),(rectEndY-rectStartY))
-        //     this.ctx.stroke()
-        //     this.ctx.fill()
-        //     this.ctx.restore()
-        // }
         for (let i= xcordinate; colstart< (this.containerdiv.clientWidth+this.containerdiv.scrollLeft);i++){
             let rowsend = rowstart;
             for(let j=ycordinate; rowsend< (this.containerdiv.clientHeight+this.containerdiv.scrollTop);j++){
@@ -451,8 +476,8 @@ export class Sheet{
                 // console.log(rowsend+5 , colstart+this.rowsize[i]-5);
                 // this.ctx.fillText(data[j] && data[j][i] ? data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[i] - 5)
                 if (this.selectedcell && this.selectedcell.col == i && this.selectedcell.row == j){
-                    // this.ctx.strokeStyle = "#107c41"
-                    // this.ctx.lineWidth = 2
+                    this.ctx.strokeStyle = "#107c41"
+                    this.ctx.lineWidth = 2
                 }
                 else if (this.starting && this.ending && 
                     Math.min(this.starting.row, this.ending.row) <= j && 
@@ -466,20 +491,20 @@ export class Sheet{
                 if (this.data[j] && this.data[j][i] && this.data[j][i].wrap){
                     this.ctx.textBaseline="bottom";
                     this.ctx.fillStyle = "black";
-                    this.ctx.font = `${15}px Segoe UI`;
+                    this.ctx.font = `${this.config.fontSize}px ${this.config.fontStyle}`;
                     let base = 0
                     for(let v of this.data[j][i].wrappedarr.slice().reverse()){
                         this.ctx.fillText(v, colstart+5 , rowsend-base+this.rowsize[j])
-                        base+=15
+                        base+=this.config.fontSize
                     }
                 }
                 else{
                     this.ctx.fillStyle = "black";
-                    this.ctx.font = `${15}px Segoe UI`;
+                    this.ctx.font = `${this.config.fontSize}px ${this.config.fontStyle}`;
                     this.ctx.fillText(this.data[j] && this.data[j][i] ? this.data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
                 }
-                this.ctx.strokeStyle="#cbd5d0";
-                this.ctx.stroke();
+                // this.ctx.strokeStyle="#cbd5d0";
+                // this.ctx.stroke();
                 // this.ctx.moveTo(colstart,0);
                 // this.ctx.lineTo(colstart,this.canvaref.height);
                 // this.ctx.strokeStyle="#00000055";
@@ -492,7 +517,27 @@ export class Sheet{
             }
             colstart+=this.columnsize[i];
         }
-       
+        this.columnsize.reduce((prev,curr)=>{
+            this.ctx.beginPath();
+            this.ctx.save();
+            this.ctx.moveTo(prev + curr - 0.5, this.containerdiv.scrollTop);
+            this.ctx.lineTo(prev + curr - 0.5, this.canvaref.height/window.devicePixelRatio+this.containerdiv.scrollTop);
+            this.ctx.strokeStyle = "#cbd5d0";
+            this.ctx.stroke();
+            this.ctx.restore();
+            return prev + curr;
+        },0)
+
+        this.rowsize.reduce((prev,curr)=>{
+            this.ctx.beginPath();
+            this.ctx.save();
+            this.ctx.moveTo(this.containerdiv.scrollLeft, prev + curr - 0.5);
+            this.ctx.lineTo(this.canvaref.width/window.devicePixelRatio + this.containerdiv.scrollLeft, prev + curr - 0.5);
+            this.ctx.strokeStyle = "#cbd5d0";
+            this.ctx.stroke();
+            this.ctx.restore();
+            return prev + curr;
+        },0)
         if(this.starting && this.ending ){
             let [x,y,w,h] = this.marchants()
             // console.log("drawing box",x,y,w,h);
@@ -506,11 +551,11 @@ export class Sheet{
             this.ctx.beginPath();
             this.ctx.strokeStyle = "#107c41"
             this.ctx.lineWidth = 2
-            if(this.dashOffset!=0){
+            if(this.config.dashOffset!=0){
                 this.ctx.setLineDash([4, 4]);
-                this.ctx.lineDashOffset = this.dashOffset;
-                this.dashOffset+=1;
-                if(this.dashOffset>8){this.dashOffset=1;}
+                this.ctx.lineDashOffset = this.config.dashOffset;
+                this.config.dashOffset+=1;
+                if(this.config.dashOffset>8){this.config.dashOffset=1;}
                 this.marchloop=window.requestAnimationFrame(()=>{
                     this.table();
                     // this.marchants();
@@ -526,7 +571,10 @@ export class Sheet{
     }
     
     //for column scroll
-    checkcolumn(e){
+    /**
+     * Check if scroll left reached till end then add 5 columns of 100px each
+     */
+    checkcolumn(){
         let stat = (this.containerdiv.scrollWidth - this.containerdiv.clientWidth - this.containerdiv.scrollLeft > 10 ? false : true)
         if (stat){
             // console.log("scrolling");
@@ -540,7 +588,10 @@ export class Sheet{
         }
     }
     //for row scroll
-    checkrow(e){
+    /**
+     * Check if scroll bottom reached end then add 20 rows of 30px 
+     */
+    checkrow(){
         let stat = (this.containerdiv.scrollHeight - this.containerdiv.clientHeight - this.containerdiv.scrollTop > 25 ? false : true)
         // console.log(stat);
         if (stat){
@@ -556,6 +607,12 @@ export class Sheet{
     }
     
     //click function for select cell to get position of selected
+    /**
+     * To calculate the co-ordinates of clicked cell and pixel values
+     * This Event Listner is added on canvas table
+     * @param {PointerEvent} e - default event
+     * @returns {{columnstart:Number , rowstart:Number , xcordinate:Number , ycordinate:Number}} - x,y index and pixel values from left and top
+     */
     handleclick(e){
         // console.log(e.offsetX,e.offsetY);
         let xcord;
@@ -571,6 +628,7 @@ export class Sheet{
             colposition += this.columnsize[xcord]
             // colposition = colposition / this.columnsize[xcord]
         }
+        // console.log(colposition);
         let ycord;
         let offy = e.offsetY;
         for(ycord=0;ycord<this.rowsize.length;ycord++){
@@ -582,8 +640,12 @@ export class Sheet{
         // console.log(colposition,rowposition , xcord, ycord);
         return {columnstart:colposition,rowstart:rowposition , xcordinate:xcord , ycordinate:ycord}
     }
-    
-    //click color change and selected cell data change and position
+    //click selected cell data change and position
+    /**
+     * To set the selected cell position
+     * This Event Listner is added on canvas table
+     * @param {PointerEvent} e - default event
+     */
     canvapointerclick(e){
         if (e.shiftKey == true){
             this.starting=JSON.parse(JSON.stringify(this.selectedcell))
@@ -599,12 +661,6 @@ export class Sheet{
             // this.selectrowInfinity=false
         }
         
-        if (this.starting.col == 0 || this.starting.row == 0){
-            this.btn.setAttribute("data-dot","")
-        }
-        else{
-            this.btn.removeAttribute("data-dot")
-        }
         // this.starting=null
         // this.ending=null
         // console.log("Cell data : ", data[ycordinate][xcordinate]);
@@ -612,23 +668,32 @@ export class Sheet{
     }
     
     //edit feild dblclick function
-    editfeild(e){
+    /**
+     * To call the input feild on double click and set its  value and position
+     * This Event Listner is added on canvas table
+     */
+    editfeild(){
         // console.log("double clk");
         this.inputdiv.style.display = "block"
-        this.inputdiv.style.left=(this.selectedcell.columnstart + this.rowWidth)  + "px"
-        this.inputdiv.style.top=(this.selectedcell.rowstart + this.rowHeight) + "px"
+        this.inputdiv.style.left=(this.selectedcell.columnstart + this.config.rowWidth)  + "px"
+        this.inputdiv.style.top=(this.selectedcell.rowstart + this.config.rowHeight) + "px"
         this.inputdiv.style.width = this.columnsize[this.selectedcell.col]  - 1 + "px"
         this.inputdiv.style.height = this.rowsize[this.selectedcell.row] - 2 + "px"
         let inputref = this.inputdiv.querySelector("input")
-        inputref.font= `${15}px Segoe UI`;
+        inputref.font= `${this.config.fontSize}px ${this.congif.fontStyle}`;
         inputref.value = this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col] ? this.data[this.selectedcell.row][this.selectedcell.col]['text'] : "" ; 
         inputref.focus();
         if (!this.marchloop){
             this.table();
-            }
+        }
     }
     
-    //key input enters and escape
+    //key Input box enters and escape
+    /**
+     * To set the input box display and remove and this eventListner is added only on input div
+     * This Event Listner is added on Input Box
+     * @param {KeyboardEvent} e - default event
+     */
     handleKeyInputEnter(e) {
         if (e.key === "Enter") {
             let newValue = {text:e.target.value};
@@ -664,6 +729,12 @@ export class Sheet{
     }
     
     //key handlers
+    /**
+     * key board events for left, top, bottom ,right ,copy, paste ,find, delete data ,Escape 
+     * This Event Listner is added on Window
+     * @param {KeyboardEvent} e - default event
+     * @returns - If the select is Input Box then return as both can triggered
+     */
     keyhandler(e){
         // console.log(this.selectedcell.row,"key pressed");
         if (e.target == this.inputdiv.querySelector("input")){return}
@@ -693,7 +764,7 @@ export class Sheet{
             else{
                 e.preventDefault();
                 // this.starting=null;
-                this.dashOffset=0
+                this.config.dashOffset=0
                 this.inputdiv.style.display="none";
                 if (this.selectedcell.col == 0){
                     this.selectedcell.col=0
@@ -741,7 +812,7 @@ export class Sheet{
             else{
                 this.starting=null;
                 e.preventDefault();
-                this.dashOffset=0
+                this.config.dashOffset=0
                 this.inputdiv.style.display="none";
                 this.selectedcell.col = this.selectedcell.col +1;
                 this.selectedcell.columnstart = this.selectedcell.columnstart + this.columnsize[this.selectedcell.col]
@@ -786,7 +857,7 @@ export class Sheet{
             else{
                 e.preventDefault();
                 // this.starting=null;
-                this.dashOffset=0
+                this.config.dashOffset=0
                 this.inputdiv.style.display="none";
                 if (this.selectedcell.row!=0){
                     this.selectedcell.row = this.selectedcell.row -1;
@@ -830,7 +901,7 @@ export class Sheet{
             else{
                 this.starting=null;
                 e.preventDefault();
-                this.dashOffset=0
+                this.config.dashOffset=0
                 this.inputdiv.style.display="none";
                 this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
                 this.selectedcell.row = this.selectedcell.row +1;
@@ -848,23 +919,23 @@ export class Sheet{
             }
             
         }
-        else if (e.key === "c" && e.ctrlKey){
+        else if (e.key.toLowerCase() === "c" && e.ctrlKey){
             // console.log("ctrl c");
             if (this.ending.colstat == Infinity || this.ending.rowstat == Infinity){
                 window.alert("To Large Text to Copy")
             }
             else{
-                this.dashOffset=1;
+                this.config.dashOffset=1;
                 if (!this.marchloop){
                     this.table();
                     }
                 this.clipboard();
             }
         }
-        else if (e.key === "v"  && e.ctrlKey){
+        else if (e.key.toLowerCase() === "v"  && e.ctrlKey){
             this.paste()
         }
-        else if (e.key === "f" && e.ctrlKey){
+        else if (e.key.toLowerCase() === "f" && e.ctrlKey){
             e.preventDefault()
             this.findDiv.style.display="grid"
             document.querySelector(".replacelabel").style.display="none"
@@ -872,7 +943,7 @@ export class Sheet{
             document.querySelector(".replaceInput").style.display="none"
             document.querySelector(".findInput").focus()
         }
-        else if (e.key === "h" && e.ctrlKey){
+        else if (e.key.toLowerCase() === "h" && e.ctrlKey){
             e.preventDefault()
             this.findDiv.style.display="grid"
             document.querySelector(".replacelabel").style.display="block"
@@ -899,7 +970,7 @@ export class Sheet{
                 }
             }
             else{
-                this.dashOffset=0
+                this.config.dashOffset=0
                 this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
                 this.selectedcell.row = this.selectedcell.row +1;
                 this.starting=JSON.parse(JSON.stringify(this.selectedcell))
@@ -940,6 +1011,27 @@ export class Sheet{
             this.findDiv.style.top = "30%"
             // this.graphdiv.style.display="none"
             this.countFind=0
+            this.config.dashOffset=0
+            this.marchloop=null
+            if (!this.marchloop){
+                this.table();
+            }
+        }
+        // else if (e.key.charCodeAt()>=33 && e.key.charCodeAt()<=126 && !e.ctrlKey && e.location == 3){
+        else if (`abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+{}[];"':./\\<>?|`.includes(e.key.toLowerCase())){
+            this.inputdiv.style.display = "block"
+            this.inputdiv.style.left=(this.selectedcell.columnstart + this.config.rowWidth)  + "px"
+            this.inputdiv.style.top=(this.selectedcell.rowstart + this.config.rowHeight) + "px"
+            this.inputdiv.style.width = this.columnsize[this.selectedcell.col]  - 1 + "px"
+            this.inputdiv.style.height = this.rowsize[this.selectedcell.row] - 2 + "px"
+            let inputref = this.inputdiv.querySelector("input")
+            inputref.font= `${this.config.fontSize}px ${this.config.fontStyle}`;
+            inputref.value = "" 
+            inputref.focus();
+            if (!this.marchloop){
+                this.table();
+            }
+            // console.log(e.key.charCodeAt());
         }
         if (this.starting.col == 0 || this.starting.row == 0){
             this.btn.setAttribute("data-dot","")
@@ -950,18 +1042,18 @@ export class Sheet{
     }
     
     //range selection
+    /**
+     * range selection pointer down , move and up 
+     * Pointer down Event is added on canvas and move and up is on Window
+     * @param {PointerEvent} e - default event
+     */
     handlemouseDown(e){
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
         this.starting = {col:xcordinate , row:ycordinate , colstat:columnstart , rowstat:rowstart}
         // console.log(this.starting);
-        if (this.starting.col == 0 || this.starting.row == 0){
-            this.btn.setAttribute("data-dot","")
-        }
-        else{
-            this.btn.removeAttribute("data-dot")
-        }
+        
         this.ending = null;
-        this.dashOffset=0;
+        this.config.dashOffset=0;
         this.marchloop=null;
         
         // console.log(this.starting);
@@ -987,7 +1079,7 @@ export class Sheet{
                 this.containerdiv.scrollBy(0,+this.rowsize[this.ending.row])
             }
 
-            if (this.starting.col == 0 || this.starting.row == 0){
+            if (this.starting.col == 0 || this.starting.row == 0 || this.ending.col == 0 || this.ending.row == 0){
                 this.btn.setAttribute("data-dot","")
             }
             else{
@@ -1013,6 +1105,13 @@ export class Sheet{
             // console.log(e.target);
             window.removeEventListener("pointermove",temp1);
             this.ending = {col:xcordinate , row:ycordinate ,colstat:columnstart,rowstat:rowstart}
+
+            if (this.starting.col == 0 || this.starting.row == 0 || this.ending.col == 0 || this.ending.row == 0){
+                this.btn.setAttribute("data-dot","")
+            }
+            else{
+                this.btn.removeAttribute("data-dot")
+            }
             // console.log("final ending",this.ending);
             if(!this.marchloop) {this.marchants();}
             // if (this.starting.col == this.ending.col){this.calculate();}
@@ -1024,6 +1123,11 @@ export class Sheet{
     }
     
     // column resize move pointer function 
+    /**
+     * pointer move to continusly check if reach the boundry or not for cursor change
+     * This is event Listner is added on Header canvas
+     * @param {PointerEvent} e -default event
+     */
     moveheader(e){
         // console.log("always check");
         // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
@@ -1055,28 +1159,13 @@ export class Sheet{
             }
         }
     }
+    /**
+     * To resize the column and to check if selected infinity and resize it
+     * Pointer down Event is added on canvas table and move and up event are added on Window
+     * @param {PointerEvent} edown - default event
+     * @returns - if selected infinity then return else perform further
+     */
     changesize(edown){
-        // console.log("down");
-        // console.log(this.handleclick({offsetX:0 , offsetY:0}));
-        // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
-        // let x = edown.offsetX + this.containerdiv.scrollLeft;
-        // // console.log(x);
-        // let boundry = columnstart + this.columnsize[ycordinate]
-        // let doresize = false;
-        // for(var i = columnstart ; x<(this.headerref.clientWidth+this.containerdiv.scrollLeft) ;i+=this.columnsize[ycordinate]){
-        //     if (Math.abs(x-this.columnsize[ycordinate]) <=15){
-        //         // console.log(x-this.columnsize[i]);
-        //         edown.target.style.cursor = "col-resize";
-        //         doresize=true
-        //         // console.log(i);
-        //         break;
-        //     }
-        //     else{
-        //         edown.target.style.cursor = "default";
-        //     }
-        //     x -=this.columnsize[ycordinate];
-        //     ycordinate++
-        // }
         let firstcell = this.handleclick({offsetX:0 , offsetY:0})
         let x = edown.offsetX + this.containerdiv.scrollLeft;
         let boundry = firstcell.columnstart + this.columnsize[firstcell.xcordinate]
@@ -1099,13 +1188,13 @@ export class Sheet{
         if (!doresize){
             // this.selectInfinity = true
             // console.log(i,x,ycordinate);
-            this.dashOffset=0
+            this.config.dashOffset=0
             this.selectedcell.row = 0
             if (edown.shiftKey == true){
                 this.ending.col = i
                 this.ending.colstat = boundry - this.columnsize[i]
                 this.starting.row = 0;
-                this.ending.row = this.rowlimit;
+                this.ending.row = this.config.rowlimit;
                 this.starting.rowstat = 0;
                 this.ending.rowstat = Infinity;
                 this.headers()
@@ -1119,7 +1208,7 @@ export class Sheet{
             this.starting.colstat = boundry - this.columnsize[i]
             this.ending.colstat = boundry - this.columnsize[i];
             this.starting.row = 0;
-            this.ending.row = this.rowlimit;
+            this.ending.row = this.config.rowlimit;
             this.starting.rowstat = 0;
             this.ending.rowstat = Infinity;
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
@@ -1203,6 +1292,11 @@ export class Sheet{
     }
     
     // row resize
+    /**
+     * pointer move to continusly check if reached row boundry or not and change cursor
+     * This is event is added on Row canvas
+     * @param {PointerEvent} e - default event
+     */
     moverow(e){
         let firstcell = this.handleclick({offsetX:0 , offsetY:0})
         let x = e.offsetY + this.containerdiv.scrollTop;
@@ -1218,6 +1312,12 @@ export class Sheet{
             }
         }
     }
+    /**
+     * To resize the row and check if selected infinity and resize it
+     * Pointer down Event is added on canvas table and move and up event are added on Window
+     * @param {PointerEvent} edown - default event
+     * @returns - if selected infinity then return else perform further
+     */
     changerowsize(edown){
         // console.log("down");
         let firstcell = this.handleclick({offsetX:0 , offsetY:0})
@@ -1238,13 +1338,13 @@ export class Sheet{
         }
         let miny = boundry - this.rowsize[i]
         if (!doresize){ 
-            this.dashOffset=0
+            this.config.dashOffset=0
             this.selectedcell.col = 0
             if (edown.shiftKey == true){
                 this.ending.row=i
                 this.ending.rowstat = boundry - this.rowsize[i]
                 this.starting.col = 0
-                this.ending.col = this.collimit
+                this.ending.col = this.config.collimit
                 this.starting.colstat=0
                 this.ending.colstat=Infinity
                 this.headers()
@@ -1255,7 +1355,7 @@ export class Sheet{
             this.selectedcell.row = i
             // this.selectrowInfinity=true
             this.starting.col = 0
-            this.ending.col = this.collimit
+            this.ending.col = this.config.collimit
             this.starting.colstat=0
             this.ending.colstat=Infinity
             this.starting.row=i
@@ -1330,6 +1430,10 @@ export class Sheet{
     }
     
     //getting select position from top left and width and height of selected data
+    /**
+     * It calculates the border of the range box and its position and width and height of box
+     * @returns {[Number , Number , Number , Number]} - It gives the position of the box and width and height of the selected box to add marchants on border
+     */
     marchants(){
         // console.log("calling march ants");
         // await new Promise(r=>setTimeout(r,1))
@@ -1362,6 +1466,9 @@ export class Sheet{
     }
     
     //copy clipboard
+    /**
+     * To copy the text and used navigator.clipboard to writeText
+     */
     clipboard(){
         if (this.starting && this.ending){
             let text="";
@@ -1376,6 +1483,9 @@ export class Sheet{
         }
     }
     //paste clipboard
+    /**
+     * To paste a data in the cells used navigator.readText check text if it has \t then move to next cell and \n move to next row
+     */
     async paste(){
         // this.starting.row = 0
         // this.starting.col=0
@@ -1449,6 +1559,10 @@ export class Sheet{
     }
     
     //calculations aggregate functions
+    /**
+     * To calculate aggregate values of selected range data
+     * @returns {[Number , Number , Number , Number , Number]} - provides min , max , mean , sum and multiply values
+     */
     calculate(){ 
         // console.log("starting",this.starting,"ending",this.ending);
         let arr = []
@@ -1484,6 +1598,11 @@ export class Sheet{
     }
     
     //doubleclick on header resize
+    /**
+     * To resize the column size according to long text
+     * @param {PointerEvent} e - default event
+     * @returns - break if not resized the column
+     */
     headerclick(e){
         let firstcell = this.handleclick({offsetX:0 , offsetY:0})
         let x = e.offsetX + this.containerdiv.scrollLeft;
@@ -1501,18 +1620,18 @@ export class Sheet{
             }
         }   
         if (!doresize){return}
-            this.ctx.save()
-            this.ctx.font=`${15}px Segoe UI`
-            let tempdatacolumn = (Object.keys(this.data).filter(x=>this.data[x][i] && !this.data[x][i].wrap)).map(x=>Math.ceil(this.ctx.measureText(this.data[x][i].text).width))   
-            if (tempdatacolumn.length===0){return}
-            this.columnsize[i] = Math.max(...tempdatacolumn) + 5 
-            // console.log(this.columnsize[i]);
-            this.ctx.restore()
-            this.wraptextforcol(i)
-            if (!this.marchloop){
-            this.table();
-            }
-            this.headers();
+        this.ctx.save()
+        this.ctx.font=`${this.config.fontSize}px ${this.config.fontStyle}`
+        let tempdatacolumn = (Object.keys(this.data).filter(x=>this.data[x][i] && !this.data[x][i].wrap)).map(x=>Math.ceil(this.ctx.measureText(this.data[x][i].text).width))   
+        if (tempdatacolumn.length===0){return}
+        this.columnsize[i] = Math.max(...tempdatacolumn) + 5 
+        // console.log(this.columnsize[i]);
+        this.ctx.restore()
+        this.wraptextforcol(i)
+        if (!this.marchloop){
+        this.table();
+        }
+        this.headers();
             console.log(tempdatacolumn);
             // console.log(this.ctx.measureText(tempdatacolumn));
             // this.ctx.measureText()
@@ -1520,12 +1639,16 @@ export class Sheet{
     }
     
     //text wrap
+    /**
+     * To Wrap a currently selected cell 
+     * used measureText Width and compare it with size of column and break it
+     */
     wraptext(){
         let s1="";
-        let w=15; //font size
+        let w=this.config.fontSize; //font size
         let wrappedarr = []
         this.ctx.save()
-        this.ctx.font=`${15}px Segoe UI`;
+        this.ctx.font=`${this.config.fontSize}px ${this.config.fontStyle}`;
         if (this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col]?.text){
             for(let x of this.data[this.selectedcell.row][this.selectedcell.col].text){
                 w+=this.ctx.measureText(x).width
@@ -1534,7 +1657,7 @@ export class Sheet{
                     // console.log(s1)
                     wrappedarr.push(s1)
                     s1=""
-                    w=15;
+                    w=this.config.fontSize;
                 }
                 s1+=x
             }
@@ -1542,7 +1665,7 @@ export class Sheet{
             this.data[this.selectedcell.row][this.selectedcell.col].wrappedarr = wrappedarr; 
             // let val = s1.split("\n").length
             // this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
-            this.rowsize[this.selectedcell.row] = Math.max(wrappedarr.length *15,this.rowsize[this.selectedcell.row]);
+            this.rowsize[this.selectedcell.row] = Math.max(wrappedarr.length *this.config.fontSize,this.rowsize[this.selectedcell.row]);
             // this.ctxrow([this.selectedcell.row] = val * this.rowsize[this.selectedcell.row])
             this.ctx.restore()
         }
@@ -1553,6 +1676,9 @@ export class Sheet{
     }
 
     //wrap range data
+    /**
+     * To wrap all cells with text wrap true in a current selected range
+     */
     wraprange(){
         // (this.starting && this.ending && 
         //     Math.min(this.starting.row, this.ending.row) <= j && 
@@ -1560,7 +1686,7 @@ export class Sheet{
         //     Math.min(this.starting.col, this.ending.col) <= i && 
         //     i <= Math.max(this.starting.col, this.ending.col
         this.ctx.save()
-        this.ctx.font=`${15}px Segoe UI`;
+        this.ctx.font=`${this.config.fontSize}px ${this.config.fontStyle}`;
         for(let i=Math.min(this.starting.row, this.ending.row) ; i<=Math.max(this.starting.row, this.ending.row);i++){
             if (this.data[i]){
                 for(let j=Math.min(this.starting.col, this.ending.col);j<=Math.max(this.starting.col, this.ending.col);j++){
@@ -1580,21 +1706,25 @@ export class Sheet{
     }
     
     //column resize wrap text
+    /**
+     * To wrap all cells with text wrap true in a specific column
+     * @param {Number} xcordinate - the column number to get wrapped
+     */
     wraptextforcol(xcordinate){
         let rows = Object.keys(this.data).filter(x=>this.data[x][xcordinate]?.wrap)
         rows.forEach(r=>{
             let s1="";
-            let w=15;
+            let w=this.config.fontSize;
             let wrappedarr = []
             this.ctx.save()
-            this.ctx.font=`${15}px Segoe UI`;
+            this.ctx.font=`${this.config.fontSize}px ${this.congif.fontStyle}`;
             for(let x of this.data[r][xcordinate].text){
                 w+=this.ctx.measureText(x).width
                 if(w > (this.columnsize[xcordinate])-5){
                     // console.log(s1)
                     wrappedarr.push(s1)
                     s1=""
-                    w=15;
+                    w=this.config.fontSize;
                 }
                 s1+=x
             }
@@ -1604,7 +1734,7 @@ export class Sheet{
             // console.log(s1.split("\n").length);
             // let val = s1.split("\n").length
             // this.rowsize[this.selectedcell.row] = Math.max(val *15,this.rowsize[this.selectedcell.row]);
-            this.rowsize[r] = Math.max(wrappedarr.length *15,this.rowsize[r]);
+            this.rowsize[r] = Math.max(wrappedarr.length *this.config.fontSize,this.rowsize[r]);
             
             // this.ctxrow([this.selectedcell.row] = val * this.rowsize[this.selectedcell.row])
             this.ctx.restore()
@@ -1615,6 +1745,10 @@ export class Sheet{
     }
     
     //find data
+    /**
+     * creation of find and replace box 
+     * @returns {HTMLElement} - Find and replace box
+     */
     findandReplaceForm(){
         this.findDiv = document.createElement("form")
         let headerLabel = document.createElement("h3")
@@ -1665,7 +1799,7 @@ export class Sheet{
         })
 
         findInput.addEventListener("change",(e)=>{
-            this.countFind = 0
+            this.config.countFind = 0
             this.prevtext = e.target.form.findText.value
             this.redo = true
             // console.log(prevtext);
@@ -1700,8 +1834,10 @@ export class Sheet{
         headerLabel.addEventListener("pointerdown",(e)=>{this.findPointerDown(e)})
         return this.findDiv
     }
-    countFind = 0
-    finalarr = []
+    /**
+     * To find text within sheets and highlight the cells
+     * @param {string} findtext - the text that needs to be find 
+     */
     find(findtext){
         // let datarow = Object.entries(this.data).map(v=>[v[0],Object.entries(v[1])])
         // console.log(datarow);
@@ -1712,25 +1848,25 @@ export class Sheet{
         // ).filter(x=>x[1].length)
         let r,c
         if (this.redo === true){
-            this.finalarr=[]
+            this.config.findarr=[]
             for(r of Object.keys(this.data)){
                 for(c of Object.keys(this.data[r])){
                     if (JSON.stringify(this.data[r][c].text).includes(findtext)){
-                        this.finalarr.push([r,c])
+                        this.config.findarr.push([r,c])
                     }
                 }
             }
-            console.log(this.finalarr,r,c);
+            console.log(this.config.findarr,r,c);
             this.redo = false
         }
         
-        // console.log(this.finalarr);
-        if (this.finalarr.length>=1){
-            this.starting.row = Number(this.finalarr[this.countFind][0])
-            this.starting.col = Number(this.finalarr[this.countFind][1])
-            this.ending.row = Number(this.finalarr[this.countFind][0])
-            this.ending.col = Number(this.finalarr[this.countFind][1])
-            this.countFind= (this.countFind + 1) %this.finalarr.length
+        // console.log(this.findarr);
+        if (this.config.findarr.length>=1){
+            this.starting.row = Number(this.config.findarr[this.config.countFind][0])
+            this.starting.col = Number(this.config.findarr[this.config.countFind][1])
+            this.ending.row = Number(this.config.findarr[this.config.countFind][0])
+            this.ending.col = Number(this.config.findarr[this.config.countFind][1])
+            this.config.countFind= (this.config.countFind + 1) %this.config.findarr.length
             // this.finalarr=[]
         }
         // let rowpos = (finalarr.map(v=>v[0]));
@@ -1770,14 +1906,17 @@ export class Sheet{
     }
 
     //replace
+    /**
+     * replaced the searched data
+     */
     replace(){
-        if (this.finalarr.length>=1){
-            let row = this.finalarr[this.finalarr.length>1 ? this.countFind-1 : this.countFind][0]
+        if (this.config.findarr.length>=1){
+            let row = this.config.findarr[this.config.findarr.length>1 ? this.config.countFind-1 : this.config.countFind][0]
             // console.log(row);
-            let col = this.finalarr[this.finalarr.length>1 ? this.countFind-1 : this.countFind][1]
+            let col = this.config.findarr[this.findarr.length>1 ? this.config.countFind-1 : this.config.countFind][1]
             this.data[row][col].text=this.data[row][col].text.replaceAll(this.prevtext,this.newText)
-            this.countFind-=1
-            this.finalarr.splice(this.countFind,1)
+            this.config.countFind-=1
+            this.config.findarr.splice(this.config.countFind,1)
         }
         else{
             window.alert("No Element Found")
@@ -1790,6 +1929,10 @@ export class Sheet{
     }
     
     //drag find and replace div
+    /**
+     * To move the find and replace box Down is on the header of the box move and up pointer are on window
+     * @param {PointerEvent} edown - default e event
+     */
     findPointerDown(edown){
         edown.preventDefault()
         var oLeft = edown.pageX - this.findDiv.getBoundingClientRect().x
@@ -1816,9 +1959,12 @@ export class Sheet{
         window.addEventListener("pointerup",findPointerUp)
     }
     //graph function
-    drawgraph=null;
+    /**
+     * calculates the value of the graph (avg)
+     * @param {{String}} type - the type of graph that needs to be created
+     */
     graph(type){
-        if(this.drawgraph)this.drawgraph.destroy()
+        if(this.config.drawgraph)this.config.drawgraph.destroy()
         let dataarr=[]
         let arr=new Set()
         let singlecol = 0

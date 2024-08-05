@@ -1,49 +1,79 @@
 // import { Sheet } from "./sheet";
 
 export class Graphcomponent{
+  /**
+   * @type {HTMLElement} - Main Graph Div
+   */
+  graphdiv
+  /**
+   * @type {HTMLCanvasElement} - graph canvas
+   */
+  graphref
+  /**
+   * @type {HTMLElement} - close button
+   */
+  closebtn
+    /**
+     * To create an graph
+     * @param {Array <Number>} dataarr -array of avg of selected columns
+     * @param {Array <string>} arr - array of labels
+     * @param {string} type - type of graph
+     * @param {HTMLElement} childdiv - parent element
+     */
     constructor(dataarr,arr,type,childdiv){
         this.graphContainer(dataarr,arr,type,childdiv)
     }
+    /**
+     * To create an graph
+     * @param {Array <Number>} dataarr -array of avg of selected columns
+     * @param {Array <string>} arr - array of labels
+     * @param {string} type - type of graph
+     * @param {HTMLElement} childdiv - parent element
+     */
     graphContainer(dataarr,arr,type,childdiv){
-        this.graphdiv = document.createElement("div");
-        this.graphref = document.createElement("canvas");
-        this.closebtn = document.createElement("button")
-        this.graphdiv.classList.add("graphdiv");
-        this.graphref.classList.add("graphref");
-        this.closebtn.classList.add("closebtn")
-        this.closebtn.textContent="x"
-        childdiv.appendChild(this.graphdiv);
-        this.graphdiv.appendChild(this.graphref)
-        this.graphdiv.appendChild(this.closebtn)
-        this.graphref.parentElement.style.display="block"
-        this.drawgraph = new Chart(this.graphref, {
-            type: `${type}`,
-            data: {
-              labels: [...arr],
-              datasets: [{
-                data: dataarr,
-                borderWidth: 1
-              }]
+      this.graphdiv = document.createElement("div");
+      this.graphref = document.createElement("canvas");
+      this.closebtn = document.createElement("button")
+      this.graphdiv.classList.add("graphdiv");
+      this.graphref.classList.add("graphref");
+      this.closebtn.classList.add("closebtn")
+      this.closebtn.textContent="x"
+      childdiv.appendChild(this.graphdiv);
+      this.graphdiv.appendChild(this.graphref)
+      this.graphdiv.appendChild(this.closebtn)
+      this.graphref.parentElement.style.display="block"
+      this.drawgraph = new Chart(this.graphref, {
+          type: `${type}`,
+          data: {
+            labels: [...arr],
+            datasets: [{
+              data: dataarr,
+              borderWidth: 1
+            }]
+          },
+          options: {
+              responsive:true,
+              maintainAspectRatio:false,
+            scales: {
+              y: {
+                beginAtZero: true
+              }
             },
-            options: {
-                responsive:true,
-                maintainAspectRatio:false,
-              scales: {
-                y: {
-                  beginAtZero: true
-                }
-              },
-              plugins:{
-                legend:{
-                    display:type=="pie"?true:false
-                }
+            plugins:{
+              legend:{
+                  display:type=="pie"?true:false
               }
             }
-        });
-        this.graphref.addEventListener("pointerdown",(e)=>this.graphPointerDown(e))
-        this.closebtn.addEventListener("click",()=>this.graphdiv.remove())
-    }
+          }
+      });
+      this.graphref.addEventListener("pointerdown",(e)=>this.graphPointerDown(e))
+      this.closebtn.addEventListener("click",()=>this.graphdiv.remove())
+  }
     //graph move
+    /**
+     * To move the graph  using pointer function
+     * @param {PointerEvent} edown - default event e
+     */
     graphPointerDown(edown){
         edown.preventDefault()
         var oLeft = edown.pageX - this.graphdiv.getBoundingClientRect().x

@@ -1,6 +1,25 @@
 import {Sheet} from './sheet.js'
 
 export class Main{
+    /**
+     * @type {HTMLElement} option menu div
+     */
+    optionsdiv
+    /**
+     * @type {HTMLElement} it contains all sheet operations
+     */
+    sheetchange
+    /**
+     * @type {HTMLElement} Input feild of sheet div
+     */
+    sheetTabContainer
+    /**
+     * @type {HTMLElement} div to maintain multiple sheets tab
+     */
+    sheetsdiv
+    /**
+     * array to maintain the number of sheets
+     */
     sheets = []
     constructor(sheetcontainer){
         this.optionsdiv = document.createElement("div");
@@ -10,46 +29,46 @@ export class Main{
         this.sheetchange = document.createElement("div");
         this.sheetchange.classList.add("change_sheet");
 
-        this.new = document.createElement("button")
-        this.new.textContent="+"
-        this.new.addEventListener("click",()=>this.newSheet())
-        this.del = document.createElement("button")
-        this.del.textContent="-"
-        this.del.addEventListener("click",()=>this.delSheet())
-        this.prev = document.createElement("button")
-        this.prev.textContent="←"
-        this.prev.addEventListener("click",()=>this.prevSheet())
-        this.next = document.createElement("button")
-        this.next.textContent="→"
-        this.next.addEventListener("click",()=>this.nextSheet())
+        let newbtn = document.createElement("button")
+        newbtn.textContent="+"
+        newbtn.addEventListener("click",()=>this.newSheet())
+        let del = document.createElement("button")
+        del.textContent="-"
+        del.addEventListener("click",()=>this.delSheet())
+        let prev = document.createElement("button")
+        prev.textContent="←"
+        prev.addEventListener("click",()=>this.prevSheet())
+        let next = document.createElement("button")
+        next.textContent="→"
+        next.addEventListener("click",()=>this.nextSheet())
 
-        this.calc = document.createElement("button")
-        this.calc.textContent="Calculate"
+        let calc = document.createElement("button")
+        calc.textContent="Calculate"
         let maths = this.calcaggregate()
         this.sheetcontainer.appendChild(maths)
-        this.calc.addEventListener("click",()=>{
+        calc.addEventListener("click",()=>{
             //this.calcaggregate()
             this.recalc()
             maths.style.display="flex";graphdiv.style.display="none";textdiv.style.display="none"
             
         })
         
-        this.text = document.createElement("button")
-        this.text.textContent="Text"
+        let text = document.createElement("button")
+        text.textContent="Text"
         let textdiv = this.textOptionsdiv()
         textdiv.style.display="flex"
         this.sheetcontainer.appendChild(textdiv)
 
-        this.graph = document.createElement("button")
-        this.graph.textContent="graph"
+        let graph = document.createElement("button")
+        graph.textContent="graph"
         let graphdiv = this.graphOptionsDiv()
         this.sheetcontainer.appendChild(graphdiv)
 
-        this.text.addEventListener("click",()=>{
+        text.addEventListener("click",()=>{
             textdiv.style.display="flex";graphdiv.style.display="none";maths.style.display="none"
         })
 
-        this.graph.addEventListener("click",()=>{
+        graph.addEventListener("click",()=>{
             console.log(graphdiv.style.display);
             graphdiv.style.display="flex" ; textdiv.style.display="none";maths.style.display="none"
         })
@@ -72,22 +91,27 @@ export class Main{
         firstSheet.addEventListener("keydown",e=>this.sheetTabKeyHandler(e))
 
 
-        this.sheetchange.appendChild(this.new)
-        this.sheetchange.appendChild(this.del)
-        this.sheetchange.appendChild(this.prev)
-        this.sheetchange.appendChild(this.next)
+        this.sheetchange.appendChild(newbtn)
+        this.sheetchange.appendChild(del)
+        this.sheetchange.appendChild(prev)
+        this.sheetchange.appendChild(next)
         this.sheetchange.appendChild(this.sheetsdiv)
         this.sheetsdiv.appendChild(firstSheet)
-        this.optionsdiv.appendChild(this.text)
-        this.optionsdiv.appendChild(this.graph)
-        this.optionsdiv.appendChild(this.calc)
+        this.optionsdiv.appendChild(text)
+        this.optionsdiv.appendChild(graph)
+        this.optionsdiv.appendChild(calc)
         this.sheetcontainer.appendChild(this.sheetchange)
 
         let sheet_1 = new Sheet(sheetcontainer)
         this.sheets.push(sheet_1)
         this.currentsheetIndex = 0
         this.currsheet(0);
+        // console.log(this,Object.keys(this));
     }
+    /**
+     * current sheet index to load
+     * @param {Number} i - current sheet index
+     */
     currsheet(i){
         if(i>=0){
             this.sheets?.[this.currentsheetIndex]?.containerdiv?.remove()
@@ -102,6 +126,9 @@ export class Main{
             this.currentsheetIndex = Number(i)
         }
     }
+    /**
+     * To add new sheets on add sheet button
+     */
     newSheet(){
         let newSheet = new Sheet(this.sheetcontainer)
         this.sheets.push(newSheet)
@@ -125,6 +152,9 @@ export class Main{
         newSheetdiv.value=`Sheet ${i+1}`;
         this.sheetsdiv.scrollTo(this.sheetsdiv.scrollWidth,0)
     }
+    /**
+     * To delete sheet on remove sheet button
+     */
     delSheet(){
         if (this.sheets.length>1){
             console.log(this.currentsheetIndex,"delete");
@@ -143,6 +173,9 @@ export class Main{
             window.alert("There Should be atleast 1 sheet")
         }
     }
+    /**
+     * To move to previous sheet
+     */
     prevSheet(){
         let tabs = this.sheetsdiv.querySelectorAll("input")
         tabs[this.currentsheetIndex].removeAttribute("data-current")
@@ -152,6 +185,9 @@ export class Main{
         }
         this.sheetsdiv.querySelectorAll("input")[this.currentsheetIndex].click()
     }
+    /**
+     * To move to next sheet 
+     */
     nextSheet(){
         let tabs = this.sheetsdiv.querySelectorAll("input")
         tabs[this.currentsheetIndex].removeAttribute("data-current")
@@ -161,6 +197,10 @@ export class Main{
         }
         this.sheetsdiv.querySelectorAll("input")[this.currentsheetIndex].click()
     }
+    /**
+     * To move to sheet on the click
+     * @param {PointerEvent} e 
+     */
     sheetTabClickHandler(e){
         e.target.parentElement.querySelectorAll("input").forEach(t1=>{
             t1.removeAttribute("data-current")
@@ -169,18 +209,26 @@ export class Main{
         e.target.setAttribute("data-current","true")
         this.currsheet(e.target.dataset["index"])
     }
+    /**
+     * To enable edit the sheet name
+     * @param {PointerEvent} e 
+     */
     sheetTabDoubleClickHandler(e){
         e.target.focus();
         e.target.removeAttribute("readonly")
     }
+    /**
+     * Enter to save the new name of the sheet
+     * @param {KeyboardEvent} e 
+     */
     sheetTabKeyHandler(e){
         if(e.key==="Enter"){
               e.target.setAttribute("readonly","")
         }
     }
-    // calcaggregate(){
-        
-    // }
+    /**
+     * function to wrap text in selected range
+     */
     wraptextfeild(){
         // this.sheets[this.currentsheetIndex].wraptext()
         this.sheets[this.currentsheetIndex].wraprange()
@@ -189,6 +237,10 @@ export class Main{
         this.sheets[this.currentsheetIndex].headers();
         this.sheets[this.currentsheetIndex].table();
     }
+    /**
+     * Creates an graph options menu
+     * @returns {HTMLElement} - provides an graph div
+     */
     graphOptionsDiv(){
         this.graphOptions = document.createElement("div");
         this.graphOptions.classList.add("graphOptions")
@@ -223,6 +275,10 @@ export class Main{
         
         return this.graphOptions
     }
+    /**
+     * To create an div for text options
+     * @returns {HTMLElement} - text div options
+     */
     textOptionsdiv(){
         this.textOptions = document.createElement("div");
         this.textOptions.classList.add("textOptions");
@@ -234,7 +290,10 @@ export class Main{
         this.textOptions.appendChild(wrap)
         return this.textOptions
     }
-    
+    /**
+     * Creates an div to display aggregate values
+     * @returns {HTMLElement} - aggregates function display div
+     */
     calcaggregate(){
         this.calcOptions = document.createElement("div");
         this.calcOptions.classList.add("calcdiv");
@@ -252,6 +311,9 @@ export class Main{
         return this.calcOptions
     }
     //for calculation and call from sheets
+    /**
+     * Function to get values and display it
+     */
     recalc(){
         // if(!this.sheets[this.currentsheetIndex]){return}
         let val = this.sheets[this.currentsheetIndex].calculate()
