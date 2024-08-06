@@ -1,5 +1,10 @@
 // import { Sheet } from "./sheet";
-
+// import "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"
+// import Chart from "chart.js"
+// import Chart from "https://cdn.jsdelivr.net/npm/chart.js"
+// import Chart from "chart.js/auto"
+// const Chart = await import ("https://cdn.jsdelivr.net/npm/chart.js")
+import ("https://cdn.jsdelivr.net/npm/chart.js")
 export class Graphcomponent{
   /**
    * @type {HTMLElement} - Main Graph Div
@@ -34,15 +39,18 @@ export class Graphcomponent{
       this.graphdiv = document.createElement("div");
       this.graphref = document.createElement("canvas");
       this.closebtn = document.createElement("button")
+
       this.graphdiv.classList.add("graphdiv");
       this.graphref.classList.add("graphref");
       this.closebtn.classList.add("closebtn")
       this.closebtn.textContent="x"
+
       childdiv.appendChild(this.graphdiv);
       this.graphdiv.appendChild(this.graphref)
       this.graphdiv.appendChild(this.closebtn)
       this.graphref.parentElement.style.display="block"
-      this.drawgraph = new Chart(this.graphref, {
+
+      this.drawgraph = new window.Chart(this.graphref, {
           type: `${type}`,
           data: {
             labels: [...arr],
@@ -68,7 +76,7 @@ export class Graphcomponent{
       });
       this.graphref.addEventListener("pointerdown",(e)=>this.graphPointerDown(e))
       this.closebtn.addEventListener("click",()=>this.graphdiv.remove())
-  }
+    }
     //graph move
     /**
      * To move the graph  using pointer function
@@ -80,6 +88,10 @@ export class Graphcomponent{
         var oTop  = edown.pageY - this.graphdiv.getBoundingClientRect().y
         console.log(oLeft,oTop);
         // let heightOffset = this.graphdiv.parentElement.getBoundingClientRect().y
+        /**
+         * pointer move event for moving the graph
+         * @param {PointerEvent} emove - default event
+         */
         let graphPointerMove = (emove) =>{
             // console.log("triggerd");
             // var l = edown.pageX - this.graphdiv.getBoundingClientRect().x
@@ -92,11 +104,14 @@ export class Graphcomponent{
             // this.findDiv.style.bottom = emove.pageY + oTop
         }
         window.addEventListener("pointermove",graphPointerMove)
-        
-        let graphPointerUp = (eup) =>{
-            // if (this.graphdiv.style.top<=0 +"px"){this.graphdiv.style.top = "10%"}
-            // else if (this.graphdiv.style.left<=0 +"px"){this.graphdiv.style.left = "10%"}
-            // else if (this.graphdiv.style.left>document.body.clientWidth -100+"px"){this.graphdiv.style.left="50%"}
+        /**
+         * pointer up event for moving graph container
+         */
+        let graphPointerUp = () =>{
+          if (Number(this.graphdiv.style.top.replace("px",""))<=0 ){this.graphdiv.style.top = "10%"}
+          else if (Number(this.graphdiv.style.left.replace("px",""))<=0 ){this.graphdiv.style.left = "10%"}
+          else if (Number(this.graphdiv.style.left.replace("px",""))>=document.body.clientWidth-100){this.graphdiv.style.left="80%"}
+          else if (Number(this.graphdiv.style.top.replace("px",""))>=document.body.clientHeight-100){this.graphdiv.style.top="80%"}
             window.removeEventListener("pointermove",graphPointerMove)
             window.removeEventListener("pointerup",graphPointerUp)
             // eup.target.removeEventListener("pointerdown",(e)=>{this.findPointerDown(e)})

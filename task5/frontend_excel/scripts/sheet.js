@@ -38,6 +38,10 @@ export class Sheet{
      * @type {HTMLFormElement} - form for the find and replace boc
      */
     findDiv
+    /**
+     * @type {Object}
+     */
+    data
     // columnArr = [180, 120, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 150, 100];
     /**
      * @type {Array <Number>} - array of columns size
@@ -58,7 +62,7 @@ export class Sheet{
         rowlimit : 1048576,
         collimit : 16383,
         dashOffset : 0,
-        drawgraph:null,
+        // drawgraph:null,
         countFind : 0,
         /**
          * @type {[[Number,Number]]} - stores row and column of data that is present
@@ -76,8 +80,8 @@ export class Sheet{
     starting  = {col:0,row:0,colstat:0,rowstat:0};
     /**@type {(null|{col:Number , row:Number , colstat:Number , rowstat:Number})} - col,row are index and colstat and rowstat are pixel values*/
     ending = {col:0,row:0,colstat:0,rowstat:0};
-
-    constructor(div){
+    //constructor(div)
+    constructor(){
         // this.columnsize = window.localStorage.getItem("column") ? JSON.parse(window.localStorage.getItem("column")) : Array(10).fill(100)
         // this.rowsize = window.localStorage.getItem("rows") ? JSON.parse(window.localStorage.getItem("rows")) : Array(25).fill(30)
         this.data = JSON.parse(JSON.stringify(data));
@@ -146,7 +150,7 @@ export class Sheet{
         //     // this.headers();
         //     // this.rows();
         // })
-        this.containerdiv.addEventListener("scroll",(e)=>{
+        this.containerdiv.addEventListener("scroll",()=>{
             // console.log("scroll");
             this.checkcolumn();
             this.checkrow();
@@ -160,12 +164,11 @@ export class Sheet{
     
         this.canvaref.addEventListener("click",(e)=>{
             this.handleclick(e);
-            // this.canvapointerclick(e);
             this.headers();
             this.rows();
             if (!this.marchloop){
                 this.table();
-                }
+            }
         })
     
         this.canvaref.addEventListener("pointerdown",(e)=>{
@@ -177,7 +180,10 @@ export class Sheet{
             this.handleKeyInputEnter(e)
             
         })
-    
+        // this.inputdiv.querySelector("input").addEventListener("blur",(e)=>{
+        //     this.InputblurHandler(e)
+            
+        // })
         this.canvaref.addEventListener("dblclick",(e)=>{
             this.editfeild(e);
         })
@@ -247,15 +253,15 @@ export class Sheet{
     static headerdata(n){
         let str = "";
         do {
-          if(str.length>0){
-            // console.log(Math.floor((n-1)/26))
-            str = String.fromCharCode(65 + Math.floor((n-1)%26)) + str
-            n = Math.floor((n-1)/26)
-          }
-          else{
-            str = String.fromCharCode(65 + Math.floor(n%26)) + str
-            n = Math.floor(n/26)
-          }
+            if(str.length>0){
+                // console.log(Math.floor((n-1)/26))
+                str = String.fromCharCode(65 + Math.floor((n-1)%26)) + str
+                n = Math.floor((n-1)/26)
+            }
+            else{
+                str = String.fromCharCode(65 + Math.floor(n%26)) + str
+                n = Math.floor(n/26)
+            }
         } while (n > 0);
         return str;
     }
@@ -269,7 +275,7 @@ export class Sheet{
         this.ctxheaders.clearRect(0, 0, this.canvaref.width, this.canvaref.height);
         this.ctxheaders.scale(window.devicePixelRatio,window.devicePixelRatio)
         this.ctxheaders.translate(-this.containerdiv.scrollLeft, 0)
-        let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
+        let {columnstart ,  xcordinate } = this.handleclick({offsetX:0 , offsetY:0})
         let sumcol = columnstart
         for (let i = xcordinate; sumcol<=(this.containerdiv.clientWidth + this.containerdiv.scrollLeft) && i<this.columnsize.length; i++) {
             this.ctxheaders.save();
@@ -311,7 +317,7 @@ export class Sheet{
           
           if (this.starting && this.ending){
             this.ctxheaders.save()
-            let [x,y,w,h] = this.marchants()
+            let [x,,w,] = this.marchants()
             let startpixel = Math.max(this.containerdiv.scrollLeft,x)
             let newwidth = Math.min(this.containerdiv.clientWidth, x>this.containerdiv.scrollLeft ? w : w-this.containerdiv.scrollLeft+x)
                 // console.log(x,w);
@@ -356,7 +362,7 @@ export class Sheet{
         //     this.ctxrow.stroke();
         // }
         // this.ctxrow.restore();
-        let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
+        let { rowstart  , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
         for(let i=ycordinate; rowstart<=(this.containerdiv.clientHeight + this.containerdiv.scrollTop);i++){
             this.ctxrow.save();
             this.ctxrow.beginPath();
@@ -388,7 +394,7 @@ export class Sheet{
         }
         if (this.starting && this.ending){
             this.ctxrow.save()
-            let [x,y,w,h] = this.marchants()
+            let [,y,,h] = this.marchants()
             let startrowpixel = Math.max(this.containerdiv.scrollTop,y)
             let newHeight = Math.min(this.containerdiv.clientHeight,y>this.containerdiv.scrollTop ? h : h-this.containerdiv.scrollTop +y)
             this.ctxrow.beginPath();
@@ -583,7 +589,7 @@ export class Sheet{
             this.headers();
             if (!this.marchloop){
                 this.table();
-                }
+            }
             this.rows();
         }
     }
@@ -602,7 +608,7 @@ export class Sheet{
             this.headers();
             if (!this.marchloop){
                 this.table();
-                }
+            }
         }
     }
     
@@ -622,7 +628,7 @@ export class Sheet{
         for (xcord = 0; xcord < this.columnsize.length; xcord++) {
             // console.log("xcord",this.containerdiv.scrollLeft);
             if (off + this.containerdiv.scrollLeft <= colposition + this.columnsize[xcord]) {
-            break;
+                break;
             // xcord = Math.floor(e.offsetX - columnArr[i]);
             }
             colposition += this.columnsize[xcord]
@@ -680,24 +686,50 @@ export class Sheet{
         this.inputdiv.style.width = this.columnsize[this.selectedcell.col]  - 1 + "px"
         this.inputdiv.style.height = this.rowsize[this.selectedcell.row] - 2 + "px"
         let inputref = this.inputdiv.querySelector("input")
-        inputref.font= `${this.config.fontSize}px ${this.congif.fontStyle}`;
+        inputref.font= `${this.config.fontSize}px ${this.config.fontStyle}`;
         inputref.value = this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col] ? this.data[this.selectedcell.row][this.selectedcell.col]['text'] : "" ; 
         inputref.focus();
         if (!this.marchloop){
             this.table();
         }
     }
+
+    // InputblurHandler(e){
+    //     let newValue = {text:e.target.value};
+    //       // console.log(selectedCell);
+    //     if(this.data[this.selectedcell.row]){
+    //         if(this.data[this.selectedcell.row][this.selectedcell.col]){
+    //             this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
+    //         }
+    //         else{
+    //             this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+    //         }
+    //     }
+    //     else{
+    //         let newrow = {}
+    //         this.data[this.selectedcell.row] = newrow;
+    //         this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+    //     }
+    //     // this.inputdiv.style.display="none";
+    //     if(this.data[this.selectedcell.row][this.selectedcell.col].wrap){
+    //         this.wraptext();
+    //     }
+    //     // this.find()
+    //     // window.localStorage.setItem("data",JSON.stringify(data))
+    //     // window.localStorage.setItem("column",JSON.stringify(this.columnsize))
+    //     // window.localStorage.setItem("rows",JSON.stringify(this.rowsize))
+    // }
     
     //key Input box enters and escape
     /**
-     * To set the input box display and remove and this eventListner is added only on input div
+     * To set the input box display , remove and store value
      * This Event Listner is added on Input Box
      * @param {KeyboardEvent} e - default event
      */
     handleKeyInputEnter(e) {
         if (e.key === "Enter") {
             let newValue = {text:e.target.value};
-          // console.log(selectedCell);
+            // console.log(selectedCell);
             if(this.data[this.selectedcell.row]){
                 if(this.data[this.selectedcell.row][this.selectedcell.col]){
                     this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
@@ -722,6 +754,22 @@ export class Sheet{
         }
         else if (e.key === "Escape"){
             this.inputdiv.style.display = "none"
+        }
+        else{
+            let newValue = {text:e.target.value};
+            if(this.data[this.selectedcell.row]){
+                if(this.data[this.selectedcell.row][this.selectedcell.col]){
+                    this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
+                }
+                else{
+                    this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+                }
+            }
+            else{
+                let newrow = {}
+                this.data[this.selectedcell.row] = newrow;
+                this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+            }
         }
         if (!this.marchloop){
             this.table();
@@ -758,8 +806,8 @@ export class Sheet{
                     this.marchloop=null
                     if (!this.marchloop){
                         this.table();
-                        }
                     }
+                }
             }
             else{
                 e.preventDefault();
@@ -783,7 +831,7 @@ export class Sheet{
                     this.marchloop=null
                     if (!this.marchloop){
                         this.table();
-                        }
+                    }
                     this.headers();
                 }
             }
@@ -806,8 +854,8 @@ export class Sheet{
                     this.marchloop=null
                     if (!this.marchloop){
                         this.table();
-                        }
                     }
+                }
             }
             else{
                 this.starting=null;
@@ -816,16 +864,16 @@ export class Sheet{
                 this.inputdiv.style.display="none";
                 this.selectedcell.col = this.selectedcell.col +1;
                 this.selectedcell.columnstart = this.selectedcell.columnstart + this.columnsize[this.selectedcell.col]
-                    // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
-                    this.starting=JSON.parse(JSON.stringify(this.selectedcell))
-                    this.ending=JSON.parse(JSON.stringify(this.selectedcell))
+                // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
+                this.starting=JSON.parse(JSON.stringify(this.selectedcell))
+                this.ending=JSON.parse(JSON.stringify(this.selectedcell))
                 if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+this.columnsize[this.selectedcell.col]){
                     this.containerdiv.scrollBy(+this.columnsize[this.selectedcell.col],0)
                 }
                 this.marchloop=null
                 if (!this.marchloop){
                     this.table();
-                    }
+                }
                 this.headers();
             } 
         }
@@ -849,8 +897,8 @@ export class Sheet{
                     this.marchloop=null
                     if (!this.marchloop){
                         this.table();
-                        }
                     }
+                }
                 this.rows()
                 // console.log(this.selectedcell,this.starting,this.ending);
             }
@@ -871,8 +919,8 @@ export class Sheet{
                     this.marchloop=null
                     if (!this.marchloop){
                         this.table();
-                        }
-                this.rows()
+                    }
+                    this.rows()
                 }
             }
         }
@@ -894,7 +942,7 @@ export class Sheet{
                     this.marchloop=null
                     if (!this.marchloop){
                         this.table();
-                        }
+                    }
                 }
                 this.rows()
             }
@@ -914,13 +962,14 @@ export class Sheet{
                 this.marchloop=null
                 if (!this.marchloop){
                     this.table();
-                    }
+                }
                 this.rows();
             }
             
         }
         else if (e.key.toLowerCase() === "c" && e.ctrlKey){
             // console.log("ctrl c");
+            e.preventDefault()
             if (this.ending.colstat == Infinity || this.ending.rowstat == Infinity){
                 window.alert("To Large Text to Copy")
             }
@@ -928,11 +977,12 @@ export class Sheet{
                 this.config.dashOffset=1;
                 if (!this.marchloop){
                     this.table();
-                    }
+                }
                 this.clipboard();
             }
         }
         else if (e.key.toLowerCase() === "v"  && e.ctrlKey){
+            e.preventDefault()
             this.paste()
         }
         else if (e.key.toLowerCase() === "f" && e.ctrlKey){
@@ -965,7 +1015,7 @@ export class Sheet{
                     this.marchloop=null
                     if (!this.marchloop){
                         this.table();
-                        }
+                    }
                 this.rows()
                 }
             }
@@ -975,14 +1025,14 @@ export class Sheet{
                 this.selectedcell.row = this.selectedcell.row +1;
                 this.starting=JSON.parse(JSON.stringify(this.selectedcell))
                 this.ending=JSON.parse(JSON.stringify(this.selectedcell))
-                    // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
+                // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
                 if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
                     this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
                 }
                 this.marchloop=null
                 if (!this.marchloop){
                     this.table();
-                    }
+                }
                 this.rows()
             }
         }
@@ -1002,7 +1052,7 @@ export class Sheet{
             }
             if (!this.marchloop){
                 this.table();
-                }
+            }
             console.log("delete");
         }
         else if (e.key === "Escape"){
@@ -1010,7 +1060,7 @@ export class Sheet{
             this.findDiv.style.left = "30%"
             this.findDiv.style.top = "30%"
             // this.graphdiv.style.display="none"
-            this.countFind=0
+            this.config.countFind=0
             this.config.dashOffset=0
             this.marchloop=null
             if (!this.marchloop){
@@ -1059,6 +1109,10 @@ export class Sheet{
         // console.log(this.starting);
         // e.target.addEventListener("pointerdown",handlemouseDown);
         // let temp1, temp2;
+        /**
+         * mouse move function for range selection
+         * @param {PointerEvent} i - default e event 
+         */
         function handleMouseMove(i){
             let newX = e.offsetX+i.clientX-e.clientX
             let newY = e.offsetY+i.clientY-e.clientY
@@ -1068,14 +1122,14 @@ export class Sheet{
             if(this.containerdiv.scrollLeft>=this.ending.colstat-50){ //scroll left
                 this.containerdiv.scrollBy(-this.columnsize[this.ending.col],0)
             }
-            if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<=this.ending.colstat+this.columnsize[this.ending.col]+50){ //scroll right
+            else if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<=this.ending.colstat+this.columnsize[this.ending.col]+50){ //scroll right
                 this.containerdiv.scrollBy(+this.columnsize[this.ending.col],0)
             }
-            if(this.containerdiv.scrollTop>=this.ending.rowstat-50){ //up
+            else if(this.containerdiv.scrollTop>=this.ending.rowstat-50){ //up
                 this.containerdiv.scrollBy(0,-this.rowsize[this.ending.row])
             }
             // console.log(this.containerdiv.scrollTop+this.containerdiv.clientHeight,this.ending.rowstat+this.rowsize[this.ending.row]);
-            if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<=this.ending.rowstat+this.rowsize[this.ending.row]+50){
+            else if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<=this.ending.rowstat+this.rowsize[this.ending.row]+50){
                 this.containerdiv.scrollBy(0,+this.rowsize[this.ending.row])
             }
 
@@ -1087,7 +1141,7 @@ export class Sheet{
             }
             if (!this.marchloop){
                 this.table();
-                }
+            }
             this.headers()
             this.rows()
             // console.log(this.ending);
@@ -1096,7 +1150,10 @@ export class Sheet{
             // e.target.addEventListener("mousemove",handleMouseMove)
         let temp1 = handleMouseMove.bind(this)
         window.addEventListener("pointermove",temp1);
-    
+        /**
+         * pointer up event for range selection
+         * @param {PointerEvent} j - default e event
+         */
         function handlemouseup(j){
             
             let newX = e.offsetX+j.clientX-e.clientX
@@ -1116,6 +1173,8 @@ export class Sheet{
             if(!this.marchloop) {this.marchants();}
             // if (this.starting.col == this.ending.col){this.calculate();}
             window.removeEventListener("pointerup",temp2)
+            let aggregateEvent = new CustomEvent("calcCustomEvent",{detail:this.calculate()})
+            window.dispatchEvent(aggregateEvent)
         }
         let temp2 = handlemouseup.bind(this)
         window.addEventListener("pointerup",temp2);   
@@ -1188,6 +1247,7 @@ export class Sheet{
         if (!doresize){
             // this.selectInfinity = true
             // console.log(i,x,ycordinate);
+            this.inputdiv.style.display="none";
             this.config.dashOffset=0
             this.selectedcell.row = 0
             if (edown.shiftKey == true){
@@ -1214,6 +1274,10 @@ export class Sheet{
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
             let count =0
             // console.log("bound",boundry);
+            /**
+             * pointer move function for multiple infinity column select
+             * @param {PointerEvent} em - default e event
+             */
             let moveinfinity = (em)=>{
                 if ((edown.offsetX+em.clientX-edown.clientX+this.containerdiv.scrollLeft)>=(boundry)){
                     count+=1
@@ -1241,6 +1305,9 @@ export class Sheet{
                 this.rows()
                 this.table()
             }
+            /**
+             * pointer up event for multiple column infinity select
+             */
             let upinfinity =()=>{
                 window.removeEventListener("pointerup",upinfinity);
                 window.removeEventListener("pointermove",moveinfinity);
@@ -1256,6 +1323,10 @@ export class Sheet{
         }
         else{
             let minx = boundry - this.columnsize[i]
+            /**
+             * pointer move event for column resize
+             * @param {PointerEvent} emove - default e event
+             */
             let resize = (emove) =>{
                 // let deltaX = emove.clientX - edown.clientX
                 // console.log(deltaX);
@@ -1270,7 +1341,10 @@ export class Sheet{
                     this.headers();
                 }
             }
-            let resizeup = (eup) =>{
+            /**
+             * pointer up event for column resize
+             */
+            let resizeup = () =>{
                 console.log(prevWidth);
                 if (this.starting.col != this.ending.col && i>=Math.min(this.starting.col,this.ending.col) && i<=Math.max(this.starting.col,this.ending.col) && this.ending.rowstat == Infinity){
                     for(let i=Math.min(this.starting.col,this.ending.col);i<=Math.max(this.starting.col,this.ending.col);i++){
@@ -1337,7 +1411,8 @@ export class Sheet{
             }
         }
         let miny = boundry - this.rowsize[i]
-        if (!doresize){ 
+        if (!doresize){
+            this.inputdiv.style.display="none"; 
             this.config.dashOffset=0
             this.selectedcell.col = 0
             if (edown.shiftKey == true){
@@ -1364,6 +1439,10 @@ export class Sheet{
             this.ending.rowstat = boundry - this.rowsize[i]
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
             let count =0
+            /**
+             * pointer move for multiple infinity row select
+             * @param {PointerEvent} em -default e event 
+             */
             let moveinfinity = (em)=>{
                 if ((edown.offsetY+em.clientY-edown.clientY+this.containerdiv.scrollTop)>=(boundry)){
                     count+=1
@@ -1387,6 +1466,9 @@ export class Sheet{
                 this.headers()
                 this.table()
             }
+            /**
+             * pointer up event for multiple infinity row select
+             */
             let upinfinity =()=>{
                 window.removeEventListener("pointerup",upinfinity);
                 window.removeEventListener("pointermove",moveinfinity);
@@ -1400,6 +1482,10 @@ export class Sheet{
             }
             return
         }
+        /**
+         * pointer move event for row resize
+         * @param {PointerEvent} e - default event 
+         */
         let rowresize = (e) =>{
             if ((this.rowsize[i]+e.movementY>=5) && (e.offsetY+this.containerdiv.scrollTop>=miny)){
                 this.rowsize[i] = this.rowsize[i] + e.movementY/window.devicePixelRatio
@@ -1411,7 +1497,10 @@ export class Sheet{
             }   
             // console.log("move");
         }
-        let rowresizeup = (eup) =>{
+        /**
+         * pointer up event for row resize
+         */
+        let rowresizeup = () =>{
             console.log(prevHeight);
             if (this.starting.row != this.ending.row && i<=Math.max(this.starting.row,this.ending.row) && i>=Math.min(this.starting.row,this.ending.row) && this.ending.colstat==Infinity){
                 for(let j=Math.min(this.starting.row,this.ending.row);j<=Math.max(this.starting.row,this.ending.row);j++){
@@ -1571,28 +1660,29 @@ export class Sheet{
         let mean;
         let sum;
         let multiply;
-        if (this.starting.col == this.ending.col){
-            let start = Math.min(this.starting.row , this.ending.row);
-            let end = Math.max(this.starting.row , this.ending.row);
-            for(let i = start ; i<=end ; i++){
-                if (this.data[i] && this.data[i][this.starting.col] && !isNaN(Number(this.data[i][this.starting.col].text))){
-                    arr.push(Number(this.data[i][this.starting.col].text))
+        // if (this.starting.col == this.ending.col){
+        let start = Math.min(this.starting.row , this.ending.row);
+        let end = Math.max(this.starting.row , this.ending.row);
+        for(let i = start ; i<=end ; i++){
+            for(let j = Math.min(this.starting.col , this.ending.col); j<=Math.max(this.starting.col , this.ending.col);j++){
+                if (this.data[i] && this.data[i][j] && !isNaN(Number(this.data[i][j].text))){
+                    arr.push(Number(this.data[i][j].text))
                 }
-                
             }
-            min = Math.min(...arr);
-            max = Math.max(...arr);
-            mean = arr.reduce((prev, curr) => prev + curr,0) / arr.length;
-            sum = mean * arr.length
-            if (arr.length>0){
-                multiply = arr.reduce((prev, curr) => prev * curr)
-            }
-            
-            // console.log(arr,multiply);
-            // console.log(min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum);
-            return[min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum,isNaN(multiply)?0:multiply];
-    
         }
+        min = Math.min(...arr);
+        max = Math.max(...arr);
+        mean = arr.reduce((prev, curr) => prev + curr,0) / arr.length;
+        sum = mean * arr.length
+        // if (arr.length>0){
+        //     multiply = arr.reduce((prev, curr) => prev * curr)
+        // }
+        
+        // console.log(arr,multiply);
+        // console.log(min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum);
+        return[min==Infinity?0:min,max==-Infinity?0:max,isNaN(mean)?0:mean,isNaN(sum)?0:sum,isNaN(multiply)?0:multiply];
+    
+        // }
 
         // console.log(arr);
     }
@@ -1632,9 +1722,9 @@ export class Sheet{
         this.table();
         }
         this.headers();
-            console.log(tempdatacolumn);
-            // console.log(this.ctx.measureText(tempdatacolumn));
-            // this.ctx.measureText()
+        console.log(tempdatacolumn);
+        // console.log(this.ctx.measureText(tempdatacolumn));
+        // this.ctx.measureText()
         
     }
     
@@ -1717,7 +1807,7 @@ export class Sheet{
             let w=this.config.fontSize;
             let wrappedarr = []
             this.ctx.save()
-            this.ctx.font=`${this.config.fontSize}px ${this.congif.fontStyle}`;
+            this.ctx.font=`${this.config.fontSize}px ${this.config.fontStyle}`;
             for(let x of this.data[r][xcordinate].text){
                 w+=this.ctx.measureText(x).width
                 if(w > (this.columnsize[xcordinate])-5){
@@ -1800,11 +1890,17 @@ export class Sheet{
 
         findInput.addEventListener("change",(e)=>{
             this.config.countFind = 0
+            /**
+             * @type {string} - pev text stored in the cell
+             */
             this.prevtext = e.target.form.findText.value
             this.redo = true
             // console.log(prevtext);
         })
         replaceInput.addEventListener("change",(e)=>{
+            /**
+             * @type {string} - new text that should replace with old one
+             */
             this.newText = e.target.form.replaceText.value
             // console.log(newText);
         })
@@ -1844,7 +1940,7 @@ export class Sheet{
         // let finalarr = datarow.map(x=>{
         //     x[1]=x[1].filter(y=>JSON.stringify(y[1]).replaceAll("\\n","").includes(findtext)) 
         //     return x 
-        // }
+        // }    
         // ).filter(x=>x[1].length)
         let r,c
         if (this.redo === true){
@@ -1868,6 +1964,9 @@ export class Sheet{
             this.ending.col = Number(this.config.findarr[this.config.countFind][1])
             this.config.countFind= (this.config.countFind + 1) %this.config.findarr.length
             // this.finalarr=[]
+        }
+        else{
+            window.alert("No Element Found")
         }
         // let rowpos = (finalarr.map(v=>v[0]));
         // let colpos = (finalarr.map(v=>v[1][0][0]));
@@ -1894,8 +1993,8 @@ export class Sheet{
             this.starting.rowstat+=this.rowsize[i]
             this.ending.rowstat+=this.rowsize[i]
         }
+        this.containerdiv.scrollTo({left:this.ending.colstat-30,top:this.ending.rowstat-30,behavior:"smooth"})
         // console.log(this.starting,this.ending);
-        this.containerdiv.scrollTo(this.ending.colstat-30,this.ending.rowstat-30)
         if (!this.marchloop){
             this.table();
         }
@@ -1913,7 +2012,7 @@ export class Sheet{
         if (this.config.findarr.length>=1){
             let row = this.config.findarr[this.config.findarr.length>1 ? this.config.countFind-1 : this.config.countFind][0]
             // console.log(row);
-            let col = this.config.findarr[this.findarr.length>1 ? this.config.countFind-1 : this.config.countFind][1]
+            let col = this.config.findarr[this.config.findarr.length>1 ? this.config.countFind-1 : this.config.countFind][1]
             this.data[row][col].text=this.data[row][col].text.replaceAll(this.prevtext,this.newText)
             this.config.countFind-=1
             this.config.findarr.splice(this.config.countFind,1)
@@ -1938,6 +2037,10 @@ export class Sheet{
         var oLeft = edown.pageX - this.findDiv.getBoundingClientRect().x
         var oTop  = edown.pageY - this.findDiv.getBoundingClientRect().y
         console.log(oLeft,oTop);
+        /**
+         * pointer move event to move the find and replace box
+         * @param {PointerEvent} emove - default e event
+         */
         let findPointerMove = (emove) =>{
             // console.log("triggerd");
             this.findDiv.style.top = emove.pageY - oTop +"px"
@@ -1947,11 +2050,14 @@ export class Sheet{
             // this.findDiv.style.bottom = emove.pageY + oTop
         }
         window.addEventListener("pointermove",findPointerMove)
-        
-        let findPointerUp = (eup) =>{
-            if (this.findDiv.style.top<=0 +"px"){this.findDiv.style.top = "10%"}
-            else if (this.findDiv.style.left<=0 +"px"){this.findDiv.style.left = "10%"}
-            else if (this.findDiv.style.left>this.containerdiv.clientWidth -100+"px"){this.findDiv.style.left="50%"}
+        /**
+         * pointer up event for moving find and replace box
+         */
+        let findPointerUp = () =>{
+            if (Number(this.findDiv.style.top.replace("px",""))<=0 ){this.findDiv.style.top = "10%"}
+            else if (Number(this.findDiv.style.left.replace("px",""))<=0 ){this.findDiv.style.left = "10%"}
+            else if (Number(this.findDiv.style.left.replace("px",""))>=this.containerdiv.clientWidth-100){this.findDiv.style.left="80%"}
+            else if (Number(this.findDiv.style.top.replace("px",""))>=this.containerdiv.clientHeight-100){this.findDiv.style.top="80%"}
             window.removeEventListener("pointermove",findPointerMove)
             window.removeEventListener("pointerup",findPointerUp)
             // eup.target.removeEventListener("pointerdown",(e)=>{this.findPointerDown(e)})
@@ -1964,7 +2070,7 @@ export class Sheet{
      * @param {{String}} type - the type of graph that needs to be created
      */
     graph(type){
-        if(this.config.drawgraph)this.config.drawgraph.destroy()
+        // if(this.config.drawgraph)this.config.drawgraph.destroy()
         let dataarr=[]
         let arr=new Set()
         let singlecol = 0

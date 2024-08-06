@@ -1,7 +1,7 @@
 import {Main} from './main.js'
 
 let maindiv = document.querySelector("#mainDiv")
-console.log(maindiv);
+// console.log(maindiv);
 let main = new Main(maindiv);
 window.s = main;
 

@@ -18,7 +18,7 @@ export class Main{
      */
     sheetsdiv
     /**
-     * array to maintain the number of sheets
+     * @type {Array<Sheet>} -array to maintain the number of sheets
      */
     sheets = []
     constructor(sheetcontainer){
@@ -73,6 +73,9 @@ export class Main{
             graphdiv.style.display="flex" ; textdiv.style.display="none";maths.style.display="none"
         })
         
+        window.addEventListener("calcCustomEvent",()=>{
+            this.recalc()
+        })
 
         this.sheetTabContainer = document.createElement("div")
         this.sheetTabContainer.classList.add("sheetTabs")
@@ -106,7 +109,7 @@ export class Main{
         this.sheets.push(sheet_1)
         this.currentsheetIndex = 0
         this.currsheet(0);
-        // console.log(this,Object.keys(this));
+        // console.log(this.sheets[0].);
     }
     /**
      * current sheet index to load
@@ -307,7 +310,7 @@ export class Main{
         this.calcOptions.appendChild(this.max)
         this.calcOptions.appendChild(this.mean)
         this.calcOptions.appendChild(this.sum)
-        this.calcOptions.appendChild(this.multiply)
+        // this.calcOptions.appendChild(this.multiply)
         return this.calcOptions
     }
     //for calculation and call from sheets
@@ -317,11 +320,11 @@ export class Main{
     recalc(){
         // if(!this.sheets[this.currentsheetIndex]){return}
         let val = this.sheets[this.currentsheetIndex].calculate()
-        console.log(this.sheets[this.currentsheetIndex]);
+        // console.log(this.sheets[this.currentsheetIndex]);
         this.min.textContent="Min:"+`${val?.[0] ? val[0] : "Null"}`
         this.max.textContent="Max:"+`${val?.[1] ? val[1] : "Null"}`
         this.mean.textContent="Mean:"+`${val?.[2] ? val[2] : "Null"}`
         this.sum.textContent="Sum:"+`${val?.[3] ? val[3] : "Null"}`
-        this.multiply.textContent="Multiply:"+`${val?.[4] ?val[4] : "Null"}`
+        // this.multiply.textContent="Multiply:"+`${val?.[4] ?val[4] : "Null"}`
     }
 }
