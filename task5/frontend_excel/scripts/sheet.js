@@ -62,6 +62,7 @@ export class Sheet{
         rowlimit : 1048576,
         collimit : 16383,
         dashOffset : 0,
+        prevValue:"",
         // drawgraph:null,
         countFind : 0,
         /**
@@ -76,15 +77,17 @@ export class Sheet{
     /**@type {{col:Number , row:Number , columnstart:Number , rowstart:Number}} */
     selectedcell= {col:0,row:0,columnstart:0,rowstart:0};
     /**
-     * @type {(null|{col:Number , row:Number , colstat:Number , rowstat:Number})} - col,row are index and colstat and rowstat are pixel values*/
-    starting  = {col:0,row:0,colstat:0,rowstat:0};
-    /**@type {(null|{col:Number , row:Number , colstat:Number , rowstat:Number})} - col,row are index and colstat and rowstat are pixel values*/
-    ending = {col:0,row:0,colstat:0,rowstat:0};
+     * @type {(null|{col:Number , row:Number , columnstart:Number , rowstart:Number})} - col,row are index and columnstart and rowstart are pixel values*/
+    starting  = {col:0,row:0,columnstart:0,rowstart:0};
+    /**@type {(null|{col:Number , row:Number , columnstart:Number , rowstart:Number})} - col,row are index and columnstart and rowstart are pixel values*/
+    ending = {col:0,row:0,columnstart:0,rowstart:0};
     //constructor(div)
     constructor(){
         // this.columnsize = window.localStorage.getItem("column") ? JSON.parse(window.localStorage.getItem("column")) : Array(10).fill(100)
         // this.rowsize = window.localStorage.getItem("rows") ? JSON.parse(window.localStorage.getItem("rows")) : Array(25).fill(30)
         this.data = JSON.parse(JSON.stringify(data));
+        let rowslimit = Object.keys(this.data)
+        this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],30)+1).fill(30)
         this.containerdiv = document.createElement("div");
         this.btn = document.createElement("div");
         // this.btn.setAttribute("data-dot","")
@@ -134,10 +137,11 @@ export class Sheet{
         this.headers();
         this.rows();
         this.table();
-        
+        this.CreateCache();
         window.addEventListener("resize",()=>{
             this.canvasize();
             this.headers();
+            this.CreateCache();
             if (!this.marchloop){
                 this.table();
                 }
@@ -156,24 +160,30 @@ export class Sheet{
             this.checkrow();
             this.canvasize();
             this.headers();
+            this.CreateCache();
             if (!this.marchloop){
                 this.table();
                 }
             this.rows();
         })
     
-        this.canvaref.addEventListener("click",(e)=>{
-            this.handleclick(e);
+        // this.canvaref.addEventListener("click",(e)=>{
+        //     // this.handleclick(e);
+        //     this.headers();
+        //     this.rows();
+        //     if (!this.marchloop){
+        //         this.table();
+        //     }
+        // })
+    
+        this.canvaref.addEventListener("pointerdown",(e)=>{
+            this.handlemouseDown(e);
+            this.canvapointerclick(e);
             this.headers();
             this.rows();
             if (!this.marchloop){
                 this.table();
             }
-        })
-    
-        this.canvaref.addEventListener("pointerdown",(e)=>{
-            this.handlemouseDown(e);
-            this.canvapointerclick(e);
         })
         
         this.inputdiv.querySelector("input").addEventListener("keyup",(e)=>{
@@ -275,7 +285,7 @@ export class Sheet{
         this.ctxheaders.clearRect(0, 0, this.canvaref.width, this.canvaref.height);
         this.ctxheaders.scale(window.devicePixelRatio,window.devicePixelRatio)
         this.ctxheaders.translate(-this.containerdiv.scrollLeft, 0)
-        let {columnstart ,  xcordinate } = this.handleclick({offsetX:0 , offsetY:0})
+        let {columnstart ,  xcordinate } = this.firstCellCache ? this.firstCellCache :this.handleclick({offsetX:0 , offsetY:0})
         let sumcol = columnstart
         for (let i = xcordinate; sumcol<=(this.containerdiv.clientWidth + this.containerdiv.scrollLeft) && i<this.columnsize.length; i++) {
             this.ctxheaders.save();
@@ -286,7 +296,7 @@ export class Sheet{
             if (this.starting && this.ending && 
                 Math.min(this.starting.col, this.ending.col) <= i && 
                 i <= Math.max(this.starting.col, this.ending.col)){ 
-                if (this.ending.rowstat == Infinity){
+                if (this.ending.rowstart == Infinity){
                     this.ctxheaders.save();
                     this.ctxheaders.fillStyle="#107c41";
                     this.ctxheaders.fill();
@@ -362,7 +372,7 @@ export class Sheet{
         //     this.ctxrow.stroke();
         // }
         // this.ctxrow.restore();
-        let { rowstart  , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
+        let { rowstart  , ycordinate} = this.firstCellCache ? this.firstCellCache : this.handleclick({offsetX:0 , offsetY:0})
         for(let i=ycordinate; rowstart<=(this.containerdiv.clientHeight + this.containerdiv.scrollTop);i++){
             this.ctxrow.save();
             this.ctxrow.beginPath();
@@ -373,7 +383,7 @@ export class Sheet{
             if (this.starting && this.ending && 
                 Math.min(this.starting.row, this.ending.row) <= i && 
                 i <= Math.max(this.starting.row, this.ending.row) ){
-                    if (this.ending.colstat == Infinity){
+                    if (this.ending.columnstart == Infinity){
                         this.ctxrow.save();
                         this.ctxrow.fillStyle="#107c41";
                         this.ctxrow.fill();
@@ -466,7 +476,7 @@ export class Sheet{
         // }
         // console.log(colcount);
         
-        let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:0 , offsetY:0})
+        let {columnstart , rowstart , xcordinate , ycordinate} = this.firstCellCache ? this.firstCellCache : this.handleclick({offsetX:0 , offsetY:0})
         let colstart =  columnstart;
         for (let i= xcordinate; colstart< (this.containerdiv.clientWidth+this.containerdiv.scrollLeft);i++){
             let rowsend = rowstart;
@@ -552,7 +562,6 @@ export class Sheet{
             let newwidth = Math.min(this.containerdiv.clientWidth, x>this.containerdiv.scrollLeft ? w : w-this.containerdiv.scrollLeft+x)
             let newHeight = Math.min(this.containerdiv.clientHeight,y>this.containerdiv.scrollTop ? h : h-this.containerdiv.scrollTop +y)
             // if (isNaN(newHeight)){debugger}
-            // console.log(startpixel,startrowpixel,newwidth,newHeight);
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.strokeStyle = "#107c41"
@@ -568,7 +577,7 @@ export class Sheet{
                 });                        
             }
             if (newwidth>0 && newHeight>0 && startpixel<this.containerdiv.scrollLeft+this.containerdiv.clientWidth && startrowpixel<this.containerdiv.scrollTop+this.containerdiv.clientHeight){
-                // console.log(startpixel,startrowpixel,newwidth,newHeight);
+                // console.log(newwidth>0 && newHeight>0 && startpixel<this.containerdiv.scrollLeft+this.containerdiv.clientWidth && startrowpixel<this.containerdiv.scrollTop+this.containerdiv.clientHeight);
                 this.ctx.strokeRect(startpixel-0.5,startrowpixel-0.5,newwidth-0.5,newHeight-1);
             }
             
@@ -588,7 +597,7 @@ export class Sheet{
             this.canvasize();
             this.headers();
             if (!this.marchloop){
-                this.table();
+                window.requestAnimationFrame(()=>this.table());
             }
             this.rows();
         }
@@ -607,7 +616,7 @@ export class Sheet{
             this.rows();
             this.headers();
             if (!this.marchloop){
-                this.table();
+                window.requestAnimationFrame(()=>this.table());
             }
         }
     }
@@ -620,12 +629,13 @@ export class Sheet{
      * @returns {{columnstart:Number , rowstart:Number , xcordinate:Number , ycordinate:Number}} - x,y index and pixel values from left and top
      */
     handleclick(e){
+        console.log("normal");
         // console.log(e.offsetX,e.offsetY);
-        let xcord;
+        let xcord=0;
         let colposition =0;
         let rowposition =0;
         let off = e.offsetX;    
-        for (xcord = 0; xcord < this.columnsize.length; xcord++) {
+        for (xcord ; xcord < this.columnsize.length; xcord++) {
             // console.log("xcord",this.containerdiv.scrollLeft);
             if (off + this.containerdiv.scrollLeft <= colposition + this.columnsize[xcord]) {
                 break;
@@ -635,15 +645,71 @@ export class Sheet{
             // colposition = colposition / this.columnsize[xcord]
         }
         // console.log(colposition);
-        let ycord;
+        let ycord=0;
         let offy = e.offsetY;
-        for(ycord=0;ycord<this.rowsize.length;ycord++){
+        for(ycord;ycord<this.rowsize.length;ycord++){
             if (offy + this.containerdiv.scrollTop <=rowposition + this.rowsize[ycord]){
                 break;
             }
             rowposition += this.rowsize[ycord]
         }
         // console.log(colposition,rowposition , xcord, ycord);
+        return {columnstart:colposition,rowstart:rowposition , xcordinate:xcord , ycordinate:ycord}
+    }
+    /**
+     * creating a cache cell
+     */
+    CreateCache(){
+        console.log("updatind cache");
+        let xcord=0;
+        let colposition =0;
+        let rowposition =0;
+        for (xcord ; xcord < this.columnsize.length; xcord++) {
+            // console.log("xcord",this.containerdiv.scrollLeft);
+            if (this.containerdiv.scrollLeft <= colposition + this.columnsize[xcord]) {
+                break;
+            // xcord = Math.floor(e.offsetX - columnArr[i]);
+            }
+            colposition += this.columnsize[xcord]
+            // colposition = colposition / this.columnsize[xcord]
+        }
+        // console.log(colposition);
+        let ycord=0;
+        for(ycord;ycord<this.rowsize.length;ycord++){
+            if (this.containerdiv.scrollTop <=rowposition + this.rowsize[ycord]){
+                break;
+            }
+            rowposition += this.rowsize[ycord]
+        }
+        this.firstCellCache = {xcordinate:xcord,ycordinate:ycord,columnstart:colposition,rowstart:rowposition}
+    }
+    /**
+     * only top position value
+     */
+    handleclickCache(e){
+        
+        let xcord=this.firstCellCache.xcordinate;
+        let ycord=this.firstCellCache.ycordinate;
+        let colposition =this.firstCellCache.columnstart;
+        let rowposition =this.firstCellCache.rowstart;
+        let off = e.offsetX;    
+        for (xcord ; xcord < this.columnsize.length; xcord++) {
+            // console.log("xcord",this.containerdiv.scrollLeft);
+            if (off + this.containerdiv.scrollLeft <= colposition + this.columnsize[xcord]) {
+                break;
+            // xcord = Math.floor(e.offsetX - columnArr[i]);
+            }
+            colposition += this.columnsize[xcord]
+            // colposition = colposition / this.columnsize[xcord]
+        }
+        // console.log(colposition);
+        let offy = e.offsetY;
+        for(ycord;ycord<this.rowsize.length;ycord++){
+            if (offy + this.containerdiv.scrollTop <=rowposition + this.rowsize[ycord]){
+                break;
+            }
+            rowposition += this.rowsize[ycord]
+        }
         return {columnstart:colposition,rowstart:rowposition , xcordinate:xcord , ycordinate:ycord}
     }
     //click selected cell data change and position
@@ -657,7 +723,7 @@ export class Sheet{
             this.starting=JSON.parse(JSON.stringify(this.selectedcell))
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
             // console.log(e.target);
-            this.ending = {col:xcordinate , row:ycordinate ,colstat:columnstart,rowstat:rowstart}
+            this.ending = {col:xcordinate , row:ycordinate ,columnstart:columnstart,rowstart:rowstart}
         }
         else{
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
@@ -680,6 +746,7 @@ export class Sheet{
      */
     editfeild(){
         // console.log("double clk");
+        this.config.prevValue = ""
         this.inputdiv.style.display = "block"
         this.inputdiv.style.left=(this.selectedcell.columnstart + this.config.rowWidth)  + "px"
         this.inputdiv.style.top=(this.selectedcell.rowstart + this.config.rowHeight) + "px"
@@ -688,9 +755,10 @@ export class Sheet{
         let inputref = this.inputdiv.querySelector("input")
         inputref.font= `${this.config.fontSize}px ${this.config.fontStyle}`;
         inputref.value = this.data[this.selectedcell.row] && this.data[this.selectedcell.row][this.selectedcell.col] ? this.data[this.selectedcell.row][this.selectedcell.col]['text'] : "" ; 
+        this.config.prevValue = this.data?.[this.selectedcell.row]?.[this.selectedcell.col]?.['text']
         inputref.focus();
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
     }
 
@@ -754,6 +822,7 @@ export class Sheet{
         }
         else if (e.key === "Escape"){
             this.inputdiv.style.display = "none"
+            this.data[this.selectedcell.row][this.selectedcell.col]['text'] = this.config.prevValue?this.config.prevValue:"";
         }
         else{
             let newValue = {text:e.target.value};
@@ -772,7 +841,7 @@ export class Sheet{
             }
         }
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
     }
     
@@ -789,7 +858,7 @@ export class Sheet{
         else if (e.key==="ArrowLeft"){
             if (e.shiftKey === true){
                 // console.log("shift pressed");
-                this.starting = {"col":this.selectedcell.col};
+                this.starting.col = this.selectedcell.col;
                 this.starting.row = this.selectedcell.row;
                 if (this.ending === null){
                     this.ending.row = this.selectedcell.row;
@@ -798,14 +867,15 @@ export class Sheet{
                 else{
                     if (this.ending.col>0){
                         this.ending.col = this.ending.col -1;
-                        this.selectedcell.columnstart = this.selectedcell.columnstart - this.columnsize[this.selectedcell.col]
+                        this.ending.columnstart = this.ending.columnstart - this.columnsize[this.ending.col]
                     }
-                    if(this.containerdiv.scrollLeft>this.selectedcell.columnstart){
-                        this.containerdiv.scrollBy(-this.columnsize[this.selectedcell.col],0)
+                    console.log(this.selectedcell.columnstart);
+                    if(this.containerdiv.scrollLeft>this.ending.columnstart){
+                        this.containerdiv.scrollTo(this.ending.columnstart,this.containerdiv.scrollTop)
                     }
                     this.marchloop=null
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                 }
             }
@@ -824,13 +894,13 @@ export class Sheet{
                     
                     this.starting=JSON.parse(JSON.stringify(this.selectedcell))
                     this.ending=JSON.parse(JSON.stringify(this.selectedcell))
-                    if(this.containerdiv.scrollLeft>this.selectedcell.columnstart){
-                        this.containerdiv.scrollBy(-this.columnsize[this.selectedcell.col],0)
+                    if(this.containerdiv.scrollLeft>this.selectedcell.columnstart - 2*this.columnsize[this.selectedcell.col]){
+                        this.containerdiv.scrollTo(this.selectedcell.columnstart,this.containerdiv.scrollTop)
                     }
                     // console.log("left");
                     this.marchloop=null
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                     this.headers();
                 }
@@ -839,7 +909,7 @@ export class Sheet{
         else if (e.key === "ArrowRight"){
             if (e.shiftKey === true){
                 // console.log("shift pressed");
-                this.starting = {"col":this.selectedcell.col};
+                this.starting.col = this.selectedcell.col
                 this.starting.row = this.selectedcell.row;
                 if (this.ending === null){
                     this.ending.row = this.selectedcell.row;
@@ -847,13 +917,14 @@ export class Sheet{
                 }
                 else{
                     this.ending.col = this.ending.col +1;
-                    this.selectedcell.columnstart = this.selectedcell.columnstart + this.columnsize[this.selectedcell.col]
-                    if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+this.columnsize[this.selectedcell.col]){
-                        this.containerdiv.scrollBy(+this.columnsize[this.selectedcell.col],0)
+                    this.ending.columnstart = this.ending.columnstart + this.columnsize[this.ending.col]
+                    console.log(this.ending.columnstart,this.containerdiv.clientWidth,this.containerdiv.scrollLeft);
+                    if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.ending.columnstart+2*this.columnsize[this.ending.col]){
+                        this.containerdiv.scrollTo(this.ending.columnstart+2*this.columnsize[this.ending.col]-this.containerdiv.clientWidth,this.containerdiv.scrollTop)
                     }
                     this.marchloop=null
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                 }
             }
@@ -867,12 +938,15 @@ export class Sheet{
                 // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
                 this.starting=JSON.parse(JSON.stringify(this.selectedcell))
                 this.ending=JSON.parse(JSON.stringify(this.selectedcell))
-                if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+this.columnsize[this.selectedcell.col]){
-                    this.containerdiv.scrollBy(+this.columnsize[this.selectedcell.col],0)
+                if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+ 2*this.columnsize[this.selectedcell.col]){
+                    this.containerdiv.scrollTo(this.selectedcell.columnstart+2*this.columnsize[this.selectedcell.col]-this.containerdiv.clientWidth,this.containerdiv.scrollTop)
                 }
+                // else if (this.containerdiv.scrollLeft+this.containerdiv.clientWidth>this.selectedcell.columnstart){
+                //     this.containerdiv.scrollTo(this.selectedcell.columnstart+this.containerdiv.clientWidth,this.containerdiv.scrollTop)
+                // }
                 this.marchloop=null
                 if (!this.marchloop){
-                    this.table();
+                    window.requestAnimationFrame(()=>this.table());
                 }
                 this.headers();
             } 
@@ -880,7 +954,7 @@ export class Sheet{
         else if(e.key === "ArrowUp"){
             if (e.shiftKey === true){
                 // console.log("shift pressed");
-                this.starting = {"col":this.selectedcell.col};
+                this.starting.col = this.selectedcell.col
                 this.starting.row = this.selectedcell.row;
                 if (this.ending === null){
                     this.ending.row = this.selectedcell.row;
@@ -889,14 +963,15 @@ export class Sheet{
                 else{
                     if (this.ending.row>0){
                         this.ending.row = this.ending.row - 1;
-                        this.selectedcell.rowstart = this.selectedcell.rowstart - this.rowsize[this.selectedcell.row]
+                        this.ending.rowstart = this.ending.rowstart - this.rowsize[this.ending.row]
                     }
-                    if(this.containerdiv.scrollTop>this.selectedcell.rowstart){
-                        this.containerdiv.scrollBy(0,-this.rowsize[this.selectedcell.row])
+                    if(this.containerdiv.scrollTop>this.ending.rowstart - this.rowsize[this.ending.row]){
+                        // console.log("up");
+                        this.containerdiv.scrollTo(this.containerdiv.scrollLeft,this.ending.rowstart)
                     }
                     this.marchloop=null
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                 }
                 this.rows()
@@ -913,12 +988,12 @@ export class Sheet{
                     this.starting=JSON.parse(JSON.stringify(this.selectedcell))
                     this.ending=JSON.parse(JSON.stringify(this.selectedcell))
                     // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
-                    if(this.containerdiv.scrollTop>this.selectedcell.rowstart){
-                        this.containerdiv.scrollBy(0,-this.rowsize[this.selectedcell.row])
+                    if(this.containerdiv.scrollTop>this.selectedcell.rowstart- this.rowsize[this.selectedcell.row]){
+                        this.containerdiv.scrollTo(this.containerdiv.scrollLeft,this.selectedcell.rowstart)
                     }
                     this.marchloop=null
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                     this.rows()
                 }
@@ -927,7 +1002,7 @@ export class Sheet{
         else if (e.key === "ArrowDown"){
             if (e.shiftKey === true){
                 // console.log("shift pressed");
-                this.starting = {"col":this.selectedcell.col};
+                this.starting.col = this.selectedcell.col
                 this.starting.row = this.selectedcell.row;
                 if (this.ending === null){
                     this.ending.row = this.selectedcell.row;
@@ -935,20 +1010,20 @@ export class Sheet{
                 }
                 else{
                     this.ending.row = this.ending.row + 1;
-                    this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
-                    if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
-                        this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
+                    this.ending.rowstart = this.ending.rowstart + this.rowsize[this.ending.row]
+                    if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.ending.rowstart + 2*this.rowsize[this.ending.row]){
+                        this.containerdiv.scrollTo(this.containerdiv.scrollLeft,this.ending.rowstart+2*this.rowsize[this.ending.row]-this.containerdiv.clientHeight)
                     }
                     this.marchloop=null
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                 }
                 this.rows()
             }
             else{
-                this.starting=null;
                 e.preventDefault();
+                this.starting=null;
                 this.config.dashOffset=0
                 this.inputdiv.style.display="none";
                 this.selectedcell.rowstart = this.selectedcell.rowstart + this.rowsize[this.selectedcell.row]
@@ -956,12 +1031,12 @@ export class Sheet{
                 this.starting=JSON.parse(JSON.stringify(this.selectedcell))
                 this.ending=JSON.parse(JSON.stringify(this.selectedcell))
                 // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
-                if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart+this.rowsize[this.selectedcell.row]){
-                    this.containerdiv.scrollBy(0,+this.rowsize[this.selectedcell.row])
+                if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart + 2*this.rowsize[this.selectedcell.row]){
+                    this.containerdiv.scrollTo(this.containerdiv.scrollLeft,this.selectedcell.rowstart+2*this.rowsize[this.selectedcell.row]-this.containerdiv.clientHeight)
                 }
                 this.marchloop=null
                 if (!this.marchloop){
-                    this.table();
+                    window.requestAnimationFrame(()=>this.table());
                 }
                 this.rows();
             }
@@ -970,13 +1045,13 @@ export class Sheet{
         else if (e.key.toLowerCase() === "c" && e.ctrlKey){
             // console.log("ctrl c");
             e.preventDefault()
-            if (this.ending.colstat == Infinity || this.ending.rowstat == Infinity){
+            if (this.ending.columnstart == Infinity || this.ending.rowstart == Infinity){
                 window.alert("To Large Text to Copy")
             }
             else{
                 this.config.dashOffset=1;
                 if (!this.marchloop){
-                    this.table();
+                    window.requestAnimationFrame(()=>this.table());
                 }
                 this.clipboard();
             }
@@ -1014,7 +1089,7 @@ export class Sheet{
                     }
                     this.marchloop=null
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                 this.rows()
                 }
@@ -1031,7 +1106,7 @@ export class Sheet{
                 }
                 this.marchloop=null
                 if (!this.marchloop){
-                    this.table();
+                    window.requestAnimationFrame(()=>this.table());
                 }
                 this.rows()
             }
@@ -1051,7 +1126,7 @@ export class Sheet{
                 }
             }
             if (!this.marchloop){
-                this.table();
+                window.requestAnimationFrame(()=>this.table());
             }
             console.log("delete");
         }
@@ -1064,11 +1139,13 @@ export class Sheet{
             this.config.dashOffset=0
             this.marchloop=null
             if (!this.marchloop){
-                this.table();
+                window.requestAnimationFrame(()=>this.table());
             }
         }
         // else if (e.key.charCodeAt()>=33 && e.key.charCodeAt()<=126 && !e.ctrlKey && e.location == 3){
         else if (`abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+{}[];"':./\\<>?|`.includes(e.key.toLowerCase())){
+            this.config.prevValue = this.data[this.selectedcell.row]?.[this.selectedcell.col]?.['text']
+            // console.log(this.config.prevValue);
             this.inputdiv.style.display = "block"
             this.inputdiv.style.left=(this.selectedcell.columnstart + this.config.rowWidth)  + "px"
             this.inputdiv.style.top=(this.selectedcell.rowstart + this.config.rowHeight) + "px"
@@ -1079,7 +1156,7 @@ export class Sheet{
             inputref.value = "" 
             inputref.focus();
             if (!this.marchloop){
-                this.table();
+                window.requestAnimationFrame(()=>this.table());
             }
             // console.log(e.key.charCodeAt());
         }
@@ -1099,10 +1176,10 @@ export class Sheet{
      */
     handlemouseDown(e){
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
-        this.starting = {col:xcordinate , row:ycordinate , colstat:columnstart , rowstat:rowstart}
+        this.starting = {col:xcordinate , row:ycordinate , columnstart:columnstart , rowstart:rowstart}
         // console.log(this.starting);
         
-        this.ending = null;
+        this.ending = {col:xcordinate , row:ycordinate , columnstart:columnstart , rowstart:rowstart};
         this.config.dashOffset=0;
         this.marchloop=null;
         
@@ -1113,23 +1190,31 @@ export class Sheet{
          * mouse move function for range selection
          * @param {PointerEvent} i - default e event 
          */
-        function handleMouseMove(i){
+        let handleMouseMove=(i)=>{
+            i.preventDefault()
             let newX = e.offsetX+i.clientX-e.clientX
             let newY = e.offsetY+i.clientY-e.clientY
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:newX,offsetY:newY})
-            this.ending = { row: ycordinate, col: xcordinate ,colstat:columnstart,rowstat:rowstart};
-
-            if(this.containerdiv.scrollLeft>=this.ending.colstat-50){ //scroll left
+            // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclickCache({offsetX:newX,offsetY:newY})
+            if (this.ending == null || (this.ending.row != ycordinate || this.ending.col != xcordinate)){
+                this.ending = { row: ycordinate, col: xcordinate ,columnstart:columnstart,rowstart:rowstart};
+                if (!this.marchloop){
+                    this.table()
+                }
+                this.headers()
+                this.rows()
+            }
+            if(this.containerdiv.scrollLeft>=this.ending.columnstart-50){ //scroll left
                 this.containerdiv.scrollBy(-this.columnsize[this.ending.col],0)
             }
-            else if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<=this.ending.colstat+this.columnsize[this.ending.col]+50){ //scroll right
+            else if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<=this.ending.columnstart+this.columnsize[this.ending.col]+50){ //scroll right
                 this.containerdiv.scrollBy(+this.columnsize[this.ending.col],0)
             }
-            else if(this.containerdiv.scrollTop>=this.ending.rowstat-50){ //up
+            else if(this.containerdiv.scrollTop>=this.ending.rowstart-50){ //up
                 this.containerdiv.scrollBy(0,-this.rowsize[this.ending.row])
             }
-            // console.log(this.containerdiv.scrollTop+this.containerdiv.clientHeight,this.ending.rowstat+this.rowsize[this.ending.row]);
-            else if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<=this.ending.rowstat+this.rowsize[this.ending.row]+50){
+            // console.log(this.containerdiv.scrollTop+this.containerdiv.clientHeight,this.ending.rowstart+this.rowsize[this.ending.row]);
+            else if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<=this.ending.rowstart+this.rowsize[this.ending.row]+50){
                 this.containerdiv.scrollBy(0,+this.rowsize[this.ending.row])
             }
 
@@ -1139,29 +1224,25 @@ export class Sheet{
             else{
                 this.btn.removeAttribute("data-dot")
             }
-            if (!this.marchloop){
-                this.table();
-            }
-            this.headers()
-            this.rows()
+            
             // console.log(this.ending);
         }
         
             // e.target.addEventListener("mousemove",handleMouseMove)
-        let temp1 = handleMouseMove.bind(this)
-        window.addEventListener("pointermove",temp1);
+        // let temp1 = handleMouseMove.bind(this)
+        window.addEventListener("pointermove",handleMouseMove);
         /**
          * pointer up event for range selection
          * @param {PointerEvent} j - default e event
          */
-        function handlemouseup(j){
+        let handlemouseup=(j)=>{
             
             let newX = e.offsetX+j.clientX-e.clientX
             let newY = e.offsetY+j.clientY-e.clientY
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick({offsetX:newX,offsetY:newY})
             // console.log(e.target);
-            window.removeEventListener("pointermove",temp1);
-            this.ending = {col:xcordinate , row:ycordinate ,colstat:columnstart,rowstat:rowstart}
+            window.removeEventListener("pointermove",handleMouseMove);
+            this.ending = {col:xcordinate , row:ycordinate ,columnstart:columnstart,rowstart:rowstart}
 
             if (this.starting.col == 0 || this.starting.row == 0 || this.ending.col == 0 || this.ending.row == 0){
                 this.btn.setAttribute("data-dot","")
@@ -1172,12 +1253,12 @@ export class Sheet{
             // console.log("final ending",this.ending);
             if(!this.marchloop) {this.marchants();}
             // if (this.starting.col == this.ending.col){this.calculate();}
-            window.removeEventListener("pointerup",temp2)
+            window.removeEventListener("pointerup",handlemouseup)
             let aggregateEvent = new CustomEvent("calcCustomEvent",{detail:this.calculate()})
             window.dispatchEvent(aggregateEvent)
         }
-        let temp2 = handlemouseup.bind(this)
-        window.addEventListener("pointerup",temp2);   
+        // let temp2 = handlemouseup.bind(this)
+        window.addEventListener("pointerup",handlemouseup);   
         // e.target.removeEventListener("pointerdown",this.handlemouseDown)
     }
     
@@ -1252,25 +1333,27 @@ export class Sheet{
             this.selectedcell.row = 0
             if (edown.shiftKey == true){
                 this.ending.col = i
-                this.ending.colstat = boundry - this.columnsize[i]
+                this.ending.columnstart = boundry - this.columnsize[i]
                 this.starting.row = 0;
                 this.ending.row = this.config.rowlimit;
-                this.starting.rowstat = 0;
-                this.ending.rowstat = Infinity;
+                this.starting.rowstart = 0;
+                this.ending.rowstart = Infinity;
                 this.headers()
-                this.table()
+                if (!this.marchloop){
+                    window.requestAnimationFrame(()=>this.table());
+                }
                 this.rows()
                 return  
             }
             this.selectedcell.col = i
             this.starting.col = i;
             this.ending.col = i;
-            this.starting.colstat = boundry - this.columnsize[i]
-            this.ending.colstat = boundry - this.columnsize[i];
+            this.starting.columnstart = boundry - this.columnsize[i]
+            this.ending.columnstart = boundry - this.columnsize[i];
             this.starting.row = 0;
             this.ending.row = this.config.rowlimit;
-            this.starting.rowstat = 0;
-            this.ending.rowstat = Infinity;
+            this.starting.rowstart = 0;
+            this.ending.rowstart = Infinity;
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
             let count =0
             // console.log("bound",boundry);
@@ -1282,7 +1365,7 @@ export class Sheet{
                 if ((edown.offsetX+em.clientX-edown.clientX+this.containerdiv.scrollLeft)>=(boundry)){
                     count+=1
                     boundry +=this.columnsize[i+count]
-                    this.ending.colstat = this.ending.colstat+this.columnsize[i+count]
+                    this.ending.columnstart = this.ending.columnstart+this.columnsize[i+count]
                     this.ending.col = i+count
                     console.log(this.containerdiv.scrollLeft+this.containerdiv.clientWidth, boundry )
                 }
@@ -1295,15 +1378,17 @@ export class Sheet{
                     boundry -=this.columnsize[i+count]
                     count-=1
                     this.ending.col = i+count
-                    this.ending.colstat -= this.columnsize[i+count]
-                    // console.log(this.containerdiv.scrollLeft,this.ending.colstat);
+                    this.ending.columnstart -= this.columnsize[i+count]
+                    // console.log(this.containerdiv.scrollLeft,this.ending.columnstart);
                 }
-                if(this.containerdiv.scrollLeft>=this.ending.colstat){
+                if(this.containerdiv.scrollLeft>=this.ending.columnstart){
                     this.containerdiv.scrollBy(-100,0)
                 }
                 this.headers()
                 this.rows()
-                this.table()
+                if (!this.marchloop){
+                    window.requestAnimationFrame(()=>this.table());
+                }
             }
             /**
              * pointer up event for multiple column infinity select
@@ -1317,7 +1402,7 @@ export class Sheet{
             this.headers();
             this.rows();
             if (!this.marchloop){
-                this.table();
+                window.requestAnimationFrame(()=>this.table());
             }
             return
         }
@@ -1336,7 +1421,7 @@ export class Sheet{
                     prevWidth = this.columnsize[i]
                     // console.log(this.columnsize[i]);
                     if (!this.marchloop){
-                        this.table();
+                        window.requestAnimationFrame(()=>this.table());
                     }
                     this.headers();
                 }
@@ -1346,14 +1431,16 @@ export class Sheet{
              */
             let resizeup = () =>{
                 console.log(prevWidth);
-                if (this.starting.col != this.ending.col && i>=Math.min(this.starting.col,this.ending.col) && i<=Math.max(this.starting.col,this.ending.col) && this.ending.rowstat == Infinity){
+                if (this.starting.col != this.ending.col && i>=Math.min(this.starting.col,this.ending.col) && i<=Math.max(this.starting.col,this.ending.col) && this.ending.rowstart == Infinity){
                     for(let i=Math.min(this.starting.col,this.ending.col);i<=Math.max(this.starting.col,this.ending.col);i++){
                         this.columnsize[i] = prevWidth 
                     }
                     this.wraptextforcol(i)
                 }
                 console.log(this.columnsize);
-                this.table()
+                if (!this.marchloop){
+                    window.requestAnimationFrame(()=>this.table());
+                }
                 this.headers()
                 this.wraptextforcol(i)
                 window.removeEventListener("pointerup",resizeup);
@@ -1417,13 +1504,15 @@ export class Sheet{
             this.selectedcell.col = 0
             if (edown.shiftKey == true){
                 this.ending.row=i
-                this.ending.rowstat = boundry - this.rowsize[i]
+                this.ending.rowstart = boundry - this.rowsize[i]
                 this.starting.col = 0
                 this.ending.col = this.config.collimit
-                this.starting.colstat=0
-                this.ending.colstat=Infinity
+                this.starting.columnstart=0
+                this.ending.columnstart=Infinity
                 this.headers()
-                this.table()
+                if (!this.marchloop){
+                    window.requestAnimationFrame(()=>this.table());
+                }
                 this.rows()
                 return
             }
@@ -1431,12 +1520,12 @@ export class Sheet{
             // this.selectrowInfinity=true
             this.starting.col = 0
             this.ending.col = this.config.collimit
-            this.starting.colstat=0
-            this.ending.colstat=Infinity
+            this.starting.columnstart=0
+            this.ending.columnstart=Infinity
             this.starting.row=i
             this.ending.row=i
-            this.starting.rowstat = boundry - this.rowsize[i]
-            this.ending.rowstat = boundry - this.rowsize[i]
+            this.starting.rowstart = boundry - this.rowsize[i]
+            this.ending.rowstart = boundry - this.rowsize[i]
             // this.selectedCell = JSON.parse(JSON.stringify(this.starting))
             let count =0
             /**
@@ -1459,12 +1548,14 @@ export class Sheet{
                     // this.columnsize[i] = this.columnsize[i+count]
                     this.ending.row = i+count
                 }
-                if(this.containerdiv.scrollTop>=this.ending.colstat){
+                if(this.containerdiv.scrollTop>=this.ending.columnstart){
                     this.containerdiv.scrollBy(0,-100)
                 }
                 this.rows()
                 this.headers()
-                this.table()
+                if (!this.marchloop){
+                    window.requestAnimationFrame(()=>this.table());
+                }
             }
             /**
              * pointer up event for multiple infinity row select
@@ -1478,7 +1569,7 @@ export class Sheet{
             this.headers();
             this.rows();
             if (!this.marchloop){
-                this.table();
+                window.requestAnimationFrame(()=>this.table());
             }
             return
         }
@@ -1491,7 +1582,7 @@ export class Sheet{
                 this.rowsize[i] = this.rowsize[i] + e.movementY/window.devicePixelRatio
                 prevHeight = this.rowsize[i]
                 if (!this.marchloop){
-                    this.table();
+                    window.requestAnimationFrame(()=>this.table());
                 }
                 this.rows();
             }   
@@ -1502,14 +1593,16 @@ export class Sheet{
          */
         let rowresizeup = () =>{
             console.log(prevHeight);
-            if (this.starting.row != this.ending.row && i<=Math.max(this.starting.row,this.ending.row) && i>=Math.min(this.starting.row,this.ending.row) && this.ending.colstat==Infinity){
+            if (this.starting.row != this.ending.row && i<=Math.max(this.starting.row,this.ending.row) && i>=Math.min(this.starting.row,this.ending.row) && this.ending.columnstart==Infinity){
                 for(let j=Math.min(this.starting.row,this.ending.row);j<=Math.max(this.starting.row,this.ending.row);j++){
                     console.log("height",prevHeight);
                     this.rowsize[j] = prevHeight
                 }
             }
             console.log(this.rowsize);
-            this.table()
+            if (!this.marchloop){
+                window.requestAnimationFrame(()=>this.table());
+            }
             this.rows()
             window.removeEventListener("pointerup",rowresizeup);
             window.removeEventListener("pointermove",rowresize);
@@ -1527,7 +1620,17 @@ export class Sheet{
         // console.log("calling march ants");
         // await new Promise(r=>setTimeout(r,1))
         if(this.starting && this.ending){
-            // console.log("march ants");
+            // console.clear();
+            // console.log(this.starting,this.ending);
+
+
+            // let posX = Math.min(this.starting.columnstart,this.ending.columnstart);
+            // let posY = Math.min(this.starting.rowstart,this.ending.rowstart);
+            // let width = Math.max(this.ending.columnstart,this.starting.columnstart)-posX+this.columnsize[this.ending.col];
+            // let height = Math.max(this.ending.rowstart,this.starting.rowstart)-posY+this.rowsize[this.ending.row];
+
+            // return [posX, posY, width, height];
+
             let [posX,posY,rectWidth, rectHeight] = [0,0,0,0];
             let i=0;
             while(i<Math.min(this.starting.col, this.ending.col)){
@@ -1562,10 +1665,11 @@ export class Sheet{
         if (this.starting && this.ending){
             let text="";
             for (let i = Math.min(this.starting.row,this.ending.row); i <= Math.max(this.starting.row,this.ending.row); i++) {
-                for (let j = Math.min(this.starting.col,this.ending.col); j <= Math.max(this.starting.col,this.ending.col); j++){
+                for (var j = Math.min(this.starting.col,this.ending.col); j < Math.max(this.starting.col,this.ending.col); j++){
                   // console.log(i,j);
-                  text +=`${(this.data[i] && this.data[i][j] ? this.data[i][j].text : " ")}\t`;
-                }   
+                  text +=`${(this.data[i] && this.data[i][j] ? this.data[i][j].text : "")}\t`;
+                }
+                text +=`${(this.data[i] && this.data[i][j] ? this.data[i][j].text : "")}`;   
                 text += `\n`
             }
             navigator.clipboard.writeText(text.trimEnd())
@@ -1604,7 +1708,7 @@ export class Sheet{
                 t =""
                 this.ending.col +=1
             }
-            else if(copiedText[i] == "\n"){
+            else if(copiedText[i] == "\n" || copiedText[i] == "\r"){
                 if(this.data[this.ending.row]){
                     if(this.data[this.ending.row][this.ending.col]){
                         this.data[this.ending.row][this.ending.col]['text'] =t;
@@ -1641,7 +1745,7 @@ export class Sheet{
             this.data[this.ending.row][this.ending.col]['text'] = t;
         }
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
         this.headers()
         this.rows()
@@ -1719,7 +1823,7 @@ export class Sheet{
         this.ctx.restore()
         this.wraptextforcol(i)
         if (!this.marchloop){
-        this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
         this.headers();
         console.log(tempdatacolumn);
@@ -1761,7 +1865,7 @@ export class Sheet{
         }
         this.rows()
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
     }
 
@@ -1791,7 +1895,7 @@ export class Sheet{
         }
         this.rows()
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
     }
     
@@ -1830,11 +1934,11 @@ export class Sheet{
             this.ctx.restore()
         })
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
     }
     
-    //find data
+    //find data form creation
     /**
      * creation of find and replace box 
      * @returns {HTMLElement} - Find and replace box
@@ -1981,22 +2085,23 @@ export class Sheet{
         //     // this.finalarr=[]
         // }
         
-        this.ending.colstat=0
-        this.starting.colstat=0
+        this.ending.columnstart=0
+        this.starting.columnstart=0
         for (let i=0;i<this.ending.col;i++){
-            this.starting.colstat+=this.columnsize[i]
-            this.ending.colstat+=this.columnsize[i]
+            this.starting.columnstart+=this.columnsize[i]
+            this.ending.columnstart+=this.columnsize[i]
         }
-        this.ending.rowstat=0
-        this.starting.rowstat=0
+        this.ending.rowstart=0
+        this.starting.rowstart=0
         for(let i=0;i<this.ending.row;i++){
-            this.starting.rowstat+=this.rowsize[i]
-            this.ending.rowstat+=this.rowsize[i]
+            this.starting.rowstart+=this.rowsize[i]
+            this.ending.rowstart+=this.rowsize[i]
         }
-        this.containerdiv.scrollTo({left:this.ending.colstat-30,top:this.ending.rowstat-30,behavior:"smooth"})
-        // console.log(this.starting,this.ending);
+        // console.log(this.config.findarr);
+        this.containerdiv.scrollTo({left:this.ending.columnstart-30,top:this.ending.rowstart-30,behavior:"smooth"})
+        console.log(this.starting,this.ending);
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
         this.headers()
         this.rows()
@@ -2021,7 +2126,7 @@ export class Sheet{
             window.alert("No Element Found")
         }
         if (!this.marchloop){
-            this.table();
+            window.requestAnimationFrame(()=>this.table());
         }
         this.headers()
         this.rows()
