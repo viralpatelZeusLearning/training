@@ -140,9 +140,9 @@ export class Sheet{
         this.table();
         this.CreateCache();
         window.addEventListener("resize",()=>{
+            this.CreateCache();
             this.canvasize();
             this.headers();
-            this.CreateCache();
             if (!this.marchloop){
                 this.table();
                 }
@@ -687,6 +687,7 @@ export class Sheet{
     }
     /**
      * creating a cache cell
+     * to get the cordinats and pixel values of cell from the top of view port
      */
     CreateCache(){
         // console.log("updatind cache");
@@ -714,7 +715,7 @@ export class Sheet{
         console.log(this.firstCellCache);
     }
     /**
-     * only top position value
+     * To calculate the cell position from the top of view port 
      */
     handleclickCache(e){
         
@@ -960,7 +961,7 @@ export class Sheet{
                 // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
                 this.starting=JSON.parse(JSON.stringify(this.selectedcell))
                 this.ending=JSON.parse(JSON.stringify(this.selectedcell))
-                if(this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+ 2*this.columnsize[this.selectedcell.col]){
+                if(this.selectedcell.columnstart<this.containerdiv.scrollLeft || this.containerdiv.scrollLeft+this.containerdiv.clientWidth<this.selectedcell.columnstart+ 2*this.columnsize[this.selectedcell.col]){
                     this.containerdiv.scrollTo(this.selectedcell.columnstart+2*this.columnsize[this.selectedcell.col]-this.containerdiv.clientWidth,this.containerdiv.scrollTop)
                 }
                 // else if (this.containerdiv.scrollLeft+this.containerdiv.clientWidth>this.selectedcell.columnstart){
@@ -1056,7 +1057,7 @@ export class Sheet{
                 this.starting=JSON.parse(JSON.stringify(this.selectedcell))
                 this.ending=JSON.parse(JSON.stringify(this.selectedcell))
                 // console.log(this.containerdiv.scrollLeft,this.selectedcell.col);
-                if(this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart + 2*this.rowsize[this.selectedcell.row]){
+                if(this.selectedcell.rowstart<this.containerdiv.scrollTop || this.containerdiv.scrollTop+this.containerdiv.clientHeight<this.selectedcell.rowstart + 2*this.rowsize[this.selectedcell.row]){
                     this.containerdiv.scrollTo(this.containerdiv.scrollLeft,this.selectedcell.rowstart+2*this.rowsize[this.selectedcell.row]-this.containerdiv.clientHeight)
                 }
                 this.marchloop=null
@@ -1084,6 +1085,20 @@ export class Sheet{
         else if (e.key.toLowerCase() === "v"  && e.ctrlKey){
             e.preventDefault()
             this.paste()
+        }
+        else if (e.key.toLocaleLowerCase() === "x" && e.ctrlKey){
+            e.preventDefault()
+            if (this.ending.columnstart == Infinity || this.ending.rowstart == Infinity){
+                window.alert("To Large Text to Copy")
+            }
+            else{
+                this.config.dashOffset=1;
+                if (!this.marchloop){
+                    window.requestAnimationFrame(()=>this.table());
+                }
+                this.clipboard();
+                this.delete();
+            }
         }
         else if (e.key.toLowerCase() === "f" && e.ctrlKey){
             e.preventDefault()
@@ -1141,18 +1156,7 @@ export class Sheet{
             // this.selectedcell= {col:xcordinate,row:ycordinate,columnstart:columnstart,rowstart:rowstart};
             // console.log(this.starting);
             // data[this.starting.row][this.starting.col].text = ""
-            if (this.starting && this.ending){
-                for(let i=this.starting.col;i<=this.ending.col;i++){
-                    for(let j=this.starting.row;j<=this.ending.row;j++){
-                        if(this.data[j]?.[i]?.text){
-                            this.data[j][i].text=""
-                        }
-                    }
-                }
-            }
-            if (!this.marchloop){
-                window.requestAnimationFrame(()=>this.table());
-            }
+            this.delete();
             // console.log("delete");
         }
         else if (e.key === "Escape"){
@@ -1192,7 +1196,23 @@ export class Sheet{
             this.btn.removeAttribute("data-dot")
         }
     }
-    
+    /**
+     * delete the data of selected range
+     */
+    delete(){
+        if (this.starting && this.ending){
+            for(let i=this.starting.col;i<=this.ending.col;i++){
+                for(let j=this.starting.row;j<=this.ending.row;j++){
+                    if(this.data[j]?.[i]?.text){
+                        this.data[j][i].text=""
+                    }
+                }
+            }
+        }
+        if (!this.marchloop){
+            window.requestAnimationFrame(()=>this.table());
+        }
+    }
     //range selection
     /**
      * range selection pointer down , move and up 
@@ -1333,6 +1353,7 @@ export class Sheet{
      * @returns - if selected infinity then return else perform further
      */
     changesize(edown){
+        edown.preventDefault()
         this.headerref.removeEventListener("pointermove",this.moveheader)
         let firstcell = this.handleclickCache({offsetX:0,offsetY:0})
         let x = edown.offsetX + this.containerdiv.scrollLeft;
@@ -1390,6 +1411,7 @@ export class Sheet{
              * @param {PointerEvent} em - default e event
              */
             let moveinfinity = (em)=>{
+                em.preventDefault()
                 if ((edown.offsetX+em.clientX-edown.clientX+this.containerdiv.scrollLeft)>=(boundry)){
                     count+=1
                     boundry +=this.columnsize[i+count]
@@ -1442,6 +1464,7 @@ export class Sheet{
              * @param {PointerEvent} emove - default e event
              */
             let resize = (emove) =>{
+                emove.preventDefault()
                 // let deltaX = emove.clientX - edown.clientX
                 // console.log(deltaX);
                 if ((this.columnsize[i]+emove.movementX>=20) && (emove.offsetX+this.containerdiv.scrollLeft >=minx)){
@@ -1511,6 +1534,7 @@ export class Sheet{
      */
     changerowsize(edown){
         // console.log("down");
+        edown.preventDefault()
         this.rowref.removeEventListener("pointermove",this.moverow)
         let firstcell =  this.handleclickCache({offsetX:0,offsetY:0})
         let x = edown.offsetY + this.containerdiv.scrollTop;
@@ -1564,6 +1588,7 @@ export class Sheet{
              * @param {PointerEvent} em -default e event 
              */
             let moveinfinity = (em)=>{
+                em.preventDefault()
                 if ((edown.offsetY+em.clientY-edown.clientY+this.containerdiv.scrollTop)>=(boundry)){
                     count+=1
                     boundry +=this.rowsize[i+count]
@@ -1610,6 +1635,7 @@ export class Sheet{
          * @param {PointerEvent} e - default event 
          */
         let rowresize = (e) =>{
+            e.preventDefault()
             if ((this.rowsize[i]+e.movementY>=5) && (e.offsetY+this.containerdiv.scrollTop>=miny)){
                 this.rowsize[i] = this.rowsize[i] + e.movementY/window.devicePixelRatio
                 prevHeight = this.rowsize[i]
@@ -1741,7 +1767,7 @@ export class Sheet{
                 t =""
                 this.ending.col +=1
             }
-            else if(copiedText[i] == "\n" || copiedText[i] == "\r"){
+            else if(copiedText[i] == "\n" ){
                 if(this.data[this.ending.row]){
                     if(this.data[this.ending.row][this.ending.col]){
                         this.data[this.ending.row][this.ending.col]['text'] =t;
