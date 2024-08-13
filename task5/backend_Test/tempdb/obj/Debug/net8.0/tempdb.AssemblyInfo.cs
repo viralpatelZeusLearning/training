@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("tempdb")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5b8440fe7f73f0141836c5d888f703aa88c21749")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ff8cb15c45c7d8e31aeb3955453386127f945de9")]
 [assembly: System.Reflection.AssemblyProductAttribute("tempdb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("tempdb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

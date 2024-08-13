@@ -57,6 +57,10 @@
             "RabbitMQ.Client": {
               "target": "Package",
               "version": "[6.8.1, )"
+            },
+            "csvhelper": {
+              "target": "Package",
+              "version": "[33.0.1, )"
             }
           },
           "imports": [

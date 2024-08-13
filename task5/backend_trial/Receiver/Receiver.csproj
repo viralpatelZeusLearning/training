@@ -8,13 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="csvhelper" Version="33.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7" />
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\tempdb\tempdb.csproj" />
+    <ProjectReference Include="..\TempApi\TempApi.csproj" />
   </ItemGroup>
 
 </Project>

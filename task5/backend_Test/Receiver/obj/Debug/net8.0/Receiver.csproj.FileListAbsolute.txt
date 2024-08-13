@@ -55,3 +55,4 @@ D:\training\task5\backend_Test\Receiver\bin\Debug\net8.0\runtimes\win\lib\net8.0
 D:\training\task5\backend_Test\Receiver\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Windows.Extensions.dll
 D:\training\task5\backend_Test\Receiver\bin\Debug\net8.0\tempdb.dll
 D:\training\task5\backend_Test\Receiver\bin\Debug\net8.0\tempdb.pdb
+D:\training\task5\backend_Test\Receiver\bin\Debug\net8.0\CsvHelper.dll

@@ -23,16 +23,17 @@ consumer.Received += (model, ea) =>
 {
     var body = ea.Body.ToArray();
     var message = Encoding.UTF8.GetString(body);
-    var msg=JsonSerializer.Deserialize<Temp>(message);
-    TempOps.CreateRow(msg);
-    Console.WriteLine($" Received {msg.Email}");
+    // var msg=JsonSerializer.Deserialize<Temp>(message);
+    // TempOps.CreateRow(msg);
+    // Console.WriteLine($" Received {msg.Email}");
+    Console.WriteLine($"Received {message}");
 };
 channel.BasicConsume(queue: "Test",
                      autoAck: true,
                      consumer: consumer);
 
-foreach (var row in TempOps.ReadRow()){
-    Console.WriteLine(row.Email);
-}
+// foreach (var row in TempOps.ReadRow()){
+//     Console.WriteLine(row.Email);
+// }
 Console.WriteLine(" Press [enter] to exit.");
 Console.ReadLine();
