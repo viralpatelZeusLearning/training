@@ -69,6 +69,7 @@ consumer.Received += (model, ea) =>
                 }
             }
             if (currCount!=0){
+                toaddContext.AddRange(newList);
                 toaddContext.SaveChanges();
             }
         }
