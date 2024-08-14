@@ -1,10 +1,14 @@
 ﻿using System.Globalization;
 using System.Text;
 using CsvHelper;
+using Mysqlx.Crud;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using tempdb.Model;
+using Sqltrial;
+using System.Diagnostics;
 
+var insert1 = new Insertmysql();
 var factory = new ConnectionFactory { HostName = "localhost" };
 using var connection = factory.CreateConnection();
 using var channel = connection.CreateModel();
@@ -22,6 +26,7 @@ consumer.Received += (model, ea) =>
 {
     var body = ea.Body.ToArray();
     var message = Encoding.UTF8.GetString(body);
+    Console.WriteLine(message);
     // if (File.Exists(message)){
     //     var toadd =new TempContext();
 
@@ -42,44 +47,55 @@ consumer.Received += (model, ea) =>
     //     }
     // }
     if(File.Exists(message)){
-        var toaddContext = new TempContext();
+        // var toaddContext = new TempContext();
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         using (var reader = new StreamReader(message))
         using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
         {
             var records = csv.GetRecords<Temp>();
             // Console.WriteLine(File.ReadAllLines(message).Length);
             var currCount = 0;
-            var MaxCount = 3;
+            var MaxCount = 1000;
+            var count = 0;
             List<Temp> newList = new();
             foreach (var item in records)
             {
-                if (toaddContext.Temps.Find(item.Id)==null && item.Id!=String.Empty){
-                    Console.WriteLine($"{item.Id} : {item.Email}");
+                // if (toaddContext.Temps.Find(item.Id)==null && item.Id!=String.Empty){
+                    // Console.WriteLine($"{item.Id} : {item.Email}");
+                if (item.Id != null && item.Id!=String.Empty){
                     newList.Add(item);
+                    currCount+=1;
+                    if (currCount == MaxCount){
+                        insert1.InsertBulk(newList);
+                        // toaddContext.AddRange(newList);
+                        // toaddContext.SaveChanges();
+                        currCount = 0;
+                        newList.Clear();
+                        Console.WriteLine(count);
+                        count++;
+                    }
+                }
+                else{
+                    Console.WriteLine("null val");
+                }
                     // toaddContext.Add(item);
                     // toaddContext.SaveChanges();
-                    currCount+=1;
-                }
-                if (currCount == MaxCount){
-                    toaddContext.AddRange(newList);
-                    toaddContext.SaveChanges();
-                    currCount = 0;
-                    newList.Clear();
-                    Console.WriteLine("done");
-                }
+                // }
             }
             if (currCount!=0){
-                toaddContext.AddRange(newList);
-                toaddContext.SaveChanges();
+                insert1.InsertBulk(newList);
             }
         }
         File.Delete(message);
+        sw.Stop();
+        Console.WriteLine(sw.Elapsed);
     }
-    Console.WriteLine($"Received {message}");
+    // Console.WriteLine($"Received {message}");
 
     // var msg=JsonSerializer.Deserialize<Temp>(message);
     // TempOps.CreateRow(msg);
-    // Console.WriteLine($" Received {msg.Email}");
+    Console.WriteLine($" Received {message}");
 };
 channel.BasicConsume(queue: "Test",
                      autoAck: true,
