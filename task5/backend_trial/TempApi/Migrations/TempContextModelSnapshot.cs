@@ -21,6 +21,9 @@ namespace TempApi.Migrations
 
             modelBuilder.Entity("tempdb.Model.MainModel", b =>
                 {
+                    b.Property<string>("Sheet_Id")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("Email_Id")
                         .HasColumnType("varchar(255)");
 
@@ -63,7 +66,7 @@ namespace TempApi.Migrations
                     b.Property<string>("Telephone_no")
                         .HasColumnType("longtext");
 
-                    b.HasKey("Email_Id");
+                    b.HasKey("Sheet_Id", "Email_Id");
 
                     b.ToTable("MainModels");
                 });

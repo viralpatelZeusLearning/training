@@ -27,25 +27,6 @@ consumer.Received += (model, ea) =>
     var body = ea.Body.ToArray();
     var message = Encoding.UTF8.GetString(body);
     Console.WriteLine(message);
-    // if (File.Exists(message)){
-    //     var toadd =new TempContext();
-
-    //     Console.WriteLine(message);
-    //     using (var reader = new StreamReader(message))
-    //     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-    //     {
-    //         var records = csv.GetRecords<Temp>();
-    //         // Console.WriteLine(records);
-    //         foreach (var item in records)
-    //         {
-    //             Console.WriteLine(item.Id);
-    //             toadd.Add(item);
-    //             toadd.SaveChanges();
-    //             Console.WriteLine("completed");
-    //         }
-    //         // Console.WriteLine("done");
-    //     }
-    // }
     if(File.Exists(message)){
         // var toaddContext = new TempContext();
         Stopwatch sw = new Stopwatch();
@@ -53,21 +34,24 @@ consumer.Received += (model, ea) =>
         using (var reader = new StreamReader(message))
         using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
         {
-            var records = csv.GetRecords<Temp>();
-            // Console.WriteLine(File.ReadAllLines(message).Length);
+            // var records = csv.GetRecords<Temp>();
+            var records = csv.GetRecords<MainModelWithoutMapped>();
+            // Console.WriteLine("Entered",csv);
             var currCount = 0;
             var MaxCount = 1000;
             var count = 0;
-            List<Temp> newList = new();
+            // List<Temp> newList = new();
+            List<MainModelWithoutMapped> newList =  new();
             foreach (var item in records)
             {
                 // if (toaddContext.Temps.Find(item.Id)==null && item.Id!=String.Empty){
                     // Console.WriteLine($"{item.Id} : {item.Email}");
-                if (item.Id != null && item.Id!=String.Empty){
+                if (item.Email_Id != null && item.Email_Id!=String.Empty){
                     newList.Add(item);
                     currCount+=1;
                     if (currCount == MaxCount){
-                        insert1.InsertBulk(newList);
+                        insert1.InsertBulk(newList , "MyFile0");
+                        //insert1.InsertBulk(newList);
                         // toaddContext.AddRange(newList);
                         // toaddContext.SaveChanges();
                         currCount = 0;
@@ -78,13 +62,15 @@ consumer.Received += (model, ea) =>
                 }
                 else{
                     Console.WriteLine("null val");
+                    // Console.WriteLine(item.Name);
                 }
                     // toaddContext.Add(item);
                     // toaddContext.SaveChanges();
                 // }
             }
             if (currCount!=0){
-                insert1.InsertBulk(newList);
+                insert1.InsertBulk(newList,"MyFile0");
+                //insert1.InsertBulk(newList);
             }
         }
         File.Delete(message);

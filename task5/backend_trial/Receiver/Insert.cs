@@ -15,40 +15,78 @@ public class Insertmysql {
         conn.ConnectionString = myconnection;
         conn.Open();
     }
-    // public void getdata()
-    // {
-    //     // System.Data.DataTable data = conn.GetSchema("MetaDataCollections");   
-    //     // Console.WriteLine(data);
-    //     string sql = "select * from temps";
-    //     MySqlCommand cmd = new MySqlCommand(sql,conn);
-    //     MySqlDataReader rdr = cmd.ExecuteReader();
-    //     //rdr.FileCount()
-    //     while (rdr.Read()){
-    //         Console.WriteLine(rdr[0]);
-    //     }
-    //     rdr.Close();
-    // }
-    // public void EnterData(Temp o)
-    // {
-    //     // var obj = new {Id="1",Email="V@gmail.com"};
-    //     string Insertval = $"insert into temps (Id , Email) values('{o.Id}','{o.Email}') as val on duplicate key update Email = val.Email;";
-    //     MySqlCommand cmd = new MySqlCommand(Insertval,conn);
-    //     cmd.ExecuteNonQuery();
-    // }
-    public void InsertBulk(List<Temp> DataList)
+    public void getdata()
     {
-        string Bulkinsert1 = $"insert into temps (Id , Email) values";
+        // // System.Data.DataTable data = conn.GetSchema("MetaDataCollections");   
+        // // Console.WriteLine(data);
+        // string sql = "select * from temps";
+        // MySqlCommand cmd = new MySqlCommand(sql,conn);
+        // MySqlDataReader rdr = cmd.ExecuteReader();
+        // //rdr.FileCount()
+        // while (rdr.Read()){
+        //     Console.WriteLine(rdr[0]);
+        // }
+        // rdr.Close();
+    }
+    public void EnterData(Temp o)
+    {
+        // var obj = new {Id="1",Email="V@gmail.com"};
+        // string Insertval = $"insert into temps (Id , Email) values('{o.Id}','{o.Email}') as val on duplicate key update Email = val.Email;";
+        // MySqlCommand cmd = new MySqlCommand(Insertval,conn);
+        // cmd.ExecuteNonQuery();
+    }
+
+    //public void InsertBulk(List<Temp> DataList)
+    public void InsertBulk(List<MainModelWithoutMapped> DataList , string sheetName)
+    {
+
+        //string Bulkinsert2 = @"(@Email_Id,@sheetName,@Name,@Country,@State,@City,@Telephone_no,@Address_Lier_1,@Address_Line_2,@Date_of_Birth,@FY_2019_20
+        //                        ,@FY_2020_21,@FY_2021_22,@FY_2022_23,@FY_2023_24)";
+        string Bulkinsert1 = @$"insert into mainmodels (Email_Id , Sheet_Id , Name, Country , State,City, Telephone_no ,
+                                Address_Line_1,Address_Line_2,Date_of_Birth,FY_2019_20,FY_2020_21,FY_2021_22,FY_2022_23,FY_2023_24) values";
+
         var Bulkinsert2 = new StringBuilder();
-        string Bulkinsert3 = " as val on duplicate key update Email = val.Email;";
+
+        string Bulkinsert3 = @" as val on duplicate key update Name=val.Name, Country=val.Country , State=val.State,City=val.City, Telephone_no =val.Telephone_no,
+                                Address_Line_1=val.Address_Line_1,Address_Line_2=val.Address_Line_2,Date_of_Birth=val.Date_of_Birth,FY_2019_20=val.FY_2019_20,
+                                FY_2020_21=val.FY_2020_21,FY_2021_22=val.FY_2021_22,FY_2022_23=val.FY_2022_23,FY_2023_24=val.FY_2023_24;";
+
         foreach (var item in DataList)
         {
-            Bulkinsert2.Append($"('{item.Id}','{item.Email}'),");
+            Bulkinsert2.Append(@$"('{item.Email_Id?.Replace("'","///")}','{sheetName?.Replace("'","///")}','{item.Name?.Replace("'","///")}','{item.Country?.Replace("'","///")}','{item.State?.Replace("'","///")}','{item.City?.Replace("'","///")}'
+                                    ,'{item.Telephone_no?.Replace("'","///")}','{item.Address_Line_1?.Replace("'","///")}',
+                                    '{item.Address_Line_2?.Replace("'","///")}',
+                                    '{item.Date_of_Birth?.ToString("yyyy-MM-dd")}',
+                                    {item.FY_2019_20},{item.FY_2020_21},{item.FY_2021_22},{item.FY_2022_23},{item.FY_2023_24}),");
         }
+
         Bulkinsert2.Remove(Bulkinsert2.Length-1,1);
-        string Bulkinsert = Bulkinsert1 + Bulkinsert2 + Bulkinsert3;
+
+        string Bulkinsert = Bulkinsert1+Bulkinsert2+Bulkinsert3;
         // Console.WriteLine(Bulkinsert);
         MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
         cmd.ExecuteNonQuery();
+
+        // foreach (var item in DataList)
+        // {
+        //         MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
+        //         cmd.Parameters.AddWithValue("@Email_Id",item.Email_Id);
+        //         cmd.Parameters.AddWithValue("@sheetName",sheetName);
+        //         cmd.Parameters.AddWithValue("@Name",item.Name);
+        //         cmd.Parameters.AddWithValue("@Country",item.Country);
+        //         cmd.Parameters.AddWithValue("@State",item.State);
+        //         cmd.Parameters.AddWithValue("@City",item.City);
+        //         cmd.Parameters.AddWithValue("@Telephone_no",item.Telephone_no);
+        //         cmd.Parameters.AddWithValue("@Address_Line_1",item.Address_Line_1);
+        //         cmd.Parameters.AddWithValue("@Address_Line_2",item.Address_Line_2);
+        //         cmd.Parameters.AddWithValue("@Date_of_Birth",item.Date_of_Birth?.ToString("yyyy-MM-dd"));
+        //         cmd.Parameters.AddWithValue("@FY_2019_20",item.FY_2019_20);
+        //         cmd.Parameters.AddWithValue("@FY_2020_21",item.FY_2020_21);
+        //         cmd.Parameters.AddWithValue("@FY_2021_22",item.FY_2021_22);
+        //         cmd.Parameters.AddWithValue("@FY_2022_23",item.FY_2022_23);
+        //         cmd.Parameters.AddWithValue("@FY_2023_24",item.FY_2023_24);
+        //         cmd.ExecuteNonQuery();
+        // }
     }
     public static void Main(string[] args){
         // Console.WriteLine("Hello");
