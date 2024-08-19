@@ -41,6 +41,19 @@ namespace TempApi.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Status",
+                columns: table => new
+                {
+                    fileId = table.Column<string>(type: "varchar(255)", nullable: false),
+                    percentage = table.Column<float>(type: "float", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Status", x => x.fileId);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Temps",
                 columns: table => new
                 {
@@ -59,6 +72,9 @@ namespace TempApi.Migrations
         {
             migrationBuilder.DropTable(
                 name: "MainModels");
+
+            migrationBuilder.DropTable(
+                name: "Status");
 
             migrationBuilder.DropTable(
                 name: "Temps");

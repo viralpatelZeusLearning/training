@@ -19,6 +19,19 @@ namespace TempApi.Migrations
                 .HasAnnotation("ProductVersion", "8.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Status.model.StatusClass", b =>
+                {
+                    b.Property<string>("fileId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<float>("percentage")
+                        .HasColumnType("float");
+
+                    b.HasKey("fileId");
+
+                    b.ToTable("Status");
+                });
+
             modelBuilder.Entity("tempdb.Model.MainModel", b =>
                 {
                     b.Property<string>("Sheet_Id")

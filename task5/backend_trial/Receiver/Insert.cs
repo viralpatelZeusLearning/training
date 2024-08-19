@@ -37,7 +37,7 @@ public class Insertmysql {
     }
 
     //public void InsertBulk(List<Temp> DataList)
-    public void InsertBulk(List<MainModelWithoutMapped> DataList , string sheetName)
+    public async Task InsertBulk(List<MainModelWithoutMapped> DataList , string sheetName,Double percent)
     {
 
         //string Bulkinsert2 = @"(@Email_Id,@sheetName,@Name,@Country,@State,@City,@Telephone_no,@Address_Lier_1,@Address_Line_2,@Date_of_Birth,@FY_2019_20
@@ -53,19 +53,33 @@ public class Insertmysql {
 
         foreach (var item in DataList)
         {
-            Bulkinsert2.Append(@$"('{item.Email_Id?.Replace("'","///")}','{sheetName?.Replace("'","///")}','{item.Name?.Replace("'","///")}','{item.Country?.Replace("'","///")}','{item.State?.Replace("'","///")}','{item.City?.Replace("'","///")}'
-                                    ,'{item.Telephone_no?.Replace("'","///")}','{item.Address_Line_1?.Replace("'","///")}',
-                                    '{item.Address_Line_2?.Replace("'","///")}',
-                                    '{item.Date_of_Birth?.ToString("yyyy-MM-dd")}',
-                                    {item.FY_2019_20},{item.FY_2020_21},{item.FY_2021_22},{item.FY_2022_23},{item.FY_2023_24}),");
+            if (item.Email_Id != string.Empty){
+                Bulkinsert2.Append(@$"('{MySqlHelper.EscapeString(item.Email_Id)}','{MySqlHelper.EscapeString(sheetName)}','{MySqlHelper.EscapeString(item.Name)}'
+                                        ,'{MySqlHelper.EscapeString(item.Country)}','{MySqlHelper.EscapeString(item.State)}','{MySqlHelper.EscapeString(item.City)}'
+                                        ,'{MySqlHelper.EscapeString(item.Telephone_no)}','{MySqlHelper.EscapeString(item.Address_Line_1)}',
+                                        '{MySqlHelper.EscapeString(item.Address_Line_2)}',
+                                        '{item.Date_of_Birth?.ToString("yyyy-MM-dd")}',
+                                        {item.FY_2019_20},{item.FY_2020_21},{item.FY_2021_22},{item.FY_2022_23},{item.FY_2023_24}),");
+            }
         }
+        // Console.WriteLine(Bulkinsert2);
+        if (Bulkinsert2.Length>0){
+            Bulkinsert2.Remove(Bulkinsert2.Length-1,1);
 
-        Bulkinsert2.Remove(Bulkinsert2.Length-1,1);
-
-        string Bulkinsert = Bulkinsert1+Bulkinsert2+Bulkinsert3;
-        // Console.WriteLine(Bulkinsert);
-        MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
-        cmd.ExecuteNonQuery();
+            string Bulkinsert = Bulkinsert1+Bulkinsert2+Bulkinsert3;
+            // Console.WriteLine(Bulkinsert);
+            MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
+            await cmd.ExecuteNonQueryAsync();
+            string query = $"Update status set percentage={percent} where fileId='{MySqlHelper.EscapeString(sheetName)}'";
+            cmd = new MySqlCommand(query,conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
+        // try{
+        //     await cmd.ExecuteNonQueryAsync();
+        // }
+        // catch(Exception e){
+        //     Console.WriteLine("Exception");
+        // }
 
         // foreach (var item in DataList)
         // {

@@ -11,7 +11,7 @@ using tempdb.Model;
 namespace TempApi.Migrations
 {
     [DbContext(typeof(TempContext))]
-    [Migration("20240816072354_firstmigration")]
+    [Migration("20240819124946_firstmigration")]
     partial class firstmigration
     {
         /// <inheritdoc />
@@ -21,6 +21,19 @@ namespace TempApi.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            modelBuilder.Entity("Status.model.StatusClass", b =>
+                {
+                    b.Property<string>("fileId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<float>("percentage")
+                        .HasColumnType("float");
+
+                    b.HasKey("fileId");
+
+                    b.ToTable("Status");
+                });
 
             modelBuilder.Entity("tempdb.Model.MainModel", b =>
                 {
