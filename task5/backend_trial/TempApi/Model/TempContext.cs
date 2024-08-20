@@ -5,7 +5,7 @@ using Status.model;
 
 namespace tempdb.Model;
 
-public partial class TempContext : DbContext
+public class TempContext : DbContext
 {
     public TempContext()
     {

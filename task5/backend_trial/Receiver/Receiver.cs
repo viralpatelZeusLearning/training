@@ -39,7 +39,12 @@ consumer.Received += async (model, ea) =>
         using (var csv = new CsvReader(reader, config))
         {
             // var records = csv.GetRecords<Temp>();
-            var records = csv.GetRecords<MainModelWithoutMapped>().ToList();
+            var records = csv.GetRecords<MainModelWithoutMapped>().DistinctBy(x=>x.Email_Id).ToList();
+            // var uniqueval = records.DistinctBy(x=>x.Email_Id).ToHashSet();
+            // foreach (var item in uniqueval)
+            // {
+            //     Console.WriteLine(item.Name);
+            // }
             // var records = await csv.GetRecordsAsync<MainModelWithoutMapped>().ToListAsync();
             // Console.WriteLine("Entered",csv);
             // var currCount = 0;
@@ -48,7 +53,7 @@ consumer.Received += async (model, ea) =>
             // var count = 0;   
             // List<Temp> newList = new();
             List<MainModelWithoutMapped> newList =  new();
-            var percent  = (Double)records.Count() / (Double)MaxCount;
+            var percent  = (Double)MaxCount/Math.Max((Double)records.Count,(Double)MaxCount);
             /* foreach (var item in records)
             // {
             //     // if (toaddContext.Temps.Find(item.Id)==null && item.Id!=String.Empty){

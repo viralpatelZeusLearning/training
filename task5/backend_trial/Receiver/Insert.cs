@@ -70,9 +70,11 @@ public class Insertmysql {
             // Console.WriteLine(Bulkinsert);
             MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
             await cmd.ExecuteNonQueryAsync();
-            string query = $"Update status set percentage={percent} where fileId='{MySqlHelper.EscapeString(sheetName)}'";
+            string query = $"Update status set percentage=percentage+{percent} where fileId='{MySqlHelper.EscapeString(sheetName)}'";
+            // Console.WriteLine(query);
             cmd = new MySqlCommand(query,conn);
             await cmd.ExecuteNonQueryAsync();
+            await conn.CloseAsync();
         }
         // try{
         //     await cmd.ExecuteNonQueryAsync();
@@ -81,7 +83,7 @@ public class Insertmysql {
         //     Console.WriteLine("Exception");
         // }
 
-        // foreach (var item in DataList)
+        /* foreach (var item in DataList)
         // {
         //         MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
         //         cmd.Parameters.AddWithValue("@Email_Id",item.Email_Id);
@@ -100,7 +102,7 @@ public class Insertmysql {
         //         cmd.Parameters.AddWithValue("@FY_2022_23",item.FY_2022_23);
         //         cmd.Parameters.AddWithValue("@FY_2023_24",item.FY_2023_24);
         //         cmd.ExecuteNonQuery();
-        // }
+         }*/
     }
     public static void Main(string[] args){
         // Console.WriteLine("Hello");
