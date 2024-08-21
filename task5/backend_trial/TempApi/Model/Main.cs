@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using Status.model;
 
 namespace tempdb.Model{
     [PrimaryKey(nameof(Sheet_Id) , nameof(Email_Id))]

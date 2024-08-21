@@ -27,7 +27,7 @@ namespace TempApi.Migrations
                     Telephone_no = table.Column<string>(type: "longtext", nullable: true),
                     Address_Line_1 = table.Column<string>(type: "longtext", nullable: true),
                     Address_Line_2 = table.Column<string>(type: "longtext", nullable: true),
-                    Date_of_Birth = table.Column<DateOnly>(type: "date", nullable: true),
+                    Date_of_Birth = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     FY_2019_20 = table.Column<float>(type: "float", nullable: false),
                     FY_2020_21 = table.Column<float>(type: "float", nullable: false),
                     FY_2021_22 = table.Column<float>(type: "float", nullable: false),
@@ -45,7 +45,7 @@ namespace TempApi.Migrations
                 columns: table => new
                 {
                     fileId = table.Column<string>(type: "varchar(255)", nullable: false),
-                    percentage = table.Column<float>(type: "float", nullable: false)
+                    percentage = table.Column<double>(type: "double", nullable: false)
                 },
                 constraints: table =>
                 {

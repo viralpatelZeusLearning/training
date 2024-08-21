@@ -1,3 +1,4 @@
+
 import {Sheet} from './sheet.js'
 
 export class Main{
@@ -49,14 +50,18 @@ export class Main{
         calc.addEventListener("click",()=>{
             //this.calcaggregate()
             this.recalc()
-            maths.style.display="flex";graphdiv.style.display="none";textdiv.style.display="none"
+            maths.style.display="flex";graphdiv.style.display="none";textdiv.style.display="none";filediv.style.display="none";
             
         })
-        
+        let file = document.createElement("button")
+        file.textContent="File"
+        let filediv = this.fileOptionsdiv()
+        filediv.style.display="flex"
+        this.sheetcontainer.appendChild(filediv)
         let text = document.createElement("button")
         text.textContent="Text"
         let textdiv = this.textOptionsdiv()
-        textdiv.style.display="flex"
+        // textdiv.style.display="flex"
         this.sheetcontainer.appendChild(textdiv)
 
         let graph = document.createElement("button")
@@ -65,12 +70,16 @@ export class Main{
         this.sheetcontainer.appendChild(graphdiv)
 
         text.addEventListener("click",()=>{
-            textdiv.style.display="flex";graphdiv.style.display="none";maths.style.display="none"
+            textdiv.style.display="flex";graphdiv.style.display="none";maths.style.display="none";filediv.style.display="none";
         })
 
         graph.addEventListener("click",()=>{
             console.log(graphdiv.style.display);
-            graphdiv.style.display="flex" ; textdiv.style.display="none";maths.style.display="none"
+            graphdiv.style.display="flex" ; textdiv.style.display="none";maths.style.display="none";filediv.style.display="none";
+        })
+
+        file.addEventListener("click",()=>{
+            filediv.style.display="flex" ; textdiv.style.display="none";maths.style.display="none";graphdiv.style.display="none";
         })
         
         window.addEventListener("calcCustomEvent",()=>{
@@ -100,6 +109,7 @@ export class Main{
         this.sheetchange.appendChild(next)
         this.sheetchange.appendChild(this.sheetsdiv)
         this.sheetsdiv.appendChild(firstSheet)
+        this.optionsdiv.appendChild(file)
         this.optionsdiv.appendChild(text)
         this.optionsdiv.appendChild(graph)
         this.optionsdiv.appendChild(calc)
@@ -292,6 +302,61 @@ export class Main{
 
         this.textOptions.appendChild(wrap)
         return this.textOptions
+    }
+    /**
+     * To create a div for file upload option
+     * @returns {HTMLElement} - upload file option
+     */
+    fileOptionsdiv(){
+        this.fileOptions = document.createElement("div");
+        this.fileOptions.classList.add("fileOptions");
+
+        let fileUploadInput = document.createElement("input")
+        fileUploadInput.type="file"
+        fileUploadInput.accept=".csv"
+
+        let fileName = document.createElement("form")
+        fileName.classList.add("file")
+
+        let upload = document.createElement("button")
+        upload.classList.add("Uploadfile")
+        upload.textContent="Upload File"
+        upload.addEventListener("click",(e)=>{
+            e.preventDefault()
+            let formuploadedfile = fileUploadInput.files[0].name;
+            console.log(formuploadedfile)
+            if (formuploadedfile !=null){
+                let formData = new FormData();
+                formData.append("file",formuploadedfile);
+                console.log(formData);
+                fetch('/api/Main/upload'
+                    , {
+                        method: 'POST',
+                        body: formData
+                        })
+                        .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('File upload failed');
+                        }
+                        })
+                        .then(data => {
+                        console.log('Server response:', data);
+                        })
+                        .catch(error => {
+                        console.error('Error uploading file:', error);
+                        });
+                }
+            
+            else{
+                window.alert("Upload a file");
+            }
+        })
+        this.fileOptions.appendChild(fileUploadInput);
+        fileUploadInput.appendChild(fileName)
+        this.fileOptions.appendChild(upload);
+        return this.fileOptions
     }
     /**
      * Creates an div to display aggregate values

@@ -10,6 +10,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tempdb.Model;
 using System.Threading.Channels;
+using System.Collections.Specialized;
+using System.Buffers;
+using Mysqlx.Crud;
+using NuGet.Versioning;
+using ZstdSharp.Unsafe;
+using MySql.Data.MySqlClient;
 
 namespace TempApi.Controllers
 {
@@ -44,6 +50,27 @@ namespace TempApi.Controllers
             // await _context.SaveChangesAsync();
 
             // return CreatedAtAction("GetSingleRow", new { id = temp.Email_Id }, temp);
+        }
+        [HttpGet("Search")]
+        public async Task<ActionResult<List<MainModel>>>Search(string sheetId, string Search , int page_no=0)
+        {
+            var size=10;
+            return await _context.MainModels.Where(x=>x.Sheet_Id == sheetId && x.Name.Contains(Search)
+            || x.Email_Id.Contains(Search)
+            || x.Country.Contains(Search)
+            || x.City.Contains(Search)
+            || x.State.Contains(Search)
+            || x.Telephone_no.Contains(Search)
+            || x.Address_Line_1.Contains(Search)
+            || x.Address_Line_2.Contains(Search)
+            || x.Date_of_Birth.ToString().Contains(Search)
+            || x.FY_2019_20.ToString().Contains(Search)
+            || x.FY_2020_21.ToString().Contains(Search)
+            || x.FY_2021_22.ToString().Contains(Search)
+            || x.FY_2022_23.ToString().Contains(Search)
+            || x.FY_2023_24.ToString().Contains(Search)).Skip(page_no*size).Take(size).ToListAsync();
+            // var query = "select * from mainmodels where Match(*) against (@Search)";
+            // return await _context.MainModels.FromSqlRaw(query,new MySqlParameter("@Search",Search)).ToListAsync();
         }
 
         // GET: api/TempItems/5
@@ -161,23 +188,75 @@ namespace TempApi.Controllers
 
         //patch for update
         [HttpPatch("Update")]
-        public async Task<ActionResult<MainModel>> UpdateSingleRow(MainModel newValues , string EmailId , string SheetId)
+        public async Task<ActionResult<MainModel>> UpdateSingleRow(Dictionary<string, Dictionary<string,object>> newValues  , string SheetId)
         {
-            var oldValues = await _context.MainModels.Where(x=>x.Email_Id == EmailId && x.Sheet_Id == SheetId).ToListAsync();
-            if (oldValues.Count !=0){
-                oldValues[0].Name = newValues.Name;
-                oldValues[0].Country = newValues.Country;
-                oldValues[0].State = newValues.State;
-                oldValues[0].City = newValues.City;
-                oldValues[0].Telephone_no = newValues.Telephone_no;
-                oldValues[0].Address_Line_1 = newValues.Address_Line_1;
-                oldValues[0].Address_Line_2 = newValues.Address_Line_2;
-                oldValues[0].Date_of_Birth = newValues.Date_of_Birth;
-                oldValues[0].FY_2019_20 = newValues.FY_2019_20;
-                oldValues[0].FY_2020_21 = newValues.FY_2020_21;
-                oldValues[0].FY_2021_22 = newValues.FY_2021_22;
-                oldValues[0].FY_2022_23 = newValues.FY_2022_23;
-                oldValues[0].FY_2023_24 = newValues.FY_2023_24;
+            foreach (var item in newValues.Keys.ToList())
+            {
+                var oldValues = await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == item).ToListAsync();
+                Console.WriteLine(item);
+                foreach (var item1 in newValues[item].Keys.ToList())
+                {
+                    Console.WriteLine(item1);
+                    switch (item1)
+                    {
+                        case "Name":
+                        oldValues[0].Name = newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        break;
+                        case "Country":
+                        oldValues[0].Country =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        break;
+                        case "State":
+                        oldValues[0].State =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        break;
+                        case "City":
+                        oldValues[0].City =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        break;
+                        case "Telephone_no":
+                        oldValues[0].Telephone_no =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        break;
+                        case "Address_line_1":
+                        oldValues[0].Address_Line_1 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        break;
+                        case "Address_Line_2":
+                        oldValues[0].Address_Line_2 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        break;
+                        case "Date_of_Birth":
+                        oldValues[0].Date_of_Birth = Convert.ToDateTime(newValues[item][item1].ToString());
+                        break;
+                        case "FY_2019_20":
+                        oldValues[0].FY_2019_20 = Convert.ToSingle(newValues[item][item1].ToString());
+                        break;
+                        case "FY_2020_21":
+                        oldValues[0].FY_2020_21 = Convert.ToSingle(newValues[item][item1].ToString());
+                        break;
+                        case "FY_2021_22":
+                        oldValues[0].FY_2021_22 = Convert.ToSingle(newValues[item][item1].ToString());
+                        break;
+                        case "FY_2022_23":
+                        oldValues[0].FY_2022_23 = Convert.ToSingle(newValues[item][item1].ToString());
+                        break;
+                        case "FY_2023_24":
+                        oldValues[0].FY_2023_24 = Convert.ToSingle(newValues[item][item1].ToString());
+                        break;
+                        
+                        // default:
+                    }
+                }
+                // if (oldValues.Count !=0){
+                //     oldValues[0].Name = newValues[item].Name;
+                //     oldValues[0].Country = newValues[item].Country;
+                //     oldValues[0].State = newValues[item].State;
+                //     oldValues[0].City = newValues[item].City;
+                //     oldValues[0].Telephone_no = newValues[item].Telephone_no;
+                //     oldValues[0].Address_Line_1 = newValues[item].Address_Line_1;
+                //     oldValues[0].Address_Line_2 = newValues[item].Address_Line_2;
+                //     oldValues[0].Date_of_Birth = newValues[item].Date_of_Birth;
+                //     oldValues[0].FY_2019_20 = newValues[item].FY_2019_20;
+                //     oldValues[0].FY_2020_21 = newValues[item].FY_2020_21;
+                //     oldValues[0].FY_2021_22 = newValues[item].FY_2021_22;
+                //     oldValues[0].FY_2022_23 = newValues[item].FY_2022_23;
+                //     oldValues[0].FY_2023_24 = newValues[item].FY_2023_24;
+                // }
             }
             await _context.SaveChangesAsync();
             return NoContent();

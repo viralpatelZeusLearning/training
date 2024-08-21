@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using tempdb.Model;
 
 namespace Status.model;
 

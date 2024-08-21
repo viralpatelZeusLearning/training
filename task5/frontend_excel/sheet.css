@@ -21,20 +21,20 @@ body {
   background-color: #caead8;
 }
 
-.graphOptions, .textOptions, .calcdiv {
+.graphOptions, .textOptions, .calcdiv, .fileOptions {
   display: none;
   background-color: #f5f5f5;
   padding-left: 30px;
   gap: 2em;
   height: 40px;
 }
-.graphOptions button, .textOptions button, .calcdiv button {
+.graphOptions button, .textOptions button, .calcdiv button, .fileOptions button {
   transition: all 200ms ease-in-out;
   border: none;
   border-bottom: 2px solid transparent;
   height: 2em;
 }
-.graphOptions button:hover, .textOptions button:hover, .calcdiv button:hover {
+.graphOptions button:hover, .textOptions button:hover, .calcdiv button:hover, .fileOptions button:hover {
   border: none;
   border-bottom: 2px solid #107c41;
   background-color: #caead8;
