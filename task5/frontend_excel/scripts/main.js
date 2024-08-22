@@ -29,18 +29,18 @@ export class Main{
         this.sheetcontainer.appendChild(this.optionsdiv)
         this.sheetchange = document.createElement("div");
         this.sheetchange.classList.add("change_sheet");
-
-        let newbtn = document.createElement("button")
-        newbtn.textContent="+"
-        newbtn.addEventListener("click",()=>this.newSheet())
+        this.sheetchange.style.display="none"
+        // let newbtn = document.createElement("button")
+        // newbtn.textContent="+"
+        // newbtn.addEventListener("click",()=>this.newSheet())
         let del = document.createElement("button")
-        del.textContent="-"
+        del.textContent="Remove File"
         del.addEventListener("click",()=>this.delSheet())
         let prev = document.createElement("button")
-        prev.textContent="←"
+        prev.textContent="Prev File"
         prev.addEventListener("click",()=>this.prevSheet())
         let next = document.createElement("button")
-        next.textContent="→"
+        next.textContent="Next File"
         next.addEventListener("click",()=>this.nextSheet())
 
         let calc = document.createElement("button")
@@ -91,34 +91,34 @@ export class Main{
 
         this.sheetsdiv = document.createElement("div")
         this.sheetsdiv.classList.add("sheets_Div")
-        let firstSheet = document.createElement("input")
-        firstSheet.classList.add("sheetTab")
-        firstSheet.value="Sheet 1";
-        firstSheet.setAttribute("readonly","")
-        firstSheet.setAttribute("data-current","")
-        firstSheet.setAttribute("data-index","0")
+        // let firstSheet = document.createElement("input")
+        // firstSheet.classList.add("sheetTab")
+        // firstSheet.value="Sheet 1";
+        // firstSheet.setAttribute("readonly","")
+        // firstSheet.setAttribute("data-current","")
+        // firstSheet.setAttribute("data-index","0")
 
-        firstSheet.addEventListener("click",e=>this.sheetTabClickHandler(e))
-        firstSheet.addEventListener("dblclick",e=>this.sheetTabDoubleClickHandler(e))
-        firstSheet.addEventListener("keydown",e=>this.sheetTabKeyHandler(e))
+        // firstSheet.addEventListener("click",e=>this.sheetTabClickHandler(e))
+        // firstSheet.addEventListener("dblclick",e=>this.sheetTabDoubleClickHandler(e))
+        // firstSheet.addEventListener("keydown",e=>this.sheetTabKeyHandler(e))
 
 
-        this.sheetchange.appendChild(newbtn)
+        // this.sheetchange.appendChild(newbtn)
         this.sheetchange.appendChild(del)
         this.sheetchange.appendChild(prev)
         this.sheetchange.appendChild(next)
         this.sheetchange.appendChild(this.sheetsdiv)
-        this.sheetsdiv.appendChild(firstSheet)
+        // this.sheetsdiv.appendChild(firstSheet)
         this.optionsdiv.appendChild(file)
         this.optionsdiv.appendChild(text)
         this.optionsdiv.appendChild(graph)
         this.optionsdiv.appendChild(calc)
         this.sheetcontainer.appendChild(this.sheetchange)
 
-        let sheet_1 = new Sheet(sheetcontainer)
-        this.sheets.push(sheet_1)
-        this.currentsheetIndex = 0
-        this.currsheet(0);
+        // let sheet_1 = new Sheet(sheetcontainer)
+        // this.sheets.push(sheet_1)
+        // this.currentsheetIndex = 0
+        // this.currsheet(0);
         // console.log(this.sheets[0].);
     }
     /**
@@ -127,10 +127,10 @@ export class Main{
      */
     currsheet(i){
         if(i>=0){
-            this.sheets?.[this.currentsheetIndex]?.containerdiv?.remove()
+            this.sheets?.[this.currentsheetIndex]?.pagiantedandSheet?.remove()
             // this.sheetcontainer?.[0]?.remove()
             // console.log(this.sheets[i]);
-            this.sheetcontainer.appendChild(this.sheets[i].containerdiv)
+            this.sheetcontainer.appendChild(this.sheets[i].pagiantedandSheet)
             // console.log(i,this.sheets);
             this.sheets[i].canvasize();
             this.sheets[i].rows();
@@ -142,8 +142,8 @@ export class Main{
     /**
      * To add new sheets on add sheet button
      */
-    newSheet(){
-        let newSheet = new Sheet(this.sheetcontainer)
+    newSheet(SheetId){
+        let newSheet = new Sheet(SheetId)
         this.sheets.push(newSheet)
         this.currsheet(this.sheets.length -1)
         // console.log(this.sheets);
@@ -157,12 +157,13 @@ export class Main{
         this.sheetsdiv.appendChild(newSheetdiv)
         let tab = this.sheetsdiv.querySelectorAll("input")
         tab[this.currentsheetIndex].click()
-        for(var i=0;i<this.sheets.length;i++){
-            if(![...tab].map(x=>x.value).includes(`Sheet ${i+1}`)){
-                break
-            }
-        }
-        newSheetdiv.value=`Sheet ${i+1}`;
+        // for(var i=0;i<this.sheets.length;i++){
+        //     if(![...tab].map(x=>x.value).includes(`Sheet ${i+1}`)){
+        //         break
+        //     }
+        // }
+        // newSheetdiv.value=`Sheet ${i+1}`;
+        newSheetdiv.value=`${SheetId}`
         this.sheetsdiv.scrollTo(this.sheetsdiv.scrollWidth,0)
     }
     /**
@@ -171,7 +172,7 @@ export class Main{
     delSheet(){
         if (this.sheets.length>1){
             console.log(this.currentsheetIndex,"delete");
-            this.sheets[this.currentsheetIndex].containerdiv.remove()
+            this.sheets[this.currentsheetIndex].pagiantedandSheet.remove()
             this.sheets.splice(Number(this.currentsheetIndex),1)
             console.log(this.sheets);
             this.sheetsdiv.children[this.currentsheetIndex].remove()
@@ -318,32 +319,77 @@ export class Main{
         let fileName = document.createElement("form")
         fileName.classList.add("file")
 
+        let search = document.createElement("button")
+        search.classList.add("search_file")
+        search.textContent="Search File"
+        search.addEventListener("click",()=>{
+            let searchPrompt = prompt("please Enter the File Name","fileName");
+            if (searchPrompt != null){
+                fetch(`/api/Status/findSheet?SheetId=${searchPrompt}`)
+                .then(response =>response.text())
+                .then(response => {
+                    console.log(response);
+                    if (response == "true"){
+                        this.newSheet(searchPrompt);
+                        this.sheetchange.style.display="flex"
+                    }
+                    else{
+                        window.alert("Sheet Does not Exist")
+                    }
+                })
+            }
+        })
+
         let upload = document.createElement("button")
         upload.classList.add("Uploadfile")
         upload.textContent="Upload File"
         upload.addEventListener("click",(e)=>{
             e.preventDefault()
-            let formuploadedfile = fileUploadInput.files[0].name;
+            let formuploadedfile = fileUploadInput.files[0];
             console.log(formuploadedfile)
             if (formuploadedfile !=null){
                 let formData = new FormData();
                 formData.append("file",formuploadedfile);
                 console.log(formData);
-                fetch('/api/Main/upload'
-                    , {
+                fetch('/api/Main/upload', {
                         method: 'POST',
                         body: formData
                         })
                         .then(response => {
                         if (response.ok) {
-                            return response.json();
+                            return response.text();
                         } else {
                             throw new Error('File upload failed');
                         }
                         })
-                        .then(data => {
-                        console.log('Server response:', data);
+                        .then(response=> {
+                            let Pooling = setInterval(()=>{
+                                fetch(`/api/Status/${response}`)
+                                .then(response=>{
+                                    if(response.ok){
+                                        return response.text();
+                                    }
+                                    else{
+                                        throw new Error("no Status")
+                                    }
+                                })
+                                .then(data=>{
+                                    console.log(data)
+                                    if (data>=1){
+                                        clearInterval(Pooling);
+                                        this.newSheet(response)
+                                        this.sheetchange.style.display="flex";
+                                    }
+                                })
+                                .catch(err=>{
+                                    console.log(err,"catch while status");
+                                    clearInterval(Pooling);
+                                })
+                            },500)
                         })
+                        // .then(data => {
+                        // console.log('Server response:', data);
+                        // })
                         .catch(error => {
                         console.error('Error uploading file:', error);
                         });
@@ -354,8 +400,9 @@ export class Main{
             }
         })
         this.fileOptions.appendChild(fileUploadInput);
-        fileUploadInput.appendChild(fileName)
+        fileUploadInput.appendChild(fileName);
         this.fileOptions.appendChild(upload);
+        this.fileOptions.appendChild(search);
         return this.fileOptions
     }
     /**
@@ -383,7 +430,7 @@ export class Main{
      * Function to get values and display it
      */
     recalc(){
-        // if(!this.sheets[this.currentsheetIndex]){return}
+        if(!this.sheets[this.currentsheetIndex]){return}
         let val = this.sheets[this.currentsheetIndex].calculate()
         // console.log(this.sheets[this.currentsheetIndex]);
         this.min.textContent="Min:"+`${val?.[0] ? val[0] : "Null"}`

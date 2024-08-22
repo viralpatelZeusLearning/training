@@ -1,21 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tempdb.Model;
-using System.Threading.Channels;
-using System.Collections.Specialized;
-using System.Buffers;
-using Mysqlx.Crud;
-using NuGet.Versioning;
-using ZstdSharp.Unsafe;
-using MySql.Data.MySqlClient;
 
 namespace TempApi.Controllers
 {
@@ -161,7 +150,7 @@ namespace TempApi.Controllers
                                     basicProperties: null,
                                     body: body);
                 Console.WriteLine($"Sent {file.FileName}");
-                return Ok();
+                return Ok(Path.GetFileName(filePath));
             }
             else{
                 return BadRequest();

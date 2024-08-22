@@ -28,11 +28,11 @@ namespace TempApi.Migrations
                     Address_Line_1 = table.Column<string>(type: "longtext", nullable: true),
                     Address_Line_2 = table.Column<string>(type: "longtext", nullable: true),
                     Date_of_Birth = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    FY_2019_20 = table.Column<float>(type: "float", nullable: false),
-                    FY_2020_21 = table.Column<float>(type: "float", nullable: false),
-                    FY_2021_22 = table.Column<float>(type: "float", nullable: false),
-                    FY_2022_23 = table.Column<float>(type: "float", nullable: false),
-                    FY_2023_24 = table.Column<float>(type: "float", nullable: false)
+                    FY_2019_20 = table.Column<float>(type: "float", nullable: true),
+                    FY_2020_21 = table.Column<float>(type: "float", nullable: true),
+                    FY_2021_22 = table.Column<float>(type: "float", nullable: true),
+                    FY_2022_23 = table.Column<float>(type: "float", nullable: true),
+                    FY_2023_24 = table.Column<float>(type: "float", nullable: true)
                 },
                 constraints: table =>
                 {

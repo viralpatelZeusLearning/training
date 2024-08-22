@@ -1,7 +1,7 @@
 import { Graphcomponent } from "./graph.js";
 
-let data = await fetch("./tempData.json")
-data = await data.json();
+// let data = await fetch("./tempData.json")
+// data = await data.json();
 // data = window.localStorage.getItem("data") ? JSON.parse(window.localStorage.getItem("data")) : data
 // console.log(data);
 
@@ -82,13 +82,20 @@ export class Sheet{
     /**@type {(null|{col:Number , row:Number , columnstart:Number , rowstart:Number})} - col,row are index and columnstart and rowstart are pixel values*/
     ending = {col:0,row:0,columnstart:0,rowstart:0};
     //constructor(div)
-    constructor(){
+    constructor(SheetId){
         // this.columnsize = window.localStorage.getItem("column") ? JSON.parse(window.localStorage.getItem("column")) : Array(10).fill(100)
         // this.rowsize = window.localStorage.getItem("rows") ? JSON.parse(window.localStorage.getItem("rows")) : Array(25).fill(30)
-        this.data = JSON.parse(JSON.stringify(data));
-        let rowslimit = Object.keys(this.data)
+        // this.data = JSON.parse(JSON.stringify(data));
+        this.data = {}
+        this.sheetId = SheetId
+        // let rowslimit = Object.keys(this.data)
         // this.rowsize=Array(1e5).fill(30)
-        this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],2e5)+1).fill(30)
+        // this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],2e5)+1).fill(30)
+        this.rowsize = Array(100).fill(30)
+        this.pagiantedandSheet = document.createElement("div");
+        this.pagiantedandSheet.classList.add("paginatedandSheetdiv");
+        this.pagination = document.createElement("div");
+        this.pagination.classList.add("pagination");
         this.containerdiv = document.createElement("div");
         this.btn = document.createElement("div");
         // this.btn.setAttribute("data-dot","")
@@ -121,6 +128,8 @@ export class Sheet{
         this.ctxrow = this.rowref.getContext("2d");
         
         // div.appendChild(this.containerdiv);
+        this.pagiantedandSheet.appendChild(this.containerdiv);
+        this.pagiantedandSheet.appendChild(this.pagination);
         this.childdiv.appendChild(this.canvaref);
         this.containerdiv.appendChild(this.btn);
         this.containerdiv.appendChild(this.headerref);
@@ -157,10 +166,10 @@ export class Sheet{
         // })
         this.containerdiv.addEventListener("scroll",()=>{
             // console.log("scroll");
-            document.activeElement.blur()
+            document.activeElement.blur();
             this.CreateCache();
             this.checkcolumn();
-            this.checkrow();
+            // this.checkrow();
             this.canvasize();
             this.headers();
             if (!this.marchloop){
@@ -232,13 +241,118 @@ export class Sheet{
             this.headers();
         })
         // console.log(this,Object.keys(this));
+
+        
+        this.loadData(SheetId);
+        this.PaginationModel()
+        // this.FetchDatafromDb("dtchdkf5.w2z.csv");
+    }
+    /**
+     * to fetch data from db
+     * @param {string} sheetId - file id to fetch
+     * @param {number} page_no - pagination no to get
+     * @returns 
+     */
+    async FetchDatafromDb(sheetId , page_no=0){
+        // sheetId="dtchdkf5.w2z.csv"
+        console.log("in fetching func");
+        let columnmap = new Map()
+        columnmap.set("email_id",0);
+        columnmap.set("name",1);
+        columnmap.set("country",2);
+        columnmap.set("state",3);
+        columnmap.set("city",4);
+        columnmap.set("telephone_no",5);
+        columnmap.set("address_line_1",6);
+        columnmap.set("address_line_2",7);
+        columnmap.set("date_of_birth",8);
+        columnmap.set("fy_2019_20",9);
+        columnmap.set("fy_2020_21",10);
+        columnmap.set("fy_2021_22",11);
+        columnmap.set("fy_2022_23",12);
+        columnmap.set("fy_2023_24",13);
+        
+        let v = await fetch(`/api/Main/${sheetId}?page_no=${page_no}`)
+        let mainData = await v.json()
+        console.log(mainData);
+        let parsedData = {}
+        try{
+            for(let i=0;i<mainData.length;i++){
+                parsedData[i] = {}
+                Object.keys(mainData[i]).forEach(j=>{
+                    if (columnmap.get(j.toLowerCase())!= undefined){
+                        parsedData[i][columnmap.get(j.toLowerCase())] = {}
+                        parsedData[i][columnmap.get(j.toLowerCase())]["text"] = mainData[i][j]; 
+                    }
+                })
+            }
+            // console.log(parsedData);
+        }
+        catch{
+            console.log("No Data");
+        }
+        return parsedData;
+    }
+    /**
+     * To Load Sheet Data
+     * @param {string} SheetId - file id 
+     * @param {number} page_no - pagination no
+     */
+    async loadData(SheetId , page_no=0){
+        this.data = await this.FetchDatafromDb(SheetId , page_no);
+        this.canvasize();
+        this.headers();
+        this.rows();
+        this.table();
+        this.CreateCache();
+    }
+    PaginationModel(){
+        let prevBtn = document.createElement("button")
+        prevBtn.textContent="Prev"
+        let nxtBtn = document.createElement("button")
+        nxtBtn.textContent="Next"
+        let moveTo = document.createElement("input")
+        moveTo.value=0
+        let goToPrev = ()=>{
+            let currval = Number(moveTo.value)-1
+            console.log(currval);
+            if (currval>=0){
+                this.loadData(this.sheetId,currval)
+                moveTo.value=currval
+            }
+        }
+        let goToNxt = () =>{
+            let currval = Number(moveTo.value)+1
+            console.log(currval)
+            this.loadData(this.sheetId,currval)
+            moveTo.value=currval
+        }
+        let moveToValue = (e) => {
+            if (e.key == "Enter"){
+                if (isNaN(Number(moveTo.value))){
+                    moveTo.value = 0;
+                    this.loadData(this.sheetId,moveTo.value);
+                }
+                else{
+                    moveTo.value = e.target.value;
+                    this.loadData(this.sheetId,moveTo.value);
+                }
+            }
+        }
+        prevBtn.addEventListener("click",goToPrev)
+        nxtBtn.addEventListener("click",goToNxt)
+        moveTo.addEventListener("keydown",moveToValue)
+        this.pagination.appendChild(prevBtn)
+        this.pagination.appendChild(moveTo)
+        this.pagination.appendChild(nxtBtn)
     }
     /**
      * To calculate the height and width of all 3 canvas 
      */
     canvasize(){
     
-        this.childdiv.style.width = Math.max(this.columnsize.reduce((prev, curr) => prev + curr, 0), window.innerWidth) +"px";
+        // this.childdiv.style.width = Math.max(this.columnsize.reduce((prev, curr) => prev + curr, 0), window.innerWidth) +"px";
+        this.childdiv.style.width = this.columnsize.reduce((prev, curr) => prev + curr, 0) + "px";
         this.childdiv.style.height = (this.rowsize.length ) * this.config.rowHeight +"px";
         // console.log(this.containertable.parentElement.clientHeight, this.containertable.parentElement.clientWidth);
         // this.canvaref.width = Math.max(this.columnsize.reduce((prev, curr) => prev + curr, 0), window.innerWidth);
@@ -712,7 +826,7 @@ export class Sheet{
             rowposition += this.rowsize[ycord]
         }
         this.firstCellCache = {xcordinate:xcord,ycordinate:ycord,columnstart:colposition,rowstart:rowposition}
-        console.log(this.firstCellCache);
+        // console.log(this.firstCellCache);
     }
     /**
      * To calculate the cell position from the top of view port 
@@ -1220,7 +1334,7 @@ export class Sheet{
      * @param {PointerEvent} e - default event
      */
     handlemouseDown(e){
-        e.preventDefault()
+        // e.preventDefault()
         // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclick(e)
         let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclickCache(e)
         this.starting = {col:xcordinate , row:ycordinate , columnstart:columnstart , rowstart:rowstart}
@@ -1283,7 +1397,7 @@ export class Sheet{
          * @param {PointerEvent} j - default e event
          */
         let handlemouseup=(j)=>{
-            j.preventDefault()
+            // j.preventDefault()
             let newX = e.offsetX+j.clientX-e.clientX
             let newY = e.offsetY+j.clientY-e.clientY
             let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclickCache({offsetX:newX,offsetY:newY})

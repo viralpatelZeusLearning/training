@@ -43,10 +43,10 @@ namespace tempdb.Model{
         public string? Address_Line_1 { get; set; }
         public string? Address_Line_2 { get; set; }
         public DateTime? Date_of_Birth { get; set; }
-        public float FY_2019_20 { get; set; }
-        public float FY_2020_21 { get; set; }
-        public float FY_2021_22 { get; set; }
-        public float FY_2022_23 { get; set; }
-        public float FY_2023_24 { get; set; }
+        public float ? FY_2019_20 { get; set; }
+        public float ? FY_2020_21 { get; set; }
+        public float ? FY_2021_22 { get; set; }
+        public float ? FY_2022_23 { get; set; }
+        public float ? FY_2023_24 { get; set; }
     }
 };

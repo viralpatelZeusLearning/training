@@ -55,19 +55,19 @@ namespace TempApi.Migrations
                     b.Property<DateTime?>("Date_of_Birth")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<float>("FY_2019_20")
+                    b.Property<float?>("FY_2019_20")
                         .HasColumnType("float");
 
-                    b.Property<float>("FY_2020_21")
+                    b.Property<float?>("FY_2020_21")
                         .HasColumnType("float");
 
-                    b.Property<float>("FY_2021_22")
+                    b.Property<float?>("FY_2021_22")
                         .HasColumnType("float");
 
-                    b.Property<float>("FY_2022_23")
+                    b.Property<float?>("FY_2022_23")
                         .HasColumnType("float");
 
-                    b.Property<float>("FY_2023_24")
+                    b.Property<float?>("FY_2023_24")
                         .HasColumnType("float");
 
                     b.Property<string>("Name")
