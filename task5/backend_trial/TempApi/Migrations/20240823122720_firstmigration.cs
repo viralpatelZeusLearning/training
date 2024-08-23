@@ -20,6 +20,7 @@ namespace TempApi.Migrations
                 {
                     Email_Id = table.Column<string>(type: "varchar(255)", nullable: false),
                     Sheet_Id = table.Column<string>(type: "varchar(255)", nullable: false),
+                    Row_Id = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "longtext", nullable: true),
                     Country = table.Column<string>(type: "longtext", nullable: true),
                     State = table.Column<string>(type: "longtext", nullable: true),
@@ -36,7 +37,7 @@ namespace TempApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MainModels", x => new { x.Sheet_Id, x.Email_Id });
+                    table.PrimaryKey("PK_MainModels", x => new { x.Sheet_Id, x.Row_Id, x.Email_Id });
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 

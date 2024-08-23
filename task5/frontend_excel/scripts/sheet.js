@@ -48,6 +48,21 @@ export class Sheet{
      */
     columnsize= Array(20).fill(100);
     /**
+     * sheet id is the file id to store and search
+     * @type {string}
+    */
+    sheetId
+    /**
+     * page no is for the pagination and the data to load
+     * @type {number}
+     */
+    pageNumber
+    /**
+     * page size is no of data to load
+     * @type {number}
+     */
+    PageSize
+    /**
      * @type {Array <Number>} - array of row sizes
      */
     rowsize=Array(30).fill(30);
@@ -88,6 +103,9 @@ export class Sheet{
         // this.data = JSON.parse(JSON.stringify(data));
         this.data = {}
         this.sheetId = SheetId
+        this.pageNumber = 0
+        this.PageSize = 100
+        this.keyList = ["email_id","name","country","state","city","telephone_no","address_line_1","address_line_2","date_of_birth","fy_2019_20","fy_2020_21","fy_2021_22","fy_2022_23","fy_2023_24"]
         // let rowslimit = Object.keys(this.data)
         // this.rowsize=Array(1e5).fill(30)
         // this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],2e5)+1).fill(30)
@@ -240,12 +258,22 @@ export class Sheet{
             this.keyhandler(e);
             this.headers();
         })
-        // console.log(this,Object.keys(this));
 
         
         this.loadData(SheetId);
         this.PaginationModel()
-        // this.FetchDatafromDb("dtchdkf5.w2z.csv");
+    }
+    /**
+     * to delete entire rows from db api
+     * @param {Array} EmId -array of email id to delete multiple rows
+     */
+    async deleteSingleRow(EmId){
+        // console.log("inside delete",EmId);
+        let M = EmId.map(e=>`&EmailId=${e}`).join('')
+        // console.log(`/api/Main?${M}&SheetId=${this.sheetId}`);
+        await fetch(`/api/Main?${M}&SheetId=${this.sheetId}`,
+        {method : "DELETE"})
+        await this.loadData(this.sheetId,this.pageNumber)
     }
     /**
      * to fetch data from db
@@ -255,7 +283,7 @@ export class Sheet{
      */
     async FetchDatafromDb(sheetId , page_no=0){
         // sheetId="dtchdkf5.w2z.csv"
-        console.log("in fetching func");
+        // console.log("in fetching func");
         let columnmap = new Map()
         columnmap.set("email_id",0);
         columnmap.set("name",1);
@@ -274,7 +302,7 @@ export class Sheet{
         
         let v = await fetch(`/api/Main/${sheetId}?page_no=${page_no}`)
         let mainData = await v.json()
-        console.log(mainData);
+        // console.log(mainData);
         let parsedData = {}
         try{
             for(let i=0;i<mainData.length;i++){
@@ -306,6 +334,9 @@ export class Sheet{
         this.table();
         this.CreateCache();
     }
+    /**
+     * to move to next page , prev page and random page
+     */
     PaginationModel(){
         let prevBtn = document.createElement("button")
         prevBtn.textContent="Prev"
@@ -319,6 +350,7 @@ export class Sheet{
             if (currval>=0){
                 this.loadData(this.sheetId,currval)
                 moveTo.value=currval
+                this.pageNumber = currval
             }
         }
         let goToNxt = () =>{
@@ -326,16 +358,19 @@ export class Sheet{
             console.log(currval)
             this.loadData(this.sheetId,currval)
             moveTo.value=currval
+            this.pageNumber = currval
         }
         let moveToValue = (e) => {
             if (e.key == "Enter"){
                 if (isNaN(Number(moveTo.value))){
                     moveTo.value = 0;
                     this.loadData(this.sheetId,moveTo.value);
+                    this.pageNumber = Number(moveTo.value)
                 }
                 else{
-                    moveTo.value = e.target.value;
-                    this.loadData(this.sheetId,moveTo.value);
+                    // moveTo.value = e.target.value;
+                    this.loadData(this.sheetId,Number(moveTo.value));
+                    this.pageNumber = Number(moveTo.value)
                 }
             }
         }
@@ -437,7 +472,8 @@ export class Sheet{
             this.ctxheaders.fillStyle = "black";
             this.ctxheaders.font = ` ${this.config.fontSize}px ${this.config.fontStyle}`;
           //   this.ctxheaders.fillText(this.dataColumns[i].toUpperCase(), x + 4, this.rowHeight - 5);
-            this.ctxheaders.fillText(Sheet.headerdata(i), sumcol + (this.columnsize[i]/2)-5,this.config.rowHeight - 5);
+            this.ctxheaders.textAlign="center";
+            this.ctxheaders.fillText(this.keyList[i] ? this.keyList[i] : Sheet.headerdata(i), sumcol + (this.columnsize[i]/2) - 5,this.config.rowHeight - 5);
             this.ctxheaders.restore();
             sumcol += this.columnsize[i];
           }
@@ -515,7 +551,7 @@ export class Sheet{
             this.ctxrow.fillStyle="black";
             this.ctxrow.font =` ${this.config.fontSize}px ${this.config.fontStyle}`;
             this.ctxrow.textAlign="right";
-            this.ctxrow.fillText(i,this.config.rowWidth-4,this.rowsize[i]+rowstart -5)
+            this.ctxrow.fillText(this.pageNumber * this.PageSize + i,this.config.rowWidth-4,this.rowsize[i]+rowstart -5)
             this.ctxrow.restore();
             rowstart += this.rowsize[i];
         }
@@ -634,7 +670,7 @@ export class Sheet{
                 else{
                     this.ctx.fillStyle = "black";
                     this.ctx.font = `${this.config.fontSize}px ${this.config.fontStyle}`;
-                    this.ctx.fillText(this.data[j] && this.data[j][i] ? this.data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
+                    this.ctx.fillText(this.data[j] && this.data[j][i]?.text ? this.data[j][i].text : " " , colstart + 5, rowsend + this.rowsize[j] - 5)
                 }
                 // this.ctx.strokeStyle="#cbd5d0";
                 // this.ctx.stroke();
@@ -917,25 +953,63 @@ export class Sheet{
      */
     handleKeyInputEnter(e) {
         if (e.key === "Enter") {
+            // this.loadData(this.sheetId,this.pageNumber)
             let newValue = {text:e.target.value};
             // console.log(selectedCell);
-            if(this.data[this.selectedcell.row]){
+            if(this.data[this.selectedcell.row]!=undefined){
+                console.log("row exists")
                 if(this.data[this.selectedcell.row][this.selectedcell.col]){
                     this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
                 }
                 else{
                     this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
                 }
+                let del = {}
+                del[this.data[this.selectedcell.row][0]["text"]] = {}
+                del[this.data[this.selectedcell.row][0]["text"]][this.keyList[this.selectedcell.col]] = e.target.value
+                let final = JSON.stringify(del)
+                // console.log(final)
+                fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
+                    {method:"PATCH",headers:{"Content-Type":"application/json"},body:final}
+                )
+                .then(response =>{
+                    console.log(response);
+                })
+                .catch(err =>{
+                    throw err;
+                })
+                // console.log(del);
+                if (this.data[this.selectedcell.row][this.selectedcell.col].wrap){
+                    this.wraptext();
+                }
+                del = {}
             }
-            else{
+            else {
+                console.log("row not exists")
+
+                if (this.selectedcell.col == 0){
                 let newrow = {}
                 this.data[this.selectedcell.row] = newrow;
                 this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
-            }
+                let newRow = Math.max(...Object.keys(this.data).map(r=> this.pageNumber*this.PageSize + r))+1
+                let upd = {"email_Id":e.target.value,"sheet_Id":this.sheetId, "row_Id":newRow}
+                // console.log(upd);
+                fetch(`/api/Main/singleRowPost`,
+                    {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(upd)}
+                )
+                .then(response =>{
+                    console.log(response);
+                    if (response.status == 400){
+                        window.alert("Enter an valid Email")
+                    }
+                    this.loadData(this.sheetId,this.pageNumber)
+                })
+                .catch(err=>{
+                    throw err;
+                })
+                upd = {}
+            }}
             this.inputdiv.style.display="none";
-            if (this.data[this.selectedcell.row][this.selectedcell.col].wrap){
-                this.wraptext();
-            }
             // this.find()
             // window.localStorage.setItem("data",JSON.stringify(data))
             // window.localStorage.setItem("column",JSON.stringify(this.columnsize))
@@ -956,20 +1030,20 @@ export class Sheet{
             }
         }
         else{
-            let newValue = {text:e.target.value};
-            if(this.data[this.selectedcell.row]){
-                if(this.data[this.selectedcell.row][this.selectedcell.col]){
-                    this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
-                }
-                else{
-                    this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
-                }
-            }
-            else{
-                let newrow = {}
-                this.data[this.selectedcell.row] = newrow;
-                this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
-            }
+            // let newValue = {text:e.target.value};
+            // if(this.data[this.selectedcell.row]){
+            //     if(this.data[this.selectedcell.row][this.selectedcell.col]){
+            //         this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
+            //     }
+            //     else{
+            //         this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+            //     }
+            // }
+            // else{
+            //     let newrow = {}
+            //     this.data[this.selectedcell.row] = newrow;
+            //     this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+            // }
         }
         if (!this.marchloop){
             window.requestAnimationFrame(()=>this.table());
@@ -1270,7 +1344,40 @@ export class Sheet{
             // this.selectedcell= {col:xcordinate,row:ycordinate,columnstart:columnstart,rowstart:rowstart};
             // console.log(this.starting);
             // data[this.starting.row][this.starting.col].text = ""
+            
             this.delete();
+            if (this.ending.columnstart == Infinity){
+                let del = []
+                for (let i = Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row);i++){
+                    del.push(this.data[i][0]["text"])
+                }
+                this.deleteSingleRow(del)
+                del = []
+            }
+            else{
+                let del = {}
+                for(let i = Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row);i++){
+                    if (this.data[i]){
+                        del[this.data[i][0]["text"]] = {}
+                        for(let j = Math.min(this.starting.col,this.ending.col);j<=Math.max(this.starting.col,this.ending.col);j++){
+                            del[this.data[i][0]["text"]][this.keyList[j]] = null 
+                        }
+                    }
+                }
+                let final = JSON.stringify(del)
+                // console.log(final)
+                fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
+                    {method:"PATCH",headers:{"Content-Type":"application/json"},body:final}
+                )
+                .then(response =>{
+                    console.log(response);
+                })
+                .catch(err =>{
+                    throw err;
+                })
+                // console.log(del);
+                del = {}
+            }
             // console.log("delete");
         }
         else if (e.key === "Escape"){
@@ -1315,9 +1422,9 @@ export class Sheet{
      */
     delete(){
         if (this.starting && this.ending){
-            for(let i=this.starting.col;i<=this.ending.col;i++){
-                for(let j=this.starting.row;j<=this.ending.row;j++){
-                    if(this.data[j]?.[i]?.text){
+            for (let i = Math.min(this.starting.col,this.ending.col); i <= Math.max(this.starting.col,this.ending.col); i++){
+                for (let j = Math.min(this.starting.row,this.ending.row); j <= Math.max(this.starting.row,this.ending.row); j++) {
+                    if(this.data[j]?.[i]?.text && i!=0){
                         this.data[j][i].text=""
                     }
                 }
@@ -1451,7 +1558,7 @@ export class Sheet{
         let boundry = firstcell.columnstart + this.columnsize[firstcell.xcordinate]
         // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
         for(let i = firstcell.xcordinate ; boundry< this.containerdiv.clientWidth+this.containerdiv.scrollLeft && i<this.columnsize.length;i++,boundry+=this.columnsize[i]){
-            if (Math.abs(x-boundry) <=5){
+            if (Math.abs(x-boundry) <=10){
                 e.target.style.cursor = "col-resize";
                 break;
             }
@@ -1631,7 +1738,7 @@ export class Sheet{
         let boundry = firstcell.rowstart + this.rowsize[firstcell.ycordinate]
         // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
         for(let i = firstcell.ycordinate ; boundry< this.containerdiv.clientHeight+this.containerdiv.scrollTop && i<this.rowsize.length;i++,boundry+=this.rowsize[i]){
-            if (Math.abs(x-boundry) <=5){
+            if (Math.abs(x-boundry) <=10){
                 e.target.style.cursor = "row-resize";
                 break;
             }
@@ -1657,7 +1764,7 @@ export class Sheet{
         let prevHeight = 0
         // console.log(x,this.headerref.clientWidth+this.containerdiv.scrollLeft,columnstart);
         for(var i = firstcell.ycordinate ; boundry< this.containerdiv.clientHeight+this.containerdiv.scrollTop && i<this.rowsize.length && (boundry<x || Math.abs(boundry-x)<=10);i++,boundry+=this.rowsize[i]){
-            if (Math.abs(x-boundry) <=5){
+            if (Math.abs(x-boundry) <=10){
                 edown.target.style.cursor = "row-resize";
                 doresize = true
                 break;
@@ -1858,9 +1965,11 @@ export class Sheet{
         // this.ending.row = 0
         // this.ending.col =0
         let copiedText = await navigator.clipboard.readText()
-        // console.log(copiedText);
         let count = this.ending.col
         let t = ""
+        // let Update = fetch(`/api/Main/Upload?SheetId=${this.sheetId}`,
+        //     {method:"PATCH",headers:{"Content-Type":"application/json"},body:t}
+        // )
         for (let i=0;i<copiedText.length;i++){
             // debugger
             // console.log(i, copiedText[i]);

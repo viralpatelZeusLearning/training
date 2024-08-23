@@ -37,12 +37,12 @@ public class Insertmysql {
     }
 
     //public void InsertBulk(List<Temp> DataList)
-    public async Task InsertBulk(List<MainModelWithoutMapped> DataList , string sheetName,Double percent)
+    public async Task InsertBulk(List<MainModelWithoutMapped> DataList , string sheetName,Double percent,int startIndex)
     {
 
         //string Bulkinsert2 = @"(@Email_Id,@sheetName,@Name,@Country,@State,@City,@Telephone_no,@Address_Lier_1,@Address_Line_2,@Date_of_Birth,@FY_2019_20
         //                        ,@FY_2020_21,@FY_2021_22,@FY_2022_23,@FY_2023_24)";
-        string Bulkinsert1 = @$"insert into mainmodels (Email_Id , Sheet_Id , Name, Country , State,City, Telephone_no ,
+        string Bulkinsert1 = @$"insert into mainmodels (Email_Id , Sheet_Id ,Row_Id ,  Name, Country , State,City, Telephone_no ,
                                 Address_Line_1,Address_Line_2,Date_of_Birth,FY_2019_20,FY_2020_21,FY_2021_22,FY_2022_23,FY_2023_24) values";
 
         var Bulkinsert2 = new StringBuilder();
@@ -54,7 +54,7 @@ public class Insertmysql {
         foreach (var item in DataList)
         {
             if (item.Email_Id != string.Empty){
-                Bulkinsert2.Append(@$"('{MySqlHelper.EscapeString(item.Email_Id)}','{MySqlHelper.EscapeString(sheetName)}','{MySqlHelper.EscapeString(item.Name)}'
+                Bulkinsert2.Append(@$"('{MySqlHelper.EscapeString(item.Email_Id)}','{MySqlHelper.EscapeString(sheetName)}',{startIndex++},'{MySqlHelper.EscapeString(item.Name)}'
                                         ,'{MySqlHelper.EscapeString(item.Country)}','{MySqlHelper.EscapeString(item.State)}','{MySqlHelper.EscapeString(item.City)}'
                                         ,'{MySqlHelper.EscapeString(item.Telephone_no)}','{MySqlHelper.EscapeString(item.Address_Line_1)}',
                                         '{MySqlHelper.EscapeString(item.Address_Line_2)}',

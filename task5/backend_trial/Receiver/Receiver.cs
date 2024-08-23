@@ -91,7 +91,7 @@ consumer.Received += async (model, ea) =>
             for (int i=0;i<records.Count;i+=MaxCount){
                 var insert1 = new Insertmysql();
                 var smallList = records.Skip(i).Take(MaxCount).ToList();
-                TaskList.Add(insert1.InsertBulk(smallList,Path.GetFileName(message),percent));
+                TaskList.Add(insert1.InsertBulk(smallList,Path.GetFileName(message),percent,i));
             }
             await Task.WhenAll(TaskList);
             /*if (currCount!=0){

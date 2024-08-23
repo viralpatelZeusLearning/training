@@ -11,7 +11,7 @@ using tempdb.Model;
 namespace TempApi.Migrations
 {
     [DbContext(typeof(TempContext))]
-    [Migration("20240822130914_firstmigration")]
+    [Migration("20240823122720_firstmigration")]
     partial class firstmigration
     {
         /// <inheritdoc />
@@ -39,6 +39,9 @@ namespace TempApi.Migrations
                 {
                     b.Property<string>("Sheet_Id")
                         .HasColumnType("varchar(255)");
+
+                    b.Property<int>("Row_Id")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email_Id")
                         .HasColumnType("varchar(255)");
@@ -82,7 +85,7 @@ namespace TempApi.Migrations
                     b.Property<string>("Telephone_no")
                         .HasColumnType("longtext");
 
-                    b.HasKey("Sheet_Id", "Email_Id");
+                    b.HasKey("Sheet_Id", "Row_Id", "Email_Id");
 
                     b.ToTable("MainModels");
                 });

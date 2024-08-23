@@ -5,6 +5,7 @@ using RabbitMQ.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tempdb.Model;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 namespace TempApi.Controllers
 {
@@ -158,10 +159,13 @@ namespace TempApi.Controllers
         }
 
         // DELETE: api/TempItems
-        [HttpDelete("{EmailId}")]
-        public async Task<IActionResult> DeleteTemp(string EmailId, string SheetId)
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTemp([FromQuery]List<string> EmailId, string SheetId)
         {
-            await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == EmailId).ExecuteDeleteAsync();
+            await _context.MainModels.Where(x=>x.Sheet_Id==SheetId && EmailId.Contains(x.Email_Id)).ExecuteDeleteAsync();
+            // EmailId.ForEach(async e=>{
+            //     await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == e).ExecuteDeleteAsync();
+            // });
             return NoContent();
             // var temp = await _context.MainModels.FindAsync(EmailId);
             // if (temp == null)
@@ -177,61 +181,61 @@ namespace TempApi.Controllers
 
         //patch for update
         [HttpPatch("Update")]
-        public async Task<ActionResult<MainModel>> UpdateSingleRow(Dictionary<string, Dictionary<string,object>> newValues  , string SheetId)
+        public async Task<ActionResult<MainModel>> UpdateSingleRow([FromBody]Dictionary<string, Dictionary<string,object>> newValues  , string SheetId)
         {
             foreach (var item in newValues.Keys.ToList())
             {
                 var oldValues = await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == item).ToListAsync();
-                Console.WriteLine(item);
+                // Console.WriteLine(item);
                 foreach (var item1 in newValues[item].Keys.ToList())
                 {
-                    Console.WriteLine(item1);
-                    switch (item1)
+                    // Console.WriteLine(item1);
+                    switch (item1.ToLower())
                     {
-                        case "Name":
+                        case "name":
                         oldValues[0].Name = newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
-                        case "Country":
+                        case "country":
                         oldValues[0].Country =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
-                        case "State":
+                        case "state":
                         oldValues[0].State =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
-                        case "City":
+                        case "city":
                         oldValues[0].City =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
-                        case "Telephone_no":
+                        case "telephone_no":
                         oldValues[0].Telephone_no =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
-                        case "Address_line_1":
+                        case "address_line_1":
                         oldValues[0].Address_Line_1 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
-                        case "Address_Line_2":
+                        case "address_line_2":
                         oldValues[0].Address_Line_2 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
-                        case "Date_of_Birth":
-                        oldValues[0].Date_of_Birth = Convert.ToDateTime(newValues[item][item1].ToString());
+                        case "date_of_birth":
+                        oldValues[0].Date_of_Birth = newValues[item][item1] != null ? Convert.ToDateTime(newValues[item][item1].ToString()) : null;
                         break;
-                        case "FY_2019_20":
-                        oldValues[0].FY_2019_20 = Convert.ToSingle(newValues[item][item1].ToString());
+                        case "fy_2019_20":
+                        oldValues[0].FY_2019_20 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
-                        case "FY_2020_21":
-                        oldValues[0].FY_2020_21 = Convert.ToSingle(newValues[item][item1].ToString());
+                        case "fy_2020_21":
+                        oldValues[0].FY_2020_21 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
-                        case "FY_2021_22":
-                        oldValues[0].FY_2021_22 = Convert.ToSingle(newValues[item][item1].ToString());
+                        case "fy_2021_22":
+                        oldValues[0].FY_2021_22 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
-                        case "FY_2022_23":
-                        oldValues[0].FY_2022_23 = Convert.ToSingle(newValues[item][item1].ToString());
+                        case "fy_2022_23":
+                        oldValues[0].FY_2022_23 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
-                        case "FY_2023_24":
-                        oldValues[0].FY_2023_24 = Convert.ToSingle(newValues[item][item1].ToString());
+                        case "fy_2023_24":
+                        oldValues[0].FY_2023_24 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
                         
                         // default:
                     }
                 }
-                // if (oldValues.Count !=0){
+                /* if (oldValues.Count !=0){
                 //     oldValues[0].Name = newValues[item].Name;
                 //     oldValues[0].Country = newValues[item].Country;
                 //     oldValues[0].State = newValues[item].State;
@@ -245,7 +249,7 @@ namespace TempApi.Controllers
                 //     oldValues[0].FY_2021_22 = newValues[item].FY_2021_22;
                 //     oldValues[0].FY_2022_23 = newValues[item].FY_2022_23;
                 //     oldValues[0].FY_2023_24 = newValues[item].FY_2023_24;
-                // }
+                 }*/
             }
             await _context.SaveChangesAsync();
             return NoContent();
