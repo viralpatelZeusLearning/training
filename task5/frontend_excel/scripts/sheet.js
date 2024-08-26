@@ -107,8 +107,8 @@ export class Sheet{
         this.PageSize = 100
         this.keyList = ["email_id","name","country","state","city","telephone_no","address_line_1","address_line_2","date_of_birth","fy_2019_20","fy_2020_21","fy_2021_22","fy_2022_23","fy_2023_24"]
         // let rowslimit = Object.keys(this.data)
-        // this.rowsize=Array(1e5).fill(30)
         // this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],2e5)+1).fill(30)
+        // this.rowsize=Array(1e5).fill(30)
         this.rowsize = Array(100).fill(30)
         this.pagiantedandSheet = document.createElement("div");
         this.pagiantedandSheet.classList.add("paginatedandSheetdiv");
@@ -186,8 +186,9 @@ export class Sheet{
             // console.log("scroll");
             document.activeElement.blur();
             this.CreateCache();
+            this.lazyLoadPage();
             this.checkcolumn();
-            // this.checkrow();
+            this.checkrow();
             this.canvasize();
             this.headers();
             if (!this.marchloop){
@@ -327,7 +328,11 @@ export class Sheet{
      * @param {number} page_no - pagination no
      */
     async loadData(SheetId , page_no=0){
-        this.data = await this.FetchDatafromDb(SheetId , page_no);
+        let newData = await this.FetchDatafromDb(SheetId , page_no);
+        let currRow = page_no * this.PageSize
+        Object.keys(newData).forEach((element,index) => {
+            this.data[currRow+index] = newData[element]
+        });
         this.canvasize();
         this.headers();
         this.rows();
@@ -380,6 +385,46 @@ export class Sheet{
         this.pagination.appendChild(prevBtn)
         this.pagination.appendChild(moveTo)
         this.pagination.appendChild(nxtBtn)
+    }
+    /**
+     * Lazy loading current page 
+     */
+    lazyLoadPage(){
+        // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclickCache(e)
+        let currCenterRow = this.handleclickCache({offsetX:0, offsetY: this.containerdiv.clientHeight}).ycordinate
+        let pgNo = Math.floor(currCenterRow/100)
+        // console.clear();
+        console.log(pgNo)
+        if(this.pageNumber>pgNo){
+            //load previous page
+            console.log("load previous page", pgNo)
+            this.loadData(this.sheetId, pgNo-1 >=0 ? pgNo-1 : 0)
+            .then(()=>{
+                Object.keys(this.data).filter(x=>Number(x) >= (pgNo+1)*this.PageSize).forEach(x=>delete this.data[x])
+            })
+        }
+        else if(this.pageNumber<pgNo){
+            // load next page
+            console.log("load next page", pgNo)
+            this.loadData(this.sheetId, pgNo)
+            .then(()=>{
+                // console.log((this.pageNumber-1)*this.PageSize)
+                Object.keys(this.data).filter(x => Number(x) < (this.pageNumber-1)*this.PageSize).forEach(x=>delete this.data[x])
+            })
+        }
+        this.pageNumber = pgNo
+    }
+    /**
+     * load next page
+     */
+    LoadNextpg(){
+        if(this.data[this.pageNumber*this.PageSize]!=undefined){
+            this.pageNumber++;
+            this.loadData(this.sheetId, this.pageNumber);
+            console.log(this.data[this.pageNumber*this.PageSize])
+            console.log("loaded next page", this.pageNumber)
+            this.rowsize = this.rowsize.concat(Array(100).fill(this.config.rowHeight))
+        }
     }
     /**
      * To calculate the height and width of all 3 canvas 
@@ -551,7 +596,8 @@ export class Sheet{
             this.ctxrow.fillStyle="black";
             this.ctxrow.font =` ${this.config.fontSize}px ${this.config.fontStyle}`;
             this.ctxrow.textAlign="right";
-            this.ctxrow.fillText(this.pageNumber * this.PageSize + i,this.config.rowWidth-4,this.rowsize[i]+rowstart -5)
+            this.ctxrow.fillText( i,this.config.rowWidth-4,this.rowsize[i]+rowstart -5)
+            // this.ctxrow.fillText(this.pageNumber * this.PageSize + i,this.config.rowWidth-4,this.rowsize[i]+rowstart -5)
             this.ctxrow.restore();
             rowstart += this.rowsize[i];
         }
@@ -788,15 +834,25 @@ export class Sheet{
         let stat = (this.containerdiv.scrollHeight - this.containerdiv.clientHeight - this.containerdiv.scrollTop > 25 ? false : true)
         // console.log(stat);
         if (stat){
-            // console.log("scrolling");
-            // this.rowsize = [...this.rowsize, ...Array(20).fill(30)];
-            this.rowsize = this.rowsize.concat(Array(20).fill(30))
+            // console.log("scrolling",this.lazyLoadPage());
+            // this.FetchDatafromDb(this.sheetId,this.pageNumber+=1)
+            // .then(scrollData =>{
+            //     // let currentPageRow = Math.max(Object.keys(scrollData).length,Object.keys(this.data).length)+1;
+            //     let currentPageRow = Object.keys(this.data).length
+            //     // console.log(currentPageRow);
+            //     Object.keys(scrollData).forEach((key , I)=>{
+            //         this.data[currentPageRow + I] = scrollData[key]
+            //     })
+            // })
+            this.LoadNextpg()
+            this.rowsize = this.rowsize.concat(Array(100).fill(this.config.rowHeight))
             this.canvasize()
             this.rows();
             this.headers();
             if (!this.marchloop){
                 window.requestAnimationFrame(()=>this.table());
             }
+            // this.rowsize = [...this.rowsize, ...Array(20).fill(30)];
         }
     }
     

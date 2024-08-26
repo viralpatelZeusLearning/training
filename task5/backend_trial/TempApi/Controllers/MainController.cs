@@ -162,7 +162,9 @@ namespace TempApi.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteTemp([FromQuery]List<string> EmailId, string SheetId)
         {
+            // int firstDeleteIndex = (await _context.MainModels.where(x=>x.sheetId == SheetId && x.Email_Id == EmailId).ToListAsync())[0].Row_Id;
             await _context.MainModels.Where(x=>x.Sheet_Id==SheetId && EmailId.Contains(x.Email_Id)).ExecuteDeleteAsync();
+            // await _context.MainModels.Where(x=>x.Row_Id == firstDeleteIndex).ExecuteUpdateAsync()
             // EmailId.ForEach(async e=>{
             //     await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == e).ExecuteDeleteAsync();
             // });
