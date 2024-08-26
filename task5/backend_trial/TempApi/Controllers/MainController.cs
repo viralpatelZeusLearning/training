@@ -192,6 +192,11 @@ namespace TempApi.Controllers
                     // Console.WriteLine(item1);
                     switch (item1.ToLower())
                     {
+                        case "email_id":
+                            if (newValues[item][item1]!= null){
+                                oldValues[0].Email_Id = newValues[item][item1].ToString();
+                            }
+                            break;
                         case "name":
                         oldValues[0].Name = newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;

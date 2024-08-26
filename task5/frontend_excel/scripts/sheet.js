@@ -958,12 +958,6 @@ export class Sheet{
             // console.log(selectedCell);
             if(this.data[this.selectedcell.row]!=undefined){
                 console.log("row exists")
-                if(this.data[this.selectedcell.row][this.selectedcell.col]){
-                    this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
-                }
-                else{
-                    this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
-                }
                 let del = {}
                 del[this.data[this.selectedcell.row][0]["text"]] = {}
                 del[this.data[this.selectedcell.row][0]["text"]][this.keyList[this.selectedcell.col]] = e.target.value
@@ -973,6 +967,12 @@ export class Sheet{
                     {method:"PATCH",headers:{"Content-Type":"application/json"},body:final}
                 )
                 .then(response =>{
+                    if(this.data[this.selectedcell.row][this.selectedcell.col]){
+                        this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
+                    }
+                    else{
+                        this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+                    }
                     console.log(response);
                 })
                 .catch(err =>{
@@ -1967,9 +1967,11 @@ export class Sheet{
         let copiedText = await navigator.clipboard.readText()
         let count = this.ending.col
         let t = ""
+        let reqBody = {};
         // let Update = fetch(`/api/Main/Upload?SheetId=${this.sheetId}`,
         //     {method:"PATCH",headers:{"Content-Type":"application/json"},body:t}
         // )
+        reqBody[this.data[this.ending.row][0]['text']] = {}
         for (let i=0;i<copiedText.length;i++){
             // debugger
             // console.log(i, copiedText[i]);
@@ -1987,6 +1989,9 @@ export class Sheet{
                     this.data[this.ending.row][this.ending.col]={}
                     this.data[this.ending.row][this.ending.col]['text'] = t;
                 }
+                console.log(this.keyList[this.ending.col], t);
+                reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
+                // reqBody[this.data[this.ending.row][this.keyList[this.ending.col]]['text']] = {}
                 t =""
                 this.ending.col +=1
             }
@@ -2004,15 +2009,18 @@ export class Sheet{
                     this.data[this.ending.row][this.ending.col]={}
                     this.data[this.ending.row][this.ending.col]['text'] = t;
                 }
+                reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
                 t =""
                 this.ending.col = count
                 this.ending.row+=1
+                reqBody[this.data[this.ending.row][0].text] = {}
             }
             else{
                 // console.log(selectedCell);
                 t+=copiedText[i]
             }
         }
+        console.log(reqBody);
         if(this.data[this.ending.row]){
             if(this.data[this.ending.row][this.ending.col]){
                 this.data[this.ending.row][this.ending.col]['text'] =t;
@@ -2026,11 +2034,20 @@ export class Sheet{
             this.data[this.ending.row][this.ending.col]={}
             this.data[this.ending.row][this.ending.col]['text'] = t;
         }
+        // reqBody[this.data[this.ending.row][0].text] = {}
+        reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
         if (!this.marchloop){
             window.requestAnimationFrame(()=>this.table());
         }
         this.headers()
         this.rows()
+        let finalbody = JSON.stringify(reqBody);
+        fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
+            {method:"PATCH",headers:{"Content-Type":"application/json"},body:finalbody}
+        )
+        .catch(err =>{
+            throw err;
+        })
     }
     
     //calculations aggregate functions
@@ -2272,6 +2289,17 @@ export class Sheet{
 
         findBtn.addEventListener("click",(e)=>{
             this.find(e.target.form.findText.value)
+            /*fetch(`/api/Main/Search?sheetId=${this.sheetId}&Search=${e.target.form.findText.value}`)
+            .then(response=>{
+                // console.log(response.json());
+                return response.json();
+            })
+            .then(data=>{
+                console.log(data);
+            })
+            .catch(err =>{
+                throw err;
+            })*/
         })
 
         findInput.addEventListener("change",(e)=>{
