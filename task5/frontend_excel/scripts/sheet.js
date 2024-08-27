@@ -270,10 +270,10 @@ export class Sheet{
      */
     async deleteSingleRow(EmId){
         // console.log("inside delete",EmId);
-        let M = EmId.map(e=>`&EmailId=${e}`).join('')
+        // let M = EmId.map(e=>`&EmailId=${e}`).join('')
         // console.log(`/api/Main?${M}&SheetId=${this.sheetId}`);
-        await fetch(`/api/Main?${M}&SheetId=${this.sheetId}`,
-        {method : "DELETE"})
+        await fetch(`/api/Main?SheetId=${this.sheetId}`,
+        {method : "DELETE", headers:{"Content-Type":"application/json"},body:JSON.stringify(EmId)})
         await this.loadData(this.sheetId,this.pageNumber)
     }
     /**
@@ -313,6 +313,9 @@ export class Sheet{
                         parsedData[i][columnmap.get(j.toLowerCase())] = {}
                         parsedData[i][columnmap.get(j.toLowerCase())]["text"] = mainData[i][j]; 
                     }
+                    else if (j.toLowerCase() == "row_id"){
+                        parsedData[i]["row_id"] = mainData[i][j]
+                    }
                 })
             }
             // console.log(parsedData);
@@ -333,6 +336,7 @@ export class Sheet{
         Object.keys(newData).forEach((element,index) => {
             this.data[currRow+index] = newData[element]
         });
+        // this.data = await this.FetchDatafromDb(SheetId,page_no)
         this.canvasize();
         this.headers();
         this.rows();
@@ -398,9 +402,10 @@ export class Sheet{
         if(this.pageNumber>pgNo){
             //load previous page
             console.log("load previous page", pgNo)
+            this.loadData(this.sheetId,pgNo)
             this.loadData(this.sheetId, pgNo-1 >=0 ? pgNo-1 : 0)
             .then(()=>{
-                Object.keys(this.data).filter(x=>Number(x) >= (pgNo+1)*this.PageSize).forEach(x=>delete this.data[x])
+                Object.keys(this.data).filter(x=>Number(x) >= (pgNo+1)*this.PageSize && (Number(x) > Math.max(this.starting.row,this.ending.row) || Number(x) < Math.min(this.starting.row,this.ending.row))).forEach(x=>delete this.data[x])
             })
         }
         else if(this.pageNumber<pgNo){
@@ -409,7 +414,7 @@ export class Sheet{
             this.loadData(this.sheetId, pgNo)
             .then(()=>{
                 // console.log((this.pageNumber-1)*this.PageSize)
-                Object.keys(this.data).filter(x => Number(x) < (this.pageNumber-1)*this.PageSize).forEach(x=>delete this.data[x])
+                Object.keys(this.data).filter(x => Number(x) < (this.pageNumber-1)*this.PageSize && (Number(x) > Math.max(this.starting.row,this.ending.row) || Number(x) < Math.min(this.starting.row,this.ending.row))).forEach(x=>delete this.data[x])
             })
         }
         this.pageNumber = pgNo
@@ -1401,8 +1406,8 @@ export class Sheet{
             // console.log(this.starting);
             // data[this.starting.row][this.starting.col].text = ""
             
-            this.delete();
             if (this.ending.columnstart == Infinity){
+                this.delete();
                 let del = []
                 for (let i = Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row);i++){
                     del.push(this.data[i][0]["text"])
@@ -1411,6 +1416,7 @@ export class Sheet{
                 del = []
             }
             else{
+                this.delete();
                 let del = {}
                 for(let i = Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row);i++){
                     if (this.data[i]){
@@ -2412,12 +2418,13 @@ export class Sheet{
         //     return x 
         // }    
         // ).filter(x=>x[1].length)
+
         let r,c
         if (this.redo === true){
             this.config.findarr=[]
             for(r of Object.keys(this.data)){
                 for(c of Object.keys(this.data[r])){
-                    if (JSON.stringify(this.data[r][c].text).includes(findtext)){
+                    if (c != "row_id" && JSON.stringify(this.data[r][c].text).includes(findtext)){
                         this.config.findarr.push([r,c])
                     }
                 }
@@ -2438,7 +2445,18 @@ export class Sheet{
         else{
             window.alert("No Element Found")
         }
-        // let rowpos = (finalarr.map(v=>v[0]));
+        if (this.config.countFind == this.config.findarr.length -1 ){
+            fetch(`/api/Main/Search?sheetId=${this.sheetId}&Search=${findtext}&page_no=${this.pageNumber}`)
+            .then(response => {
+                console.log(response);
+                return response.json()
+            })
+            .then(data=>{
+                console.log(data);
+            })
+        }
+
+        /* let rowpos = (finalarr.map(v=>v[0]));
         // let colpos = (finalarr.map(v=>v[1][0][0]));
         // else{
         //     this.countFind=0
@@ -2449,7 +2467,7 @@ export class Sheet{
         //         this.ending.col = Number(this.finalarr[0][1])
         //     }
         //     // this.finalarr=[]
-        // }
+        }*/
         
         this.ending.columnstart=0
         this.starting.columnstart=0
@@ -2487,6 +2505,24 @@ export class Sheet{
             this.data[row][col].text=this.data[row][col].text.replaceAll(this.prevtext,this.newText)
             this.config.countFind-=1
             this.config.findarr.splice(this.config.countFind,1)
+            let final = {}
+            final[this.data[this.ending.row][0]['text']] = {}
+            final[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]]  = this.newText
+            console.log(final);
+            let rep = JSON.stringify(final)
+            console.log(rep);
+            fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
+                {method:"PATCH",headers:{"Content-Type":"application/json"},body:rep}
+            )
+            .then(response =>{
+                if(this.data[this.selectedcell.row][this.selectedcell.col]){
+                    this.data[this.selectedcell.row][this.selectedcell.col]['text'] = this.newText;
+                }
+                console.log(response);
+            })
+            .catch(err =>{
+                throw err;
+            })
         }
         else{
             window.alert("No Element Found")

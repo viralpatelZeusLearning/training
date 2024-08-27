@@ -104,6 +104,7 @@ public class Insertmysql {
         //         cmd.ExecuteNonQuery();
          }*/
     }
+    
     public static void Main(string[] args){
         // Console.WriteLine("Hello");
         Insertmysql sq = new();

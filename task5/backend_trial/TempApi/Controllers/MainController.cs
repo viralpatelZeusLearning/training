@@ -41,6 +41,13 @@ namespace TempApi.Controllers
 
             // return CreatedAtAction("GetSingleRow", new { id = temp.Email_Id }, temp);
         }
+
+        [HttpGet("findIndex")]
+        // public async Task<ActionResult<List<MainModel>>>findIndex(string sheetId , string Find , int page_no)
+        // {
+        //     int pageSize = 100;
+        // }
+
         [HttpGet("Search")]
         public async Task<ActionResult<List<MainModel>>>Search(string sheetId, string Search , int page_no=0)
         {
@@ -160,9 +167,10 @@ namespace TempApi.Controllers
 
         // DELETE: api/TempItems
         [HttpDelete]
-        public async Task<IActionResult> DeleteTemp([FromQuery]List<string> EmailId, string SheetId)
+        public async Task<IActionResult> DeleteTemp([FromBody]List<string> EmailId, string SheetId)
         {
-            // int firstDeleteIndex = (await _context.MainModels.where(x=>x.sheetId == SheetId && x.Email_Id == EmailId).ToListAsync())[0].Row_Id;
+            // int firstDeleteIndex = (await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == EmailId[0]).ToListAsync())[0].Row_Id;
+            // await _context.Database.ExecuteSqlAsync($"call deleteMultiple({firstDeleteIndex} , {EmailId.Count});");
             await _context.MainModels.Where(x=>x.Sheet_Id==SheetId && EmailId.Contains(x.Email_Id)).ExecuteDeleteAsync();
             // await _context.MainModels.Where(x=>x.Row_Id == firstDeleteIndex).ExecuteUpdateAsync()
             // EmailId.ForEach(async e=>{
@@ -196,7 +204,12 @@ namespace TempApi.Controllers
                     {
                         case "email_id":
                             if (newValues[item][item1]!= null){
-                                oldValues[0].Email_Id = newValues[item][item1].ToString();
+                                // oldValues[0].Email_Id = newValues[item][item1].ToString();
+                                var Email = oldValues[0];
+                                _context.Remove(Email);
+                                await _context.SaveChangesAsync();
+                                Email.Email_Id = newValues[item][item1].ToString();
+                                _context.Add(Email);
                             }
                             break;
                         case "name":
