@@ -3,6 +3,10 @@ body {
   margin: 0px;
 }
 
+#mainDiv {
+  min-height: 100dvh;
+}
+
 .options_menu {
   display: flex;
   gap: 2em;
@@ -43,7 +47,7 @@ body {
 .change_sheet {
   display: flex;
   position: absolute;
-  top: 100%;
+  bottom: 5%;
   padding: 10px 10px 0px 30px;
   width: 95%;
   gap: 5px;

@@ -65,7 +65,7 @@ export class Sheet{
     /**
      * @type {Array <Number>} - array of row sizes
      */
-    rowsize=Array(30).fill(30);
+    rowsize=Array(this.PageSize).fill(30);
     /**
      * some default configs
      */
@@ -104,19 +104,19 @@ export class Sheet{
         this.data = {}
         this.sheetId = SheetId
         this.pageNumber = 0
-        this.PageSize = 100
+        this.PageSize = 1000
         this.keyList = ["email_id","name","country","state","city","telephone_no","address_line_1","address_line_2","date_of_birth","fy_2019_20","fy_2020_21","fy_2021_22","fy_2022_23","fy_2023_24"]
         // let rowslimit = Object.keys(this.data)
         // this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],2e5)+1).fill(30)
         // this.rowsize=Array(1e5).fill(30)
-        this.rowsize = Array(100).fill(30)
+        this.rowsize = Array(40).fill(30)
         this.pagiantedandSheet = document.createElement("div");
         this.pagiantedandSheet.classList.add("paginatedandSheetdiv");
         this.pagination = document.createElement("div");
         this.pagination.classList.add("pagination");
         this.containerdiv = document.createElement("div");
         this.btn = document.createElement("div");
-        // this.btn.setAttribute("data-dot","")
+        this.btn.setAttribute("data-dot","")
         this.headerref = document.createElement("canvas");
         this.rowref = document.createElement("canvas");
         this.containertable = document.createElement("div");
@@ -262,19 +262,25 @@ export class Sheet{
 
         
         this.loadData(SheetId);
-        this.PaginationModel()
+        // this.PaginationModel()
     }
     /**
      * to delete entire rows from db api
      * @param {Array} EmId -array of email id to delete multiple rows
      */
-    async deleteSingleRow(EmId){
+    deleteSingleRow(EmId){
         // console.log("inside delete",EmId);
         // let M = EmId.map(e=>`&EmailId=${e}`).join('')
         // console.log(`/api/Main?${M}&SheetId=${this.sheetId}`);
-        await fetch(`/api/Main?SheetId=${this.sheetId}`,
+        fetch(`/api/Main?SheetId=${this.sheetId}`,
         {method : "DELETE", headers:{"Content-Type":"application/json"},body:JSON.stringify(EmId)})
-        await this.loadData(this.sheetId,this.pageNumber)
+        .then(response => {
+            console.log(response);
+            Object.keys(this.data).filter(x=>Number(x) >= (this.pageNumber>0 ? this.pageNumber-1 : 0)*this.PageSize).forEach(x=> delete this.data[x])
+            this.loadData(this.sheetId,this.pageNumber)
+            if (this.pageNumber>=0) this.loadData(this.sheetId,this.pageNumber-1)
+        })
+        // await this.loadData(this.sheetId,this.pageNumber)
     }
     /**
      * to fetch data from db
@@ -306,17 +312,20 @@ export class Sheet{
         // console.log(mainData);
         let parsedData = {}
         try{
-            for(let i=0;i<mainData.length;i++){
+            for(let i=0;i<mainData.data.length;i++){
                 parsedData[i] = {}
-                Object.keys(mainData[i]).forEach(j=>{
+                Object.keys(mainData.data[i]).forEach(j=>{
                     if (columnmap.get(j.toLowerCase())!= undefined){
                         parsedData[i][columnmap.get(j.toLowerCase())] = {}
-                        parsedData[i][columnmap.get(j.toLowerCase())]["text"] = mainData[i][j]; 
+                        parsedData[i][columnmap.get(j.toLowerCase())]["text"] = mainData.data[i][j]; 
                     }
                     else if (j.toLowerCase() == "row_id"){
-                        parsedData[i]["row_id"] = mainData[i][j]
+                        parsedData[i]["row_id"] = mainData.data[i][j]
                     }
                 })
+            }
+            if (this.rowsize.length < mainData.count){
+                this.rowsize = Array(mainData.count).fill(30)
             }
             // console.log(parsedData);
         }
@@ -396,7 +405,7 @@ export class Sheet{
     lazyLoadPage(){
         // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclickCache(e)
         let currCenterRow = this.handleclickCache({offsetX:0, offsetY: this.containerdiv.clientHeight}).ycordinate
-        let pgNo = Math.floor(currCenterRow/100)
+        let pgNo = Math.floor(currCenterRow/this.PageSize)
         // console.clear();
         console.log(pgNo)
         if(this.pageNumber>pgNo){
@@ -411,6 +420,7 @@ export class Sheet{
         else if(this.pageNumber<pgNo){
             // load next page
             console.log("load next page", pgNo)
+            this.loadData(this.sheetId, pgNo-1)
             this.loadData(this.sheetId, pgNo)
             .then(()=>{
                 // console.log((this.pageNumber-1)*this.PageSize)
@@ -428,7 +438,7 @@ export class Sheet{
             this.loadData(this.sheetId, this.pageNumber);
             console.log(this.data[this.pageNumber*this.PageSize])
             console.log("loaded next page", this.pageNumber)
-            this.rowsize = this.rowsize.concat(Array(100).fill(this.config.rowHeight))
+            this.rowsize = this.rowsize.concat(Array(this.PageSize).fill(this.config.rowHeight))
         }
     }
     /**
@@ -850,7 +860,7 @@ export class Sheet{
             //     })
             // })
             this.LoadNextpg()
-            this.rowsize = this.rowsize.concat(Array(100).fill(this.config.rowHeight))
+            this.rowsize = this.rowsize.concat(Array(this.PageSize).fill(this.config.rowHeight))
             this.canvasize()
             this.rows();
             this.headers();
@@ -1034,41 +1044,61 @@ export class Sheet{
                     else{
                         this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
                     }
+                    if (this.data[this.selectedcell.row][this.selectedcell.col].wrap){
+                        this.wraptext();
+                    }
+                    if (!this.marchloop){
+                        window.requestAnimationFrame(()=>this.table());
+                    }
                     console.log(response);
                 })
                 .catch(err =>{
                     throw err;
                 })
                 // console.log(del);
-                if (this.data[this.selectedcell.row][this.selectedcell.col].wrap){
-                    this.wraptext();
-                }
+                
                 del = {}
+                // if (!this.marchloop){
+                //     window.requestAnimationFrame(()=>this.table());
+                // }
             }
             else {
                 console.log("row not exists")
 
                 if (this.selectedcell.col == 0){
-                let newrow = {}
-                this.data[this.selectedcell.row] = newrow;
-                this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
-                let newRow = Math.max(...Object.keys(this.data).map(r=> this.pageNumber*this.PageSize + r))+1
-                let upd = {"email_Id":e.target.value,"sheet_Id":this.sheetId, "row_Id":newRow}
-                // console.log(upd);
-                fetch(`/api/Main/singleRowPost`,
-                    {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(upd)}
-                )
-                .then(response =>{
-                    console.log(response);
-                    if (response.status == 400){
-                        window.alert("Enter an valid Email")
-                    }
+                    let newRow = Math.max(...Object.keys(this.data).map(r => Number(r)))
+                    let newRowId = this.data[newRow].row_id
+                    console.log(newRow , newRowId);
+                    let upd = {"email_Id":e.target.value,"sheet_Id":this.sheetId, "row_Id":newRowId+1}
+                    // console.log(upd);
+                    fetch(`/api/Main/singleRowPost`,
+                        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(upd)}
+                    )
+                    .then(response =>{
+                        console.log(response);
+                        if (response.status == 400){
+                            window.alert("Enter an valid Email")
+                        }
+                        Object.keys(this.data).filter(x=>Number(x) >= (this.pageNumber>0 ? this.pageNumber-1 : 0)*this.PageSize).forEach(x=> delete this.data[x])
+                        this.loadData(this.sheetId,this.pageNumber)
+                        if (this.pageNumber>=0) this.loadData(this.sheetId,this.pageNumber-1)
+                        // else{
+                        //     let newrow = {}
+                        //     this.data[this.selectedcell.row] = newrow;
+                        //     this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+                        // }
                     this.loadData(this.sheetId,this.pageNumber)
+                    if (!this.marchloop){
+                        window.requestAnimationFrame(()=>this.table());
+                    }
                 })
                 .catch(err=>{
                     throw err;
                 })
                 upd = {}
+                // if (!this.marchloop){
+                //     window.requestAnimationFrame(()=>this.table());
+                // }
             }}
             this.inputdiv.style.display="none";
             // this.find()
@@ -1342,6 +1372,28 @@ export class Sheet{
             }
             else{
                 this.config.dashOffset=1;
+                let del = {}
+                for(let i = Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row);i++){
+                    if (this.data[i]){
+                        del[this.data[i][0]["text"]] = {}
+                        for(let j = Math.min(this.starting.col,this.ending.col);j<=Math.max(this.starting.col,this.ending.col);j++){
+                            del[this.data[i][0]["text"]][this.keyList[j]] = null 
+                        }
+                    }
+                }
+                let final = JSON.stringify(del)
+                // console.log(final)
+                fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
+                    {method:"PATCH",headers:{"Content-Type":"application/json"},body:final}
+                )
+                .then(response =>{
+                    console.log(response);
+                })
+                .catch(err =>{
+                    throw err;
+                })
+                // console.log(del);
+                del = {}
                 if (!this.marchloop){
                     window.requestAnimationFrame(()=>this.table());
                 }
@@ -1409,7 +1461,7 @@ export class Sheet{
             if (this.ending.columnstart == Infinity){
                 this.delete();
                 let del = []
-                for (let i = Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row);i++){
+                for (let i = Math.min(this.starting.row,this.ending.row);i<=Math.max(this.starting.row,this.ending.row) && this.data[i];i++){
                     del.push(this.data[i][0]["text"])
                 }
                 this.deleteSingleRow(del)
@@ -1433,6 +1485,9 @@ export class Sheet{
                 )
                 .then(response =>{
                     console.log(response);
+                    if (!this.marchloop){
+                        window.requestAnimationFrame(()=>this.table());
+                    }
                 })
                 .catch(err =>{
                     throw err;
@@ -1977,10 +2032,12 @@ export class Sheet{
             let i=0;
             while(i<Math.min(this.starting.col, this.ending.col)){
               posX+=this.columnsize[i];
+            //   console.log(posX , "mic col pixel");
               i++;
             }
-            while(i<Math.max(this.starting.col+1, this.ending.col+1)&& i<this.columnsize.length){
+            while(i<=Math.max(this.starting.col, this.ending.col) && i<this.columnsize.length){
                     rectWidth+=this.columnsize[i];
+                    // console.log(rectWidth,"mac col pixel");
                     i++;
                 
             }
@@ -1989,8 +2046,9 @@ export class Sheet{
                 posY+=this.rowsize[i];
                 i++;
             }
-            while(i<Math.max(this.starting.row+1, this.ending.row+1)&&i<this.rowsize.length){
+            while(i<=Math.max(this.starting.row, this.ending.row) && i<this.rowsize.length){
                     rectHeight+=this.rowsize[i];
+                    // console.log(rectHeight , "max row pixel");
                     i++;
                 
             }
@@ -2313,7 +2371,7 @@ export class Sheet{
         let replaceRadio = document.createElement("span")
         replaceRadio.textContent="Replace"
         let findlabel = document.createElement("label")
-        findlabel.textContent = "Find"
+        findlabel.textContent = "Search Text"
         let findInput = document.createElement("input")
         let replacelabel = document.createElement("label")
         replacelabel.textContent = "Replace"
@@ -2350,29 +2408,23 @@ export class Sheet{
         replacelabel.style.display="none"
 
         findBtn.addEventListener("click",(e)=>{
-            this.find(e.target.form.findText.value)
-            /*fetch(`/api/Main/Search?sheetId=${this.sheetId}&Search=${e.target.form.findText.value}`)
-            .then(response=>{
-                // console.log(response.json());
-                return response.json();
+            // this.find(e.target.form.findText.value)
+            this.findFromDb(e.target.form.findText.value)
+            .next()
+            .then(response => {
+                console.log(response);
             })
-            .then(data=>{
-                console.log(data);
-            })
-            .catch(err =>{
-                throw err;
-            })*/
         })
 
-        findInput.addEventListener("change",(e)=>{
-            this.config.countFind = 0
-            /**
-             * @type {string} - pev text stored in the cell
-             */
-            this.prevtext = e.target.form.findText.value
-            this.redo = true
-            // console.log(prevtext);
-        })
+        // findInput.addEventListener("change",()=>{
+        //     this.config.countFind = 0
+        //     /**
+        //      * @type {string} - pev text stored in the cell
+        //      */
+        //     // this.prevtext = e.target.form.findText.value
+        //     // this.redo = true
+        //     // console.log(prevtext);
+        // })
         replaceInput.addEventListener("change",(e)=>{
             /**
              * @type {string} - new text that should replace with old one
@@ -2409,8 +2461,9 @@ export class Sheet{
     /**
      * To find text within sheets and highlight the cells
      * @param {string} findtext - the text that needs to be find 
+     * @param {object} padeData - data in which to find text
      */
-    find(findtext){
+    find(findtext , pageData = this.data){
         // let datarow = Object.entries(this.data).map(v=>[v[0],Object.entries(v[1])])
         // console.log(datarow);
         // let finalarr = datarow.map(x=>{
@@ -2420,55 +2473,67 @@ export class Sheet{
         // ).filter(x=>x[1].length)
 
         let r,c
-        if (this.redo === true){
-            this.config.findarr=[]
-            for(r of Object.keys(this.data)){
-                for(c of Object.keys(this.data[r])){
-                    if (c != "row_id" && JSON.stringify(this.data[r][c].text).includes(findtext)){
-                        this.config.findarr.push([r,c])
+        // if (this.redo === true){
+            let findarr=[]
+            for(r of Object.keys(pageData)){
+                for(c of Object.keys(pageData[r])){
+                    if (c != "row_id" && JSON.stringify(pageData[r][c].text).includes(findtext)){
+                        findarr.push([r,c])
                     }
                 }
             }
-            // console.log(this.config.findarr,r,c);
-            this.redo = false
-        }
+        return findarr;
+            /* console.log(this.config.findarr,r,c);
+        //     this.redo = false
+        // }
         
         // console.log(this.findarr);
-        if (this.config.findarr.length>=1){
-            this.starting.row = Number(this.config.findarr[this.config.countFind][0])
-            this.starting.col = Number(this.config.findarr[this.config.countFind][1])
-            this.ending.row = Number(this.config.findarr[this.config.countFind][0])
-            this.ending.col = Number(this.config.findarr[this.config.countFind][1])
-            this.config.countFind= (this.config.countFind + 1) %this.config.findarr.length
-            // this.finalarr=[]
-        }
-        else{
-            window.alert("No Element Found")
-        }
-        if (this.config.countFind == this.config.findarr.length -1 ){
-            fetch(`/api/Main/Search?sheetId=${this.sheetId}&Search=${findtext}&page_no=${this.pageNumber}`)
-            .then(response => {
-                console.log(response);
-                return response.json()
-            })
-            .then(data=>{
-                console.log(data);
-            })
-        }
-
-        /* let rowpos = (finalarr.map(v=>v[0]));
-        // let colpos = (finalarr.map(v=>v[1][0][0]));
-        // else{
-        //     this.countFind=0
-        //     if (this.finalarr.length=1){
-        //         this.starting.row = Number(this.finalarr[0][0])
-        //         this.starting.col = Number(this.finalarr[0][1])
-        //         this.ending.row = Number(this.finalarr[0][0])
-        //         this.ending.col = Number(this.finalarr[0][1])
-        //     }
+        // if (this.config.findarr.length>=1){
+        //     console.log(this.config.findarr , this.config.countFind);
+        //     this.starting.row = Number(this.config.findarr[this.config.countFind][0])
+        //     this.starting.col = Number(this.config.findarr[this.config.countFind][1])
+        //     this.ending.row = Number(this.config.findarr[this.config.countFind][0])
+        //     this.ending.col = Number(this.config.findarr[this.config.countFind][1])
+        //     this.config.countFind= (this.config.countFind + 1) % this.config.findarr.length
         //     // this.finalarr=[]
-        }*/
+        // }
+        // else{
+        //     window.alert("No Element Found")
+        // }
         
+        // this.ending.columnstart=0
+        // this.starting.columnstart=0
+        // for (let i=0;i<this.ending.col;i++){
+        //     this.starting.columnstart+=this.columnsize[i]
+        //     this.ending.columnstart+=this.columnsize[i]
+        // }
+        // this.ending.rowstart=0
+        // this.starting.rowstart=0
+        // for(let i=0;i<this.ending.row;i++){
+        //     this.starting.rowstart+=this.rowsize[i]
+        //     this.ending.rowstart+=this.rowsize[i]
+        // }
+        // // console.log(this.config.findarr);
+        // this.containerdiv.scrollTo({left:this.ending.columnstart-30,top:this.ending.rowstart-30,behavior:"smooth"})
+        // // console.log(this.starting,this.ending);
+        // if (!this.marchloop){
+        //     window.requestAnimationFrame(()=>this.table());
+        // }
+        // this.headers()
+        // this.rows()
+        // return finalarr
+        // console.log(finalarr.map(v=>v[1][0]));*/
+    }
+    /**
+     * function to scroll till the page and select the cell
+     * @param {number} row - row number of the selected cell
+     * @param {number} col - col number of the selected cell
+     */
+    findColor(row,col){
+        this.starting.row = row
+        this.ending.row = row
+        this.starting.col = col
+        this.ending.col = col
         this.ending.columnstart=0
         this.starting.columnstart=0
         for (let i=0;i<this.ending.col;i++){
@@ -2477,11 +2542,12 @@ export class Sheet{
         }
         this.ending.rowstart=0
         this.starting.rowstart=0
+        console.log(this.rowsize[16]);
         for(let i=0;i<this.ending.row;i++){
             this.starting.rowstart+=this.rowsize[i]
             this.ending.rowstart+=this.rowsize[i]
         }
-        // console.log(this.config.findarr);
+        // console.log(arr);
         this.containerdiv.scrollTo({left:this.ending.columnstart-30,top:this.ending.rowstart-30,behavior:"smooth"})
         // console.log(this.starting,this.ending);
         if (!this.marchloop){
@@ -2489,10 +2555,92 @@ export class Sheet{
         }
         this.headers()
         this.rows()
-        // return finalarr
-        // console.log(finalarr.map(v=>v[1][0]));
     }
+    /**
+     * Generator for next find 
+     * @param {string} - text to search 
+     */
+    async *findFromDb(text){
+        console.log("from db text");
+        if(this.prevtext!=text){
+            // new search
+            this.config.findarr=[]
+            console.log("insdie find from db func");
+            this.prevtext = text;
+            // this.searchObject.currentPage=0;
+            if(!this.data[0]){
+                let pageData = await this.FetchDatafromDb(this.sheetId, 0);
+                console.log(pageData);
+                let newArr = this.find(text, pageData)
+                // this.find(text, pageData)
+                // console.log(pageArr);
+                this.config.findarr = newArr;
+                this.config.countFind = 0;
+                console.log("searching in pg:0 from db");
+                // console.log(pageArr)
+                if(this.config.countFind < this.config.findarr.length){
+                    let elem = this.config.findarr[this.config.countFind++]
+                    this.findColor(elem[0], elem[1])
+                    // yield this.config.findarr[this.config.countFind++]
+                    yield elem
+                }
+            }
+            else{
+                let newArr = this.find(text, this.data);
+                // let pageArr = this.find(text, this.data);
 
+                console.log("searching in pg:0 from local");
+                // console.log(pageArr)
+                this.config.findarr = newArr;
+                this.config.countFind = 0;
+                if(this.config.countFind < newArr.length){
+                    let elem = this.config.findarr[this.config.countFind++]
+                    this.findColor(elem[0], elem[1])
+                    // yield this.config.findarr[this.config.countFind++]
+                    yield elem
+                }
+            }
+        }
+        else{
+            //continued search
+            console.log("inside else");
+            if(this.config.countFind < this.config.findarr.length){
+                let elem = this.config.findarr[this.config.countFind++]
+                this.findColor(elem[0], elem[1])
+                // yield this.config.findarr[this.config.countFind++]
+                yield elem
+            }
+            else{
+                // need to fetch another page
+                console.log("need to fetch next page data") 
+                do {
+                    this.pageNumber+=1;
+                    console.log(this.pageNumber);
+                    let pageData = await this.FetchDatafromDb(this.sheetId, this.pageNumber);
+                    let currRow = this.pageNumber*this.PageSize;
+                    let newPageData = {};
+                    Object.keys(pageData).forEach((element,index) => {
+                        newPageData[currRow+index] = pageData[element]
+                    });
+                    console.log(newPageData);
+                    // this.config.countFind = 0
+                    var newArr = this.find(text, newPageData)
+                }while(newArr.length == 0);
+                this.config.findarr = this.config.findarr.concat(newArr);
+                // this.config.countFind = this.config.findarr.length-1
+                if(this.config.countFind < this.config.findarr.length){
+                    let elem = this.config.findarr[this.config.countFind++]
+                    this.findColor(elem[0], elem[1])
+                    // yield this.config.findarr[this.config.countFind++]
+                    yield elem
+                }
+                // yield this.config.findarr[this.config.countFind++]
+ 
+            }
+ 
+        }
+        // yield "hi";
+    }
     //replace
     /**
      * replaced the searched data
@@ -2515,8 +2663,8 @@ export class Sheet{
                 {method:"PATCH",headers:{"Content-Type":"application/json"},body:rep}
             )
             .then(response =>{
-                if(this.data[this.selectedcell.row][this.selectedcell.col]){
-                    this.data[this.selectedcell.row][this.selectedcell.col]['text'] = this.newText;
+                if(this.data[this.starting.row][this.starting.col]){
+                    this.data[this.starting.row][this.starting.col]['text'] = this.newText;
                 }
                 console.log(response);
             })

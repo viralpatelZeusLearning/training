@@ -42,7 +42,7 @@ namespace TempApi.Controllers
             // return CreatedAtAction("GetSingleRow", new { id = temp.Email_Id }, temp);
         }
 
-        [HttpGet("findIndex")]
+        //[HttpGet("findIndex")]
         // public async Task<ActionResult<List<MainModel>>>findIndex(string sheetId , string Find , int page_no)
         // {
         //     int pageSize = 100;
@@ -51,7 +51,7 @@ namespace TempApi.Controllers
         [HttpGet("Search")]
         public async Task<ActionResult<List<MainModel>>>Search(string sheetId, string Search , int page_no=0)
         {
-            var size=10;
+            var size=1000;
             return await _context.MainModels.Where(x=>x.Sheet_Id == sheetId && x.Name.Contains(Search)
             || x.Email_Id.Contains(Search)
             || x.Country.Contains(Search)
@@ -72,10 +72,13 @@ namespace TempApi.Controllers
 
         // GET: api/TempItems/5
         [HttpGet("{SheetId}")]
-        public async Task<ActionResult<IEnumerable<MainModel>>> GetSingle(string SheetId,int page_no=0)
+        public async Task<ActionResult<Dictionary<string , object>>> GetSingle(string SheetId,int page_no=0)
         {
-            int takeSize=100;
-            return await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).Skip(page_no*takeSize).Take(takeSize).ToListAsync();
+            int takeSize=1000;
+            var result = new Dictionary<string,object>();
+            result.Add("data", await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).Skip(page_no*takeSize).Take(takeSize).ToListAsync());
+            result.Add("count" , await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).CountAsync());
+            return result;
 
             // if (temp == null)
             // {
@@ -170,8 +173,8 @@ namespace TempApi.Controllers
         public async Task<IActionResult> DeleteTemp([FromBody]List<string> EmailId, string SheetId)
         {
             // int firstDeleteIndex = (await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == EmailId[0]).ToListAsync())[0].Row_Id;
-            // await _context.Database.ExecuteSqlAsync($"call deleteMultiple({firstDeleteIndex} , {EmailId.Count});");
             await _context.MainModels.Where(x=>x.Sheet_Id==SheetId && EmailId.Contains(x.Email_Id)).ExecuteDeleteAsync();
+            // await _context.Database.ExecuteSqlAsync($"call deleteMultiple({firstDeleteIndex} , {EmailId.Count});");
             // await _context.MainModels.Where(x=>x.Row_Id == firstDeleteIndex).ExecuteUpdateAsync()
             // EmailId.ForEach(async e=>{
             //     await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == e).ExecuteDeleteAsync();
