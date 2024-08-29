@@ -11,7 +11,7 @@ using tempdb.Model;
 namespace TempApi.Migrations
 {
     [DbContext(typeof(TempContext))]
-    [Migration("20240823122720_firstmigration")]
+    [Migration("20240829051335_firstmigration")]
     partial class firstmigration
     {
         /// <inheritdoc />

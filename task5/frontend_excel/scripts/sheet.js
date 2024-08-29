@@ -104,7 +104,7 @@ export class Sheet{
         this.data = {}
         this.sheetId = SheetId
         this.pageNumber = 0
-        this.PageSize = 1000
+        this.PageSize = 100
         this.keyList = ["email_id","name","country","state","city","telephone_no","address_line_1","address_line_2","date_of_birth","fy_2019_20","fy_2020_21","fy_2021_22","fy_2022_23","fy_2023_24"]
         // let rowslimit = Object.keys(this.data)
         // this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],2e5)+1).fill(30)
@@ -278,7 +278,7 @@ export class Sheet{
             console.log(response);
             Object.keys(this.data).filter(x=>Number(x) >= (this.pageNumber>0 ? this.pageNumber-1 : 0)*this.PageSize).forEach(x=> delete this.data[x])
             this.loadData(this.sheetId,this.pageNumber)
-            if (this.pageNumber>=0) this.loadData(this.sheetId,this.pageNumber-1)
+            if (this.pageNumber>=1) this.loadData(this.sheetId,this.pageNumber-1)
         })
         // await this.loadData(this.sheetId,this.pageNumber)
     }
@@ -317,7 +317,7 @@ export class Sheet{
                 Object.keys(mainData.data[i]).forEach(j=>{
                     if (columnmap.get(j.toLowerCase())!= undefined){
                         parsedData[i][columnmap.get(j.toLowerCase())] = {}
-                        parsedData[i][columnmap.get(j.toLowerCase())]["text"] = mainData.data[i][j]; 
+                        parsedData[i][columnmap.get(j.toLowerCase())]["text"] = j.toLowerCase() == ("date_of_birth") ? mainData.data[i][j].split("T")[0] : mainData.data[i][j]; 
                     }
                     else if (j.toLowerCase() == "row_id"){
                         parsedData[i]["row_id"] = mainData.data[i][j]
@@ -1038,17 +1038,22 @@ export class Sheet{
                     {method:"PATCH",headers:{"Content-Type":"application/json"},body:final}
                 )
                 .then(response =>{
-                    if(this.data[this.selectedcell.row][this.selectedcell.col]){
-                        this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
+                    if (response.status == 500 || response.status == 400){
+                        window.alert("Please Enter a Valid Value");
                     }
                     else{
-                        this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
-                    }
-                    if (this.data[this.selectedcell.row][this.selectedcell.col].wrap){
-                        this.wraptext();
-                    }
-                    if (!this.marchloop){
-                        window.requestAnimationFrame(()=>this.table());
+                        if(this.data[this.selectedcell.row][this.selectedcell.col]){
+                            this.data[this.selectedcell.row][this.selectedcell.col]['text'] = e.target.value;
+                        }
+                        else{
+                            this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
+                        }
+                        if (this.data[this.selectedcell.row][this.selectedcell.col].wrap){
+                            this.wraptext();
+                        }
+                        if (!this.marchloop){
+                            window.requestAnimationFrame(()=>this.table());
+                        }
                     }
                     console.log(response);
                 })
@@ -1087,10 +1092,10 @@ export class Sheet{
                         //     this.data[this.selectedcell.row] = newrow;
                         //     this.data[this.selectedcell.row][this.selectedcell.col] = newValue;
                         // }
-                    this.loadData(this.sheetId,this.pageNumber)
-                    if (!this.marchloop){
-                        window.requestAnimationFrame(()=>this.table());
-                    }
+                        this.loadData(this.sheetId,this.pageNumber)
+                        if (!this.marchloop){
+                            window.requestAnimationFrame(()=>this.table());
+                        }
                 })
                 .catch(err=>{
                     throw err;
@@ -1620,14 +1625,14 @@ export class Sheet{
          * pointer up event for range selection
          * @param {PointerEvent} j - default e event
          */
-        let handlemouseup=(j)=>{
+        let handlemouseup=()=>{
             // j.preventDefault()
-            let newX = e.offsetX+j.clientX-e.clientX
-            let newY = e.offsetY+j.clientY-e.clientY
-            let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclickCache({offsetX:newX,offsetY:newY})
+            // let newX = e.offsetX+j.clientX-e.clientX
+            // let newY = e.offsetY+j.clientY-e.clientY
+            // let {columnstart , rowstart , xcordinate , ycordinate} = this.handleclickCache({offsetX:newX,offsetY:newY})
             // console.log(e.target);
             window.removeEventListener("pointermove",handleMouseMove);
-            this.ending = {col:xcordinate , row:ycordinate ,columnstart:columnstart,rowstart:rowstart}
+            // this.ending = {col:xcordinate , row:ycordinate ,columnstart:columnstart,rowstart:rowstart}
 
             if (this.starting.col == 0 || this.starting.row == 0 || this.ending.col == 0 || this.ending.row == 0){
                 this.btn.setAttribute("data-dot","")
@@ -2064,6 +2069,8 @@ export class Sheet{
     clipboard(){
         if (this.starting && this.ending){
             let text="";
+            let count = this.ending.row - this.starting.row +1;
+            console.log(count);
             for (let i = Math.min(this.starting.row,this.ending.row); i <= Math.max(this.starting.row,this.ending.row); i++) {
                 for (var j = Math.min(this.starting.col,this.ending.col); j < Math.max(this.starting.col,this.ending.col); j++){
                   // console.log(i,j);
@@ -2072,6 +2079,7 @@ export class Sheet{
                 text +=`${(this.data[i] && this.data[i][j] ? this.data[i][j].text : "")}`;   
                 text += `\n`
             }
+            text += count
             navigator.clipboard.writeText(text.trimEnd())
         }
     }
@@ -2085,12 +2093,24 @@ export class Sheet{
         // this.ending.row = 0
         // this.ending.col =0
         let copiedText = await navigator.clipboard.readText()
+        let rows_Count = copiedText.slice(copiedText.lastIndexOf("\n")+1)
+        copiedText = copiedText.slice(0,copiedText.lastIndexOf("\n"))
+        console.log(Number(rows_Count));
         let count = this.ending.col
         let t = ""
         let reqBody = {};
         // let Update = fetch(`/api/Main/Upload?SheetId=${this.sheetId}`,
         //     {method:"PATCH",headers:{"Content-Type":"application/json"},body:t}
         // )
+        //waiting for the next page where the data should get loaded
+        if(this.selectedcell.row + Number(rows_Count) >Math.max(...Object.keys(this.data))){
+            let newNumber = Number(rows_Count)/this.PageSize
+            for (let i=0;i<=Math.ceil(newNumber);i++){
+                console.log(newNumber);
+                await this.loadData(this.sheetId,this.pageNumber + i)
+            }
+        }
+
         reqBody[this.data[this.ending.row][0]['text']] = {}
         for (let i=0;i<copiedText.length;i++){
             // debugger
@@ -2156,15 +2176,24 @@ export class Sheet{
         }
         // reqBody[this.data[this.ending.row][0].text] = {}
         reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
-        if (!this.marchloop){
-            window.requestAnimationFrame(()=>this.table());
-        }
-        this.headers()
-        this.rows()
         let finalbody = JSON.stringify(reqBody);
+        
         fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
             {method:"PATCH",headers:{"Content-Type":"application/json"},body:finalbody}
         )
+        .then(response => {
+            if (response.status == 500){
+                window.alert("To Large Text to Paste")
+            }
+            else{
+                if (!this.marchloop){
+                    window.requestAnimationFrame(()=>this.table());
+                }
+                this.headers()
+                this.rows()
+            }
+
+        })
         .catch(err =>{
             throw err;
         })
@@ -2409,6 +2438,7 @@ export class Sheet{
 
         findBtn.addEventListener("click",(e)=>{
             // this.find(e.target.form.findText.value)
+
             this.findFromDb(e.target.form.findText.value)
             .next()
             .then(response => {
@@ -2555,6 +2585,32 @@ export class Sheet{
         }
         this.headers()
         this.rows()
+    }
+    /**
+     * fetch find api from data
+     */
+    findApi(text,page_no){
+        let arr = []
+        fetch(`/api/Main/Search?sheetId=${this.sheetId}&searchText=${text}&page_no=${page_no}`)
+            .then(response=>{
+                // let find_data = response.json()
+                // console.log(find_data);
+                return response.json();
+            })
+            .then(data=>{
+                data.forEach(d=>{
+                    // console.log(d.index)
+                    let colArr = Object.keys(d.row_Data).filter(x=>new String(d.row_Data[x]).includes(text))
+                    colArr.forEach(c=>{
+                        arr.push([d.row_Index, this.keyList.indexOf(c.toLowerCase())])
+                    })
+                })
+                console.log(arr);
+            })
+            .catch(err=>{
+                console.log(err);
+                throw err;
+            })
     }
     /**
      * Generator for next find 

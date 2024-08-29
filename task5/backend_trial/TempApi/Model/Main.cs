@@ -7,6 +7,14 @@ using Microsoft.EntityFrameworkCore;
 using Status.model;
 
 namespace tempdb.Model{
+
+    public class sheetWithIndex
+    {
+        public int Row_Index {get;set;}
+
+        public MainModel row_Data {get;set;}
+    }
+
     [PrimaryKey(nameof(Sheet_Id),nameof(Row_Id) , nameof(Email_Id))]
 
     public partial class MainModel : MainModelWithoutMapped
@@ -40,6 +48,8 @@ namespace tempdb.Model{
         public string? Country { get; set; }
         public string? State { get; set; }
         public string? City { get; set; }
+
+        [RegularExpression (@"^\d{10}$")]
         public string? Telephone_no { get; set; }
         public string? Address_Line_1 { get; set; }
         public string? Address_Line_2 { get; set; }

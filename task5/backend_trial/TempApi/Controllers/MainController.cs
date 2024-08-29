@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tempdb.Model;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using System.Text.RegularExpressions;
 
 namespace TempApi.Controllers
 {
@@ -49,34 +50,38 @@ namespace TempApi.Controllers
         // }
 
         [HttpGet("Search")]
-        public async Task<ActionResult<List<MainModel>>>Search(string sheetId, string Search , int page_no=0)
+        public async Task<ActionResult<List<sheetWithIndex>>>Search(string sheetId, string searchText , int page_no=0)
         {
-            var size=1000;
-            return await _context.MainModels.Where(x=>x.Sheet_Id == sheetId && x.Name.Contains(Search)
-            || x.Email_Id.Contains(Search)
-            || x.Country.Contains(Search)
-            || x.City.Contains(Search)
-            || x.State.Contains(Search)
-            || x.Telephone_no.Contains(Search)
-            || x.Address_Line_1.Contains(Search)
-            || x.Address_Line_2.Contains(Search)
-            || x.Date_of_Birth.ToString().Contains(Search)
-            || x.FY_2019_20.ToString().Contains(Search)
-            || x.FY_2020_21.ToString().Contains(Search)
-            || x.FY_2021_22.ToString().Contains(Search)
-            || x.FY_2022_23.ToString().Contains(Search)
-            || x.FY_2023_24.ToString().Contains(Search)).Skip(page_no*size).Take(size).ToListAsync();
-            // var query = "select * from mainmodels where Match(*) against (@Search)";
-            // return await _context.MainModels.FromSqlRaw(query,new MySqlParameter("@Search",Search)).ToListAsync();
+            var pageSize = 100;
+            var data = await _context.MainModels.Where(x=>x.Sheet_Id==sheetId).OrderBy(x=>x.Row_Id).Skip(page_no*pageSize).Take(pageSize).ToListAsync();
+            var results = data.Select((x,index)=>new sheetWithIndex{Row_Index=page_no * pageSize + index, row_Data=x}).OrderBy(x => x.row_Data.Row_Id).Where(x=>(x.row_Data.Name != null && x.row_Data.Name.Contains(searchText)) ||
+                x.row_Data.City != null && x.row_Data.City.Contains(searchText) ||
+                x.row_Data.State != null && x.row_Data.State.Contains(searchText) ||
+                x.row_Data.Country != null && x.row_Data.Country.Contains(searchText) ||
+                x.row_Data.Telephone_no != null && x.row_Data.Telephone_no.Contains(searchText) ||
+                x.row_Data.Address_Line_1 != null && x.row_Data.Address_Line_1.Contains(searchText) ||
+                x.row_Data.Address_Line_2 != null && x.row_Data.Address_Line_2.Contains(searchText) ||
+                x.row_Data.Date_of_Birth.ToString() != null && x.row_Data.Date_of_Birth.ToString().Contains(searchText) ||
+                x.row_Data.FY_2019_20.ToString() != null && x.row_Data.FY_2019_20.ToString().Contains(searchText) ||
+                x.row_Data.FY_2020_21.ToString() != null && x.row_Data.FY_2020_21.ToString().Contains(searchText) ||
+                x.row_Data.FY_2021_22.ToString() != null && x.row_Data.FY_2021_22.ToString().Contains(searchText) ||
+                x.row_Data.FY_2022_23.ToString() != null && x.row_Data.FY_2022_23.ToString().Contains(searchText) ||
+                x.row_Data.FY_2023_24.ToString() != null && x.row_Data.FY_2023_24.ToString().Contains(searchText)).ToList();
+                // foreach (var item in results)
+                // {
+                //     Console.WriteLine("{0} : {1}", item.Row_Index, JsonSerializer.Serialize(item.row_Data));
+                // }
+ 
+                return results;
         }
 
         // GET: api/TempItems/5
         [HttpGet("{SheetId}")]
         public async Task<ActionResult<Dictionary<string , object>>> GetSingle(string SheetId,int page_no=0)
         {
-            int takeSize=1000;
+            int takeSize=100;
             var result = new Dictionary<string,object>();
-            result.Add("data", await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).Skip(page_no*takeSize).Take(takeSize).ToListAsync());
+            result.Add("data", await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).OrderBy(x=>x.Row_Id).Skip(page_no*takeSize).Take(takeSize).ToListAsync());
             result.Add("count" , await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).CountAsync());
             return result;
 
@@ -89,7 +94,6 @@ namespace TempApi.Controllers
         }
 
         // PUT: api/TempItems/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /*[HttpPut("{EmailId}")]
         public async Task<IActionResult> PutTemp(string EmailId, MainModel temp)
         {
@@ -120,7 +124,6 @@ namespace TempApi.Controllers
         }*/
 
         // POST: api/TempItems
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("singleRowPost")]
         public async Task<ActionResult<MainModel>> PostSingleRow(MainModel temp)
         {
@@ -196,63 +199,76 @@ namespace TempApi.Controllers
         [HttpPatch("Update")]
         public async Task<ActionResult<MainModel>> UpdateSingleRow([FromBody]Dictionary<string, Dictionary<string,object>> newValues  , string SheetId)
         {
-            foreach (var item in newValues.Keys.ToList())
+            var oldValues = await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && newValues.Keys.Contains(x.Email_Id)).ToDictionaryAsync(x=>x.Email_Id);
+            foreach (var item in oldValues.Keys)
             {
-                var oldValues = await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == item).ToListAsync();
+                // var oldValues = await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == item).ToListAsync();
                 // Console.WriteLine(item);
-                foreach (var item1 in newValues[item].Keys.ToList())
+                foreach (var item1 in newValues[item].Keys)
                 {
                     // Console.WriteLine(item1);
                     switch (item1.ToLower())
                     {
                         case "email_id":
-                            if (newValues[item][item1]!= null){
+                            string Email_pattern =  @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";
+                            bool EmailMatch = Regex.IsMatch(newValues[item][item1].ToString(),Email_pattern);
+                            if (newValues[item][item1]!= null && EmailMatch){
                                 // oldValues[0].Email_Id = newValues[item][item1].ToString();
-                                var Email = oldValues[0];
+                                var Email = oldValues[item];
                                 _context.Remove(Email);
                                 await _context.SaveChangesAsync();
                                 Email.Email_Id = newValues[item][item1].ToString();
                                 _context.Add(Email);
                             }
+                            else{
+                                return BadRequest();
+                            }
                             break;
                         case "name":
-                        oldValues[0].Name = newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        oldValues[item].Name = newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
                         case "country":
-                        oldValues[0].Country =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        oldValues[item].Country =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
                         case "state":
-                        oldValues[0].State =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        oldValues[item].State =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
                         case "city":
-                        oldValues[0].City =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        oldValues[item].City =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
                         case "telephone_no":
-                        oldValues[0].Telephone_no =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        string pattern = @"^\d{10}$";  // Pattern to match exactly 10 digits
+                            bool isMatch = Regex.IsMatch(oldValues[item].Telephone_no = newValues[item][item1]?.ToString(), pattern);
+                            if(isMatch){
+                                oldValues[item].Telephone_no =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                            }
+                            else{
+                                return BadRequest("Telephone number invalid");
+                            }
                         break;
                         case "address_line_1":
-                        oldValues[0].Address_Line_1 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        oldValues[item].Address_Line_1 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
                         case "address_line_2":
-                        oldValues[0].Address_Line_2 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
+                        oldValues[item].Address_Line_2 =  newValues[item][item1] != null ?  newValues[item][item1].ToString() : null;
                         break;
                         case "date_of_birth":
-                        oldValues[0].Date_of_Birth = newValues[item][item1] != null ? Convert.ToDateTime(newValues[item][item1].ToString()) : null;
+                        oldValues[item].Date_of_Birth = newValues[item][item1] != null ? Convert.ToDateTime(newValues[item][item1].ToString()) : null;
                         break;
                         case "fy_2019_20":
-                        oldValues[0].FY_2019_20 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
+                        oldValues[item].FY_2019_20 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
                         case "fy_2020_21":
-                        oldValues[0].FY_2020_21 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
+                        oldValues[item].FY_2020_21 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
                         case "fy_2021_22":
-                        oldValues[0].FY_2021_22 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
+                        oldValues[item].FY_2021_22 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
                         case "fy_2022_23":
-                        oldValues[0].FY_2022_23 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
+                        oldValues[item].FY_2022_23 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
                         case "fy_2023_24":
-                        oldValues[0].FY_2023_24 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
+                        oldValues[item].FY_2023_24 = newValues[item][item1] != null ? Convert.ToSingle(newValues[item][item1].ToString()) : null;
                         break;
                         
                         // default:
