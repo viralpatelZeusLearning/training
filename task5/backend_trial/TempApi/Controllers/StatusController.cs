@@ -25,7 +25,7 @@ namespace TempApi.Controllers
         [HttpGet("{SheetId}")]
         public async Task<ActionResult<double>>Status(string SheetId)
         {
-            var file =  _context.Status.Where(x=> x.fileId == SheetId).FirstOrDefault();
+            var file = _context.Status.Where(x=> x.fileId == SheetId).FirstOrDefault();
             if (file!=null){
 
                 return file.percentage;  

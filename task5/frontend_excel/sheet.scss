@@ -93,6 +93,40 @@ body{
     }
     // flex-direction: column;
 }
+.statusDiv{
+    z-index: 30;
+    visibility: hidden;
+    position: absolute;
+    background-color: #f5f5f5;
+    top: 7%;
+    left:60%;
+}
+.SearchFileDiv{
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    height: max-content;
+    position: absolute;
+    left: 45%;
+    top: 10%;
+    z-index: 3;
+    background-color: rgb(112, 111, 111);
+    color: #f5f5f5;
+    .File-Name{
+        display: flex;
+        gap: 1em;
+        justify-content: inline;
+        .Icon{
+            background-image:url('./assets/xlsx.svg');
+            height: 20px;
+            width: 20px;
+        }
+        .Icon , .Name {
+            align-items: center;
+            justify-content: center;
+        }
+    }
+}
 .containerDiv{
     position:relative;
     display: grid;

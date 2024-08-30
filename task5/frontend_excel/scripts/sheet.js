@@ -104,7 +104,7 @@ export class Sheet{
         this.data = {}
         this.sheetId = SheetId
         this.pageNumber = 0
-        this.PageSize = 100
+        this.PageSize = 1000
         this.keyList = ["email_id","name","country","state","city","telephone_no","address_line_1","address_line_2","date_of_birth","fy_2019_20","fy_2020_21","fy_2021_22","fy_2022_23","fy_2023_24"]
         // let rowslimit = Object.keys(this.data)
         // this.rowsize = Array(Math.max(rowslimit[rowslimit.length-1],2e5)+1).fill(30)
@@ -2093,6 +2093,7 @@ export class Sheet{
         // this.ending.row = 0
         // this.ending.col =0
         let copiedText = await navigator.clipboard.readText()
+        let oldData = JSON.stringify(this.data);
         let rows_Count = copiedText.slice(copiedText.lastIndexOf("\n")+1)
         copiedText = copiedText.slice(0,copiedText.lastIndexOf("\n"))
         console.log(Number(rows_Count));
@@ -2110,8 +2111,12 @@ export class Sheet{
                 await this.loadData(this.sheetId,this.pageNumber + i)
             }
         }
-
-        reqBody[this.data[this.ending.row][0]['text']] = {}
+        if (this.data[this.ending.row]?.[0]?.['text']){
+            reqBody[this.data[this.ending.row][0]['text']] = {}
+        }
+        else{
+            window.alert("Enter the Email id and then try to Paste")
+        }
         for (let i=0;i<copiedText.length;i++){
             // debugger
             // console.log(i, copiedText[i]);
@@ -2124,13 +2129,15 @@ export class Sheet{
                         this.data[this.ending.row][this.ending.col] = {text:t};
                     }
                 }
-                else{
-                    this.data[this.ending.row]={};
-                    this.data[this.ending.row][this.ending.col]={}
-                    this.data[this.ending.row][this.ending.col]['text'] = t;
-                }
+                // else{
+                //     this.data[this.ending.row]={};
+                //     this.data[this.ending.row][this.ending.col]={}
+                //     this.data[this.ending.row][this.ending.col]['text'] = t;
+                // }
                 console.log(this.keyList[this.ending.col], t);
-                reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
+                if (this.data[this.ending.row]?.[0]?.['text']){
+                    reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
+                }
                 // reqBody[this.data[this.ending.row][this.keyList[this.ending.col]]['text']] = {}
                 t =""
                 this.ending.col +=1
@@ -2144,16 +2151,20 @@ export class Sheet{
                         this.data[this.ending.row][this.ending.col] = {text:t};
                     }
                 }
-                else{
-                    this.data[this.ending.row]={};
-                    this.data[this.ending.row][this.ending.col]={}
-                    this.data[this.ending.row][this.ending.col]['text'] = t;
+                // else{
+                //     this.data[this.ending.row]={};
+                //     this.data[this.ending.row][this.ending.col]={}
+                //     this.data[this.ending.row][this.ending.col]['text'] = t;
+                // }
+                if (this.data[this.ending.row]?.[0]?.['text']){
+                    reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
                 }
-                reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
                 t =""
                 this.ending.col = count
                 this.ending.row+=1
-                reqBody[this.data[this.ending.row][0].text] = {}
+                if (this.data[this.ending.row]?.[0]?.text){
+                    reqBody[this.data[this.ending.row][0].text] = {}
+                }
             }
             else{
                 // console.log(selectedCell);
@@ -2169,34 +2180,38 @@ export class Sheet{
                 this.data[this.ending.row][this.ending.col] = {text:t};
             }
         }
-        else{
-            this.data[this.ending.row]={};
-            this.data[this.ending.row][this.ending.col]={}
-            this.data[this.ending.row][this.ending.col]['text'] = t;
-        }
+        // else{
+        //     this.data[this.ending.row]={};
+        //     this.data[this.ending.row][this.ending.col]={}
+        //     this.data[this.ending.row][this.ending.col]['text'] = t;
+        // }
         // reqBody[this.data[this.ending.row][0].text] = {}
-        reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
+        if (this.data[this.ending.row]?.[0]?.['text']){
+            reqBody[this.data[this.ending.row][0]['text']][this.keyList[this.ending.col]] = t
+        }
         let finalbody = JSON.stringify(reqBody);
-        
-        fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
-            {method:"PATCH",headers:{"Content-Type":"application/json"},body:finalbody}
-        )
-        .then(response => {
-            if (response.status == 500){
-                window.alert("To Large Text to Paste")
-            }
-            else{
-                if (!this.marchloop){
-                    window.requestAnimationFrame(()=>this.table());
+        if (finalbody.length>2){
+            fetch(`/api/Main/Update?SheetId=${this.sheetId}`,
+                {method:"PATCH",headers:{"Content-Type":"application/json"},body:finalbody}
+            )
+            .then(response => {
+                if (response.status >=400){
+                    this.data = JSON.parse(oldData)
+                    window.alert("Enter valid Values")
                 }
-                this.headers()
-                this.rows()
-            }
-
-        })
-        .catch(err =>{
-            throw err;
-        })
+                else{
+                    if (!this.marchloop){
+                        window.requestAnimationFrame(()=>this.table());
+                    }
+                    this.headers()
+                    this.rows()
+                }
+    
+            })
+            .catch(err =>{
+                throw err;
+            })
+        }
     }
     
     //calculations aggregate functions
@@ -2572,7 +2587,7 @@ export class Sheet{
         }
         this.ending.rowstart=0
         this.starting.rowstart=0
-        console.log(this.rowsize[16]);
+        // console.log(this.rowsize[16]);
         for(let i=0;i<this.ending.row;i++){
             this.starting.rowstart+=this.rowsize[i]
             this.ending.rowstart+=this.rowsize[i]
@@ -2589,28 +2604,25 @@ export class Sheet{
     /**
      * fetch find api from data
      */
-    findApi(text,page_no){
+    async findApi(text,page_no){
         let arr = []
-        fetch(`/api/Main/Search?sheetId=${this.sheetId}&searchText=${text}&page_no=${page_no}`)
-            .then(response=>{
-                // let find_data = response.json()
-                // console.log(find_data);
-                return response.json();
-            })
-            .then(data=>{
-                data.forEach(d=>{
-                    // console.log(d.index)
-                    let colArr = Object.keys(d.row_Data).filter(x=>new String(d.row_Data[x]).includes(text))
-                    colArr.forEach(c=>{
-                        arr.push([d.row_Index, this.keyList.indexOf(c.toLowerCase())])
-                    })
+        let data = await fetch(`/api/Main/Search?sheetId=${this.sheetId}&searchText=${text}&page_no=${page_no}`)
+        data = await data.json();
+            data.forEach(d=>{
+                let colArr = Object.keys(d.row_Data).filter(x=>new String(d.row_Data[x]).includes(text))
+                colArr.forEach(c=>{
+                    arr.push([d.row_Index, this.keyList.indexOf(c.toLowerCase())])
                 })
-                console.log(arr);
+                // console.log(d.index)
             })
-            .catch(err=>{
-                console.log(err);
-                throw err;
-            })
+            // .then(data=>{
+            //     console.log(arr);
+            // })
+            // .catch(err=>{
+            //     console.log(err);
+            //     throw err;
+            // })
+        return arr;
     }
     /**
      * Generator for next find 
@@ -2625,9 +2637,10 @@ export class Sheet{
             this.prevtext = text;
             // this.searchObject.currentPage=0;
             if(!this.data[0]){
-                let pageData = await this.FetchDatafromDb(this.sheetId, 0);
-                console.log(pageData);
-                let newArr = this.find(text, pageData)
+                // let pageData = await this.FetchDatafromDb(this.sheetId, 0);
+                // console.log(pageData);
+                // let newArr = this.find(text, pageData)
+                let newArr = await this.findApi(text,0);
                 // this.find(text, pageData)
                 // console.log(pageArr);
                 this.config.findarr = newArr;
@@ -2669,19 +2682,25 @@ export class Sheet{
             else{
                 // need to fetch another page
                 console.log("need to fetch next page data") 
+                var stop = false
                 do {
                     this.pageNumber+=1;
                     console.log(this.pageNumber);
-                    let pageData = await this.FetchDatafromDb(this.sheetId, this.pageNumber);
-                    let currRow = this.pageNumber*this.PageSize;
-                    let newPageData = {};
-                    Object.keys(pageData).forEach((element,index) => {
-                        newPageData[currRow+index] = pageData[element]
-                    });
-                    console.log(newPageData);
-                    // this.config.countFind = 0
-                    var newArr = this.find(text, newPageData)
-                }while(newArr.length == 0);
+                    var newArr = await this.findApi(text,this.pageNumber);
+                    if (this.pageNumber*this.PageSize >= this.rowsize.length){
+                        stop = true;
+                        break;
+                    }
+                    // let pageData = await this.FetchDatafromDb(this.sheetId, this.pageNumber);
+                    // let currRow = this.pageNumber*this.PageSize;
+                    // let newPageData = {};
+                    // Object.keys(pageData).forEach((element,index) => {
+                    //     newPageData[currRow+index] = pageData[element]
+                    // });
+                    // console.log(newPageData);
+                    // // this.config.countFind = 0
+                    // var newArr = this.find(text, newPageData)
+                }while(newArr.length == 0 && !stop);
                 this.config.findarr = this.config.findarr.concat(newArr);
                 // this.config.countFind = this.config.findarr.length-1
                 if(this.config.countFind < this.config.findarr.length){

@@ -88,12 +88,14 @@ consumer.Received += async (model, ea) =>
             //     // }
             }*/
             
+            var insert1 = new Insertmysql();
             for (int i=0;i<records.Count;i+=MaxCount){
-                var insert1 = new Insertmysql();
                 var smallList = records.Skip(i).Take(MaxCount).ToList();
-                TaskList.Add(insert1.InsertBulk(smallList,Path.GetFileName(message),percent,i));
+                // TaskList.Add(insert1.InsertBulk(smallList,Path.GetFileName(message),percent,i));
+                await insert1.InsertBulk(smallList,Path.GetFileName(message),percent,i);
             }
-            await Task.WhenAll(TaskList);
+            await insert1.CloseAsync();
+            // await Task.WhenAll(TaskList);
             /*if (currCount!=0){
                 // var insert1 = new Insertmysql();
                 await insert1.InsertBulk(newList,message);

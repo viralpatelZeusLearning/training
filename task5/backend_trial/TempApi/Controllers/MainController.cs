@@ -52,7 +52,7 @@ namespace TempApi.Controllers
         [HttpGet("Search")]
         public async Task<ActionResult<List<sheetWithIndex>>>Search(string sheetId, string searchText , int page_no=0)
         {
-            var pageSize = 100;
+            var pageSize = 1000;
             var data = await _context.MainModels.Where(x=>x.Sheet_Id==sheetId).OrderBy(x=>x.Row_Id).Skip(page_no*pageSize).Take(pageSize).ToListAsync();
             var results = data.Select((x,index)=>new sheetWithIndex{Row_Index=page_no * pageSize + index, row_Data=x}).OrderBy(x => x.row_Data.Row_Id).Where(x=>(x.row_Data.Name != null && x.row_Data.Name.Contains(searchText)) ||
                 x.row_Data.City != null && x.row_Data.City.Contains(searchText) ||
@@ -79,7 +79,16 @@ namespace TempApi.Controllers
         [HttpGet("{SheetId}")]
         public async Task<ActionResult<Dictionary<string , object>>> GetSingle(string SheetId,int page_no=0)
         {
-            int takeSize=100;
+            if (string.IsNullOrWhiteSpace(SheetId))
+            {
+                return BadRequest("SheetId cannot be null or empty.");
+            }
+
+            if (page_no < 0)
+            {
+                return BadRequest("Page number cannot be negative.");
+            }
+            int takeSize=1000;
             var result = new Dictionary<string,object>();
             result.Add("data", await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).OrderBy(x=>x.Row_Id).Skip(page_no*takeSize).Take(takeSize).ToListAsync());
             result.Add("count" , await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).CountAsync());
@@ -93,6 +102,11 @@ namespace TempApi.Controllers
             // return temp;
         }
 
+        [HttpGet("SheetsList")]
+        public async Task<ActionResult<List<string>>>GetFileList()
+        {
+            return await _context.Status.Select(x=>x.fileId).ToListAsync();
+        }
         // PUT: api/TempItems/5
         /*[HttpPut("{EmailId}")]
         public async Task<IActionResult> PutTemp(string EmailId, MainModel temp)
@@ -125,8 +139,14 @@ namespace TempApi.Controllers
 
         // POST: api/TempItems
         [HttpPost("singleRowPost")]
-        public async Task<ActionResult<MainModel>> PostSingleRow(MainModel temp)
+        public async Task<ActionResult<MainModel>> PostSingleRow(MainModel? temp)
         {
+            if (temp == null){
+                return BadRequest("Body cannot be null");
+            }
+            // if (!ModelState.IsValid){
+            //     return BadRequest("wrong type of data");
+            // }
             _context.MainModels.Add(temp);  
             await _context.SaveChangesAsync();
 
@@ -152,11 +172,6 @@ namespace TempApi.Controllers
                 {
                     await file.CopyToAsync(stream);
                 }
-                // var x =  {Id=3,Email="A@gmail.com"};
-                // const string message = JsonSerializer.Serialize(x);
-
-                // string message = JsonSerializer.Serialize(new {Id=6,Email="manav@gmail.com"});
-                // var body = Encoding.UTF8.GetBytes(message);
                 var body = Encoding.UTF8.GetBytes(filePath);
 
                 _channel.BasicPublish(exchange: string.Empty,
@@ -175,24 +190,12 @@ namespace TempApi.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteTemp([FromBody]List<string> EmailId, string SheetId)
         {
+            if (EmailId == null || SheetId == null){
+                return BadRequest("Enter valid Data");
+            }
             // int firstDeleteIndex = (await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == EmailId[0]).ToListAsync())[0].Row_Id;
             await _context.MainModels.Where(x=>x.Sheet_Id==SheetId && EmailId.Contains(x.Email_Id)).ExecuteDeleteAsync();
-            // await _context.Database.ExecuteSqlAsync($"call deleteMultiple({firstDeleteIndex} , {EmailId.Count});");
-            // await _context.MainModels.Where(x=>x.Row_Id == firstDeleteIndex).ExecuteUpdateAsync()
-            // EmailId.ForEach(async e=>{
-            //     await _context.MainModels.Where(x=>x.Sheet_Id == SheetId && x.Email_Id == e).ExecuteDeleteAsync();
-            // });
             return NoContent();
-            // var temp = await _context.MainModels.FindAsync(EmailId);
-            // if (temp == null)
-            // {
-            //     return NotFound();
-            // }
-
-            // _context.MainModels.Remove(temp);
-            // await _context.SaveChangesAsync();
-
-            // return NoContent();
         }
 
         //patch for update

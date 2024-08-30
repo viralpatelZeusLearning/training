@@ -12,7 +12,7 @@ namespace tempdb.Model{
     {
         public int Row_Index {get;set;}
 
-        public MainModel row_Data {get;set;}
+        public required MainModel row_Data {get;set;}
     }
 
     [PrimaryKey(nameof(Sheet_Id),nameof(Row_Id) , nameof(Email_Id))]
@@ -42,7 +42,7 @@ namespace tempdb.Model{
     public partial class MainModelWithoutMapped
     {
         [RegularExpression (@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")]
-        public string Email_Id { get; set; }
+        public required string Email_Id { get; set; }
 
         public string? Name { get; set; }
         public string? Country { get; set; }

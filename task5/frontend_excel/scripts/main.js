@@ -30,6 +30,14 @@ export class Main{
         this.sheetchange = document.createElement("div");
         this.sheetchange.classList.add("change_sheet");
         this.sheetchange.style.display="none"
+        this.SearchFileDiv = document.createElement("div");
+        this.SearchFileDiv.classList.add("SearchFileDiv");
+        this.SearchFileDiv.style.display="none"
+        this.status = document.createElement("div")
+        this.status.classList.add("MainSAtatusDiv");
+        this.statusDiv = document.createElement("progress")
+        this.statusDiv.classList.add("statusDiv")
+        this.sheetcontainer.appendChild(this.status);
         // let newbtn = document.createElement("button")
         // newbtn.textContent="+"
         // newbtn.addEventListener("click",()=>this.newSheet())
@@ -305,6 +313,42 @@ export class Main{
         return this.textOptions
     }
     /**
+     * div creation for searching file
+     */
+    async SearchFileBox(){
+        this.SearchFileDiv.innerHTML = ""
+        let response = await fetch(`/api/Main/SheetsList`)
+        let data = await response.json()
+        this.sheetcontainer.appendChild(this.SearchFileDiv)
+        for(let i=0;i<data.length;i++){
+            let File_name = document.createElement("div")
+            File_name.classList.add("File-Name");
+            this.SearchFileDiv.appendChild(File_name)
+            let Icon = document.createElement("span");
+            Icon.classList.add("Icon")
+            let Name = document.createElement("span");
+            Name.classList.add("Name");
+            Name.textContent = data[i];
+            File_name.appendChild(Icon)
+            File_name.appendChild(Name)
+            File_name.addEventListener("click",async()=>{
+                let clicked_val = data[i]
+                let response = await fetch(`/api/Status/findSheet?SheetId=${clicked_val}`)
+                console.log(response);
+                if (response.status == 200){
+                    this.newSheet(clicked_val);
+                    this.sheetchange.style.display="flex"
+                    this.SearchFileDiv.style.display = "none"
+                }
+                else{
+                    this.SearchFileDiv.style.display = "none"
+                    window.alert("Sheet Does not Exist")
+                }
+            })
+        }
+        // data = []
+    }
+    /**
      * To create a div for file upload option
      * @returns {HTMLElement} - upload file option
      */
@@ -322,22 +366,29 @@ export class Main{
         let search = document.createElement("button")
         search.classList.add("search_file")
         search.textContent="Search File"
-        search.addEventListener("click",()=>{
-            let searchPrompt = prompt("please Enter the File Name","fileName");
-            if (searchPrompt != null){
-                fetch(`/api/Status/findSheet?SheetId=${searchPrompt}`)
-                .then(response =>response.text())
-                .then(response => {
-                    console.log(response);
-                    if (response == "true"){
-                        this.newSheet(searchPrompt);
-                        this.sheetchange.style.display="flex"
-                    }
-                    else{
-                        window.alert("Sheet Does not Exist")
-                    }
-                })
+        search.addEventListener("click",async()=>{
+            if (this.SearchFileDiv.style.display == "none"){
+                this.SearchFileDiv.style.display = "flex"
+                this.SearchFileBox()
             }
+            else{
+                this.SearchFileDiv.style.display = "none"
+            }
+            // let searchPrompt = prompt("please Enter the File Name","fileName");
+            // if (searchPrompt != null){
+            //     fetch(`/api/Status/findSheet?SheetId=${searchPrompt}`)
+            //     .then(response =>response.text())
+            //     .then(response => {
+            //         console.log(response);
+            //         if (response == "true"){
+            //             this.newSheet(searchPrompt);
+            //             this.sheetchange.style.display="flex"
+            //         }
+            //         else{
+            //             window.alert("Sheet Does not Exist")
+            //         }
+            //     })
+            // }
         })
 
         let upload = document.createElement("button")
@@ -374,11 +425,18 @@ export class Main{
                                     }
                                 })
                                 .then(data=>{
+                                    this.status.appendChild(this.statusDiv)
+                                    this.statusDiv.style.display = "flex"
+                                    this.statusDiv.style.visibility="visible"
                                     console.log(data)
+                                    this.statusDiv.value = data;
+                                    this.statusDiv.max=1;
                                     if (data>=1){
                                         clearInterval(Pooling);
                                         this.newSheet(response)
                                         this.sheetchange.style.display="flex";
+                                        // this.statusDiv.style.display = "none";
+                                        this.statusDiv.style.visibility="hidden";
                                     }
                                 })
                                 .catch(err=>{

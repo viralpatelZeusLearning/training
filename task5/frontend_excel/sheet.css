@@ -87,6 +87,43 @@ body {
   border-bottom: 2px solid #107c41;
 }
 
+.statusDiv {
+  z-index: 30;
+  visibility: hidden;
+  position: absolute;
+  background-color: #f5f5f5;
+  top: 7%;
+  left: 60%;
+}
+
+.SearchFileDiv {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  height: -moz-max-content;
+  height: max-content;
+  position: absolute;
+  left: 45%;
+  top: 10%;
+  z-index: 3;
+  background-color: rgb(112, 111, 111);
+  color: #f5f5f5;
+}
+.SearchFileDiv .File-Name {
+  display: flex;
+  gap: 1em;
+  justify-content: inline;
+}
+.SearchFileDiv .File-Name .Icon {
+  background-image: url("./assets/xlsx.svg");
+  height: 20px;
+  width: 20px;
+}
+.SearchFileDiv .File-Name .Icon, .SearchFileDiv .File-Name .Name {
+  align-items: center;
+  justify-content: center;
+}
+
 .containerDiv {
   position: relative;
   display: grid;

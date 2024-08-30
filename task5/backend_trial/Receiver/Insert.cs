@@ -74,7 +74,7 @@ public class Insertmysql {
             // Console.WriteLine(query);
             cmd = new MySqlCommand(query,conn);
             await cmd.ExecuteNonQueryAsync();
-            await conn.CloseAsync();
+            // await conn.CloseAsync();
         }
         // try{
         //     await cmd.ExecuteNonQueryAsync();
@@ -103,6 +103,9 @@ public class Insertmysql {
         //         cmd.Parameters.AddWithValue("@FY_2023_24",item.FY_2023_24);
         //         cmd.ExecuteNonQuery();
          }*/
+    }
+    public async Task CloseAsync(){
+            await conn.CloseAsync();
     }
     
     public static void Main(string[] args){
