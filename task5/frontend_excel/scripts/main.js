@@ -34,9 +34,7 @@ export class Main{
         this.SearchFileDiv.classList.add("SearchFileDiv");
         this.SearchFileDiv.style.display="none"
         this.status = document.createElement("div")
-        this.status.classList.add("MainSAtatusDiv");
-        this.statusDiv = document.createElement("progress")
-        this.statusDiv.classList.add("statusDiv")
+        this.status.classList.add("MainStatusDiv");
         this.sheetcontainer.appendChild(this.status);
         // let newbtn = document.createElement("button")
         // newbtn.textContent="+"
@@ -50,7 +48,7 @@ export class Main{
         let next = document.createElement("button")
         next.textContent="Next File"
         next.addEventListener("click",()=>this.nextSheet())
-
+        
         let calc = document.createElement("button")
         calc.textContent="Calculate"
         let maths = this.calcaggregate()
@@ -414,6 +412,13 @@ export class Main{
                         }
                         })
                         .then(response=> {
+                            let statusDiv = document.createElement("progress")
+                            statusDiv.classList.add("statusDiv")
+                            let UploadName = document.createElement("span")
+                            UploadName.classList.add("UploadName")
+                            this.status.appendChild(statusDiv)
+                            UploadName.textContent=response;
+                            this.status.appendChild(UploadName)
                             let Pooling = setInterval(()=>{
                                 fetch(`/api/Status/${response}`)
                                 .then(response=>{
@@ -425,18 +430,21 @@ export class Main{
                                     }
                                 })
                                 .then(data=>{
-                                    this.status.appendChild(this.statusDiv)
-                                    this.statusDiv.style.display = "flex"
-                                    this.statusDiv.style.visibility="visible"
+                                    statusDiv.style.display = "flex"
+                                    statusDiv.style.visibility="visible"
+                                    UploadName.style.display="flex"
                                     console.log(data)
-                                    this.statusDiv.value = data;
-                                    this.statusDiv.max=1;
+                                    statusDiv.value = data;
+                                    statusDiv.max=1;
                                     if (data>=1){
                                         clearInterval(Pooling);
                                         this.newSheet(response)
                                         this.sheetchange.style.display="flex";
-                                        // this.statusDiv.style.display = "none";
-                                        this.statusDiv.style.visibility="hidden";
+                                        //statusDiv.style.display = "none";
+                                        UploadName.style.display="none"
+                                        statusDiv.style.visibility="hidden";
+                                        statusDiv.remove()
+                                        UploadName.remove()
                                     }
                                 })
                                 .catch(err=>{

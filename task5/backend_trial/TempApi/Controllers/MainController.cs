@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using tempdb.Model;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.Text.RegularExpressions;
+using MongoDB.Driver;
+using MongoStatus.model;
 
 namespace TempApi.Controllers
 {
@@ -15,13 +17,17 @@ namespace TempApi.Controllers
     public class MainController : ControllerBase
     {
         private readonly TempContext _context;
+
+        private readonly IMongoCollection<MongoStatusClass> _StatusCollection;
         private readonly IModel _channel;
         
         private string[] permittedExtensions = {".csv",".xlsx"};
 
-        public MainController(TempContext context)
+        public MainController(TempContext context, IMongoClient mongoClient)
         {
             _context = context;
+            var dbName = mongoClient.GetDatabase("status");
+            _StatusCollection = dbName.GetCollection<MongoStatusClass>("fileStatus");
             var factory = new ConnectionFactory { HostName = "localhost" };
             var connection = factory.CreateConnection();
             _channel = connection.CreateModel();
@@ -67,10 +73,6 @@ namespace TempApi.Controllers
                 x.row_Data.FY_2021_22.ToString() != null && x.row_Data.FY_2021_22.ToString().Contains(searchText) ||
                 x.row_Data.FY_2022_23.ToString() != null && x.row_Data.FY_2022_23.ToString().Contains(searchText) ||
                 x.row_Data.FY_2023_24.ToString() != null && x.row_Data.FY_2023_24.ToString().Contains(searchText)).ToList();
-                // foreach (var item in results)
-                // {
-                //     Console.WriteLine("{0} : {1}", item.Row_Index, JsonSerializer.Serialize(item.row_Data));
-                // }
  
                 return results;
         }
@@ -167,6 +169,11 @@ namespace TempApi.Controllers
                 var filePath = Path.Combine("../allFiles", Path.GetRandomFileName()+".csv");
                 _context.Status.Add(new Status.model.StatusClass {fileId=Path.GetFileName(filePath)});
                 await _context.SaveChangesAsync();
+
+                //mongo insert
+                await _StatusCollection.InsertOneAsync(new MongoStatusClass{fileId=Path.GetFileName(filePath)});
+
+
                 Console.WriteLine(filePath);
                 using (var stream = System.IO.File.Create(filePath))
                 {

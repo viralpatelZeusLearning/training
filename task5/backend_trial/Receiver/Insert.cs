@@ -1,6 +1,8 @@
 using tempdb.Model;
 using System.Text;
 using MySql.Data.MySqlClient;
+using MongoDB.Driver;
+using MongoStatus.model;
 
 
 namespace Sqltrial;
@@ -8,12 +10,18 @@ namespace Sqltrial;
 public class Insertmysql {
 
     public readonly MySqlConnection conn;
+    public readonly IMongoCollection<MongoStatusClass> _StatusCollection;
     public  Insertmysql()
     {
         string myconnection = "server=localhost;user=root;password=root;database=temp";
         conn = new MySql.Data.MySqlClient.MySqlConnection();
         conn.ConnectionString = myconnection;
         conn.Open();
+
+        var mongoClient = new MongoClient("mongodb://localhost:27017");
+        var dbName = mongoClient.GetDatabase("status");
+        _StatusCollection = dbName.GetCollection<MongoStatusClass>(
+            "fileStatus");
     }
     public void getdata()
     {
@@ -71,10 +79,14 @@ public class Insertmysql {
             MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
             await cmd.ExecuteNonQueryAsync();
             string query = $"Update status set percentage=percentage+{percent} where fileId='{MySqlHelper.EscapeString(sheetName)}'";
-            // Console.WriteLine(query);
             cmd = new MySqlCommand(query,conn);
             await cmd.ExecuteNonQueryAsync();
             // await conn.CloseAsync();
+
+            var filter = Builders<MongoStatusClass>.Filter.Eq(item => item.fileId, sheetName);
+            var update = Builders<MongoStatusClass>.Update.Inc(item => item.percentage, percent);
+            await _StatusCollection.UpdateOneAsync(filter,update);
+            // Console.WriteLine("updating");
         }
         // try{
         //     await cmd.ExecuteNonQueryAsync();
