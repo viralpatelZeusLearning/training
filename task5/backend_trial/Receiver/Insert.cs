@@ -3,6 +3,8 @@ using System.Text;
 using MySql.Data.MySqlClient;
 using MongoDB.Driver;
 using MongoStatus.model;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
+using Mysqlx;
 
 
 namespace Sqltrial;
@@ -11,6 +13,8 @@ public class Insertmysql {
 
     public readonly MySqlConnection conn;
     public readonly IMongoCollection<MongoStatusClass> _StatusCollection;
+
+    public MySqlTransaction myTrans;
     public  Insertmysql()
     {
         string myconnection = "server=localhost;user=root;password=root;database=temp";
@@ -22,6 +26,8 @@ public class Insertmysql {
         var dbName = mongoClient.GetDatabase("status");
         _StatusCollection = dbName.GetCollection<MongoStatusClass>(
             "fileStatus");
+
+        myTrans = conn.BeginTransaction();
     }
     public void getdata()
     {
@@ -77,23 +83,37 @@ public class Insertmysql {
             string Bulkinsert = Bulkinsert1+Bulkinsert2+Bulkinsert3;
             // Console.WriteLine(Bulkinsert);
             MySqlCommand cmd = new MySqlCommand(Bulkinsert,conn);
+            cmd.Transaction = myTrans;
             await cmd.ExecuteNonQueryAsync();
             string query = $"Update status set percentage=percentage+{percent} where fileId='{MySqlHelper.EscapeString(sheetName)}'";
             cmd = new MySqlCommand(query,conn);
-            await cmd.ExecuteNonQueryAsync();
+            try
+            {
+                // if (startIndex>12000){
+                //     throw new Exception("created error");
+                // }
+                await cmd.ExecuteNonQueryAsync(); 
+                //mongo percent update
+                var filter = Builders<MongoStatusClass>.Filter.Eq(item => item.fileId, sheetName);
+                var update = Builders<MongoStatusClass>.Update.Inc(item => item.percentage, percent);
+                await _StatusCollection.UpdateOneAsync(filter,update);
+            }
+            catch (Exception)
+            {
+                //mongo percent
+                await _StatusCollection.DeleteOneAsync(x=>x.fileId == sheetName);
+                await myTrans.RollbackAsync();
+
+                //sql deletion 
+                string searchdelete = $"Delete from status where fileId='{MySqlHelper.EscapeString(sheetName)}'";
+                cmd = new MySqlCommand(searchdelete,conn);
+                await cmd.ExecuteNonQueryAsync();
+                throw;
+
+            }
             // await conn.CloseAsync();
 
-            var filter = Builders<MongoStatusClass>.Filter.Eq(item => item.fileId, sheetName);
-            var update = Builders<MongoStatusClass>.Update.Inc(item => item.percentage, percent);
-            await _StatusCollection.UpdateOneAsync(filter,update);
-            // Console.WriteLine("updating");
         }
-        // try{
-        //     await cmd.ExecuteNonQueryAsync();
-        // }
-        // catch(Exception e){
-        //     Console.WriteLine("Exception");
-        // }
 
         /* foreach (var item in DataList)
         // {
@@ -117,7 +137,8 @@ public class Insertmysql {
          }*/
     }
     public async Task CloseAsync(){
-            await conn.CloseAsync();
+        await myTrans.CommitAsync();
+        await conn.CloseAsync();
     }
     
     public static void Main(string[] args){

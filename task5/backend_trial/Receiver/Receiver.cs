@@ -35,23 +35,14 @@ consumer.Received += async (model, ea) =>
         };
         Stopwatch sw = new Stopwatch();
         sw.Start();
+        var insert1 = new Insertmysql();
         using (var reader = new StreamReader(message))
         using (var csv = new CsvReader(reader, config))
         {
             // var records = csv.GetRecords<Temp>();
             var records = csv.GetRecords<MainModelWithoutMapped>().DistinctBy(x=>x.Email_Id).ToList();
-            // var uniqueval = records.DistinctBy(x=>x.Email_Id).ToHashSet();
-            // foreach (var item in uniqueval)
-            // {
-            //     Console.WriteLine(item.Name);
-            // }
-            // var records = await csv.GetRecordsAsync<MainModelWithoutMapped>().ToListAsync();
-            // Console.WriteLine("Entered",csv);
-            // var currCount = 0;
             var MaxCount = 1000;
             var TaskList = new List<Task>();
-            // var count = 0;   
-            // List<Temp> newList = new();
             List<MainModelWithoutMapped> newList =  new();
             var percent  = (Double)MaxCount/Math.Max((Double)records.Count,(Double)MaxCount);
             /* foreach (var item in records)
@@ -88,13 +79,13 @@ consumer.Received += async (model, ea) =>
             //     // }
             }*/
             
-            var insert1 = new Insertmysql();
+            
             for (int i=0;i<records.Count;i+=MaxCount){
                 var smallList = records.Skip(i).Take(MaxCount).ToList();
                 // TaskList.Add(insert1.InsertBulk(smallList,Path.GetFileName(message),percent,i));
                 await insert1.InsertBulk(smallList,Path.GetFileName(message),percent,i);
             }
-            await insert1.CloseAsync();
+            
             // await Task.WhenAll(TaskList);
             /*if (currCount!=0){
                 // var insert1 = new Insertmysql();
@@ -103,13 +94,10 @@ consumer.Received += async (model, ea) =>
             }*/
         }
         File.Delete(message);
+        await insert1.CloseAsync();
         sw.Stop();
         Console.WriteLine(sw.Elapsed);
     }
-    // Console.WriteLine($"Received {message}");
-
-    // var msg=JsonSerializer.Deserialize<Temp>(message);
-    // TempOps.CreateRow(msg);
     Console.WriteLine($" Received {message}");
 };
 channel.BasicConsume(queue: "Test",

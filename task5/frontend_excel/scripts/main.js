@@ -420,12 +420,20 @@ export class Main{
                             UploadName.textContent=response;
                             this.status.appendChild(UploadName)
                             let Pooling = setInterval(()=>{
-                                fetch(`/api/Status/${response}`)
+                                //from mysql
+                                // fetch(`/api/Status/${response}`)
+                                //from mongodb
+                                fetch(`/getPercentage/?sheetId=${response}`)
                                 .then(response=>{
                                     if(response.ok){
                                         return response.text();
                                     }
                                     else{
+                                        window.alert("Issue while Processing the File")
+                                        UploadName.style.display="none"
+                                        statusDiv.style.visibility="hidden";
+                                        statusDiv.remove()
+                                        UploadName.remove()
                                         throw new Error("no Status")
                                     }
                                 })

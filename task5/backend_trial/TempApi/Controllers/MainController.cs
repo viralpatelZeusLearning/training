@@ -95,13 +95,6 @@ namespace TempApi.Controllers
             result.Add("data", await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).OrderBy(x=>x.Row_Id).Skip(page_no*takeSize).Take(takeSize).ToListAsync());
             result.Add("count" , await _context.MainModels.Where(x=>x.Sheet_Id == SheetId).CountAsync());
             return result;
-
-            // if (temp == null)
-            // {
-            //     return NotFound();
-            // }
-
-            // return temp;
         }
 
         [HttpGet("SheetsList")]
