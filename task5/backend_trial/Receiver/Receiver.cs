@@ -40,7 +40,7 @@ consumer.Received += async (model, ea) =>
         using (var csv = new CsvReader(reader, config))
         {
             // var records = csv.GetRecords<Temp>();
-            var records = csv.GetRecords<MainModelWithoutMapped>().DistinctBy(x=>x.Email_Id).ToList();
+            var records = csv.GetRecords<MainModelWithoutMapped>().DistinctBy(x=>x.Email_Id).Where(x=>x.Telephone_no?.Length==10).ToList();
             var MaxCount = 1000;
             var TaskList = new List<Task>();
             List<MainModelWithoutMapped> newList =  new();

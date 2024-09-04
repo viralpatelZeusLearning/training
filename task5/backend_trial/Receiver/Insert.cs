@@ -90,7 +90,7 @@ public class Insertmysql {
             try
             {
                 // if (startIndex>12000){
-                //     throw new Exception("created error");
+                //     throw new Exception("created error to verify");
                 // }
                 await cmd.ExecuteNonQueryAsync(); 
                 //mongo percent update

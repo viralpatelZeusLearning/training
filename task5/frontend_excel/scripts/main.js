@@ -446,7 +446,7 @@ export class Main{
                                     statusDiv.max=1;
                                     if (data>=1){
                                         clearInterval(Pooling);
-                                        this.newSheet(response)
+                                        this.newSheet(response);
                                         this.sheetchange.style.display="flex";
                                         //statusDiv.style.display = "none";
                                         UploadName.style.display="none"
